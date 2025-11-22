@@ -1,0 +1,30 @@
+// Graphical variables
+@import "config/fonts";
+@import "config/colours";
+@import "variables";
+@import "components/navbar";
+@import "components/footer";
+
+// Your CSS partials
+@import "pages/leaderboard_show";
+@import 'components/buttons';
+@import 'pages/leaderboard';
+@import 'pages/matches';
+@import 'pages/faqs';
+
+
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
+
+body {
+  font-family: "DM Sans", sans-serif;
+  background-color: $background-color;
+  margin: 0; /* Remove default margin */
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+}
+
+#content {
+  width: 100%;
+  max-width: 100%; /* Ensure content doesn't exceed viewport width */
+  padding: 20px; /* Adjust padding as needed */
+}

@@ -1,0 +1,50 @@
+<body>
+  <div class="leaderboard-show-container">
+    <h1>Groups</h1>
+    <% @groups.each do |group| %>
+      <div class="leaderboard-card group-card">
+        <div class="leaderboard-header">
+          <h4><%= group.name %></h4>
+          <h1><strong><%= group.friend&.name || "No Friend Assigned" %></strong></h1>
+          <% if group.friend&.profile_picture_url.present? %>
+            <%= image_tag(group.friend.profile_picture_url, alt: group.friend.name, class: 'profile-picture-group') %>
+          <% end %>
+          <h4>Multiplier: X<%= group.multiplier.to_i %></h4>
+        </div>
+
+        <div class="team-list">
+          <% total_points = group.total_points.to_i %>
+          <% group.teams.each do |team| %>
+            <div class="team">
+              <div class="team-header">
+                <h1><%= team.name %> - <%= team.points.to_i %></h1>
+                <div class="progressed">
+                  <span>Progressed?</span>
+                  <%= form_with url: update_team_progress_leaderboard_path(team), method: :patch, local: true do %>
+                    <%= hidden_field_tag 'authenticity_token', form_authenticity_token %>
+                    <%= check_box_tag :progressed, team.id, team.progressed?, class: 'progressed-checkbox', onchange: 'this.form.submit();' %>
+                  <% end %>
+                </div>
+              </div>
+
+              <!-- Team Match Results -->
+              <div class="team-results">
+                <ul class="football-list"> <!-- Use football-list class here -->
+                  <% team.matches.where(status: 'PostEvent').each do |match| %>
+                    <li>
+                      vs <%= match.home_team_id == team.id ? match.away_team.name : match.home_team.name %>: <%= match.result_for(team) %>
+
+                    </li>
+                  <% end %>
+                </ul>
+              </div>
+              <!-- End Team Match Results -->
+
+            </div>
+          <% end %>
+        </div>
+        <h1 class="total-points">Total Points: <%= total_points %></h1>
+      </div>
+    <% end %>
+  </div>
+</body>

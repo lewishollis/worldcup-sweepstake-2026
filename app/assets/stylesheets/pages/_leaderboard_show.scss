@@ -1,0 +1,150 @@
+/* GROUPS */
+
+/* Basic styling for the leaderboard container */
+.leaderboard-show-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Styling for the leaderboard cards */
+.leaderboard-card.group-card {
+  width: 80%;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Styling for the leaderboard header */
+.leaderboard-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+/* Styling for the header text */
+.leaderboard-header h2, .leaderboard-header h1 {
+  margin: 0;
+  text-align: center;
+  color: black;
+}
+
+/* Styling for the profile picture */
+.profile-picture-group {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  margin-top: 10px;
+}
+
+/* Styling for the team list */
+.team-list {
+  width: 100%;
+  margin-top: 10px;
+}
+
+/* Styling for the team header */
+.team .team-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+/* Styling for the "Progressed?" text and checkbox */
+.progressed {
+  display: flex;
+  align-items: center;
+}
+
+.progressed span {
+  margin-right: 10px; /* Adjust spacing between text and checkbox */
+}
+
+/* Styling for individual teams */
+.team {
+  padding: 10px 0;
+  border-bottom: 1px solid #ddd;
+}
+
+/* Styling for team names */
+.team h1 {
+  margin: 0;
+  text-align: left;
+  font-size: 1.5em;
+}
+
+/* Styling for the checkbox */
+.progressed-checkbox {
+  margin-left: 10px;
+}
+
+/* Styling for total points */
+.total-points {
+  font-weight: bold;
+  margin-top: 10px;
+  text-align: right;
+  color: $primary-color;
+}
+
+/* Styling for team images */
+.team img {
+  width: 32px;
+  height: 32px;
+  margin-right: 10px;
+}
+
+/* Styling for the leaderboard table */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Styling for table headers */
+th {
+  padding: 10px;
+  background-color: #f0f0f0;
+  text-align: left;
+}
+
+/* Styling for table data cells */
+td {
+  padding: 10px;
+}
+
+/* Styling for alternating table rows */
+tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+/* Styling for team results */
+.team-results {
+  margin-top: 10px;
+}
+
+/* Update the ul.football-list selector */
+.team-results ul.football-list {
+  padding-left: 20px;
+}
+
+/* Style for each list item with football icon */
+.team-results ul.football-list li {
+  list-style-type: none; /* Remove default bullet point */
+  margin-bottom: 5px;
+  position: relative; /* Create relative positioning for icon */
+}
+
+/* Football icon styling */
+.team-results ul.football-list li:before {
+  content: "\26BD"; /* Unicode character for football */
+  display: inline-block;
+  width: 1em;
+  font-size: 1.2em; /* Adjust size as needed */
+  margin-right: 5px; /* Space between icon and text */
+  color: #007bff; /* Example color */
+}

@@ -1,0 +1,83 @@
+/* Leaderboard container styling */
+.leaderboard-show-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+
+
+/* Styling for the table */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+/* Styling for table headers */
+th {
+  padding: 10px;
+  background-color: #90AEAD;
+  text-align: left;
+}
+
+/* Styling for table rows */
+tbody tr {
+  background-color: #90aeadbd;
+  text-align: center;
+}
+
+/* Styling for table data cells */
+td {
+  padding: 10px;
+  vertical-align: middle;
+}
+
+/* Styling for alternating table rows */
+tbody tr:nth-child(even) {
+  background-color: #874f414e;
+}
+
+/* Styling for the profile pictures */
+.profile-picture {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin-right: 10px;
+  vertical-align: middle;
+}
+
+/* Styling for friend info cell */
+.friend-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Styling for the flags */
+.team-flags {
+  display: flex;
+  align-items: center;
+  margin-left: 10px;
+}
+
+.team-flags img {
+  margin: 0 5px;
+  width: 32px;
+  height: 32px;
+  vertical-align: middle;
+}
+
+/* Animation for spinning numbers */
+.spin {
+  animation: spin 6s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

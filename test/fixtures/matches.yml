@@ -1,0 +1,21 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  home_team_id: 1
+  away_team_id: 1
+  home_score: 1
+  away_score: 1
+  start_time: 2024-06-05 21:24:26
+  status: MyString
+  winner: MyString
+  accessible_event_summary: MyString
+
+two:
+  home_team_id: 1
+  away_team_id: 1
+  home_score: 1
+  away_score: 1
+  start_time: 2024-06-05 21:24:26
+  status: MyString
+  winner: MyString
+  accessible_event_summary: MyString

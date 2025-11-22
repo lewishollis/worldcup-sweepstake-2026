@@ -1,0 +1,92 @@
+<!-- app/views/matches/index.html.erb -->
+<h1>Matches</h1>
+<button class="refresh-button" onclick="refreshPage()">Refresh Matches</button>
+<%= form_with url: matches_path, method: :get, local: true, id: 'filter-form' do %>
+  <div class="filters">
+    <%= hidden_field_tag 'filter[PostEvent]', '0', id: 'filter_PostEvent' %>
+    <%= hidden_field_tag 'filter[MidEvent]', '0', id: 'filter_MidEvent' %>
+    <%= hidden_field_tag 'filter[PreEvent]', '0', id: 'filter_PreEvent' %>
+
+    <label class="filter-label <%= 'active' if @filter_params['PostEvent'] == '1' %>" onclick="applyFilter('PostEvent')">
+      Past Games
+    </label>
+    <label class="filter-label <%= 'active' if @filter_params['MidEvent'] == '1' %>" onclick="applyFilter('MidEvent')">
+      In Play
+    </label>
+    <label class="filter-label <%= 'active' if @filter_params['PreEvent'] == '1' %>" onclick="applyFilter('PreEvent')">
+      Upcoming
+    </label>
+  </div>
+<% end %>
+
+<% if @error_message %>
+  <p><%= @error_message %></p>
+<% else %>
+  <div class="matches-list">
+    <% @matches.each do |match| %>
+      <div class="match">
+        <div class="team-scores">
+          <div class="team-score">
+            <%= image_tag(match.home_friend_profile_picture_url, alt: match.home_friend_name) if match.home_friend_profile_picture_url.present? %>
+            <div class="friend-name">
+              <%= match.home_friend_name %>
+            </div>
+            <div class="team-name">
+              <%= match.home_team.name %>
+            </div>
+            <%= match.home_score %>
+          </div>
+          <div class="winner">
+            <% if match.status != 'MidEvent' %>
+              Winner:
+              <% if match.status == 'PreEvent' %>
+                TBC
+              <% elsif match.winner == "draw" %>
+                Draw
+              <% elsif match.winner == "home" %>
+                <%= match.home_team.name %>
+              <% elsif match.winner == "away" %>
+                <%= match.away_team.name %>
+              <% else %>
+                TBC
+              <% end %>
+              <% elsif match.status == 'MidEvent' %>
+            <!-- Display event summary for 'MidEvent' matches -->
+            <p><%= match.accessible_event_summary %></p>
+            <% end %>
+          </div>
+          <div class="team-score">
+            <%= image_tag(match.away_friend_profile_picture_url, alt: match.away_friend_name) if match.away_friend_profile_picture_url.present? %>
+            <div class="friend-name">
+              <%= match.away_friend_name %>
+            </div>
+            <div class="team-name">
+              <%= match.away_team.name %>
+            </div>
+            <%= match.away_score %>
+          </div>
+        </div>
+        <div class="event-summary">
+          <p><%= match.accessible_event_summary %></p>
+        </div>
+        <div class="match-details">
+          <p><strong>Stage:</strong> <%= match.stage %></p>
+          <p><strong>Fixture Date:</strong> <%= match.start_time.strftime("%B %d, %Y %H:%M") %></p>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<script>
+  function applyFilter(filterType) {
+    document.getElementById('filter_PostEvent').value = (filterType === 'PostEvent') ? '1' : '0';
+    document.getElementById('filter_MidEvent').value = (filterType === 'MidEvent') ? '1' : '0';
+    document.getElementById('filter_PreEvent').value = (filterType === 'PreEvent') ? '1' : '0';
+    document.getElementById('filter-form').submit();
+  }
+    function refreshPage() {
+    location.reload(); // Reload the current page
+
+  }
+</script>

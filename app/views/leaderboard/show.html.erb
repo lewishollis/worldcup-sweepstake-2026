@@ -1,0 +1,25 @@
+<div class="leaderboard-show-container">
+  <h1>Leaderboard</h1>
+  <table>
+
+    <tbody>
+      <% @leaderboard.each_with_index do |group, index| %>
+        <% if group.friend %>
+          <tr>
+            <td><h1><%= index + 1 %></h1></td>
+            <td class="friend-info">
+              <%= image_tag(group.friend.profile_picture_url, alt: group.friend.name, class: 'profile-picture') if group.friend.profile_picture_url.present? %>
+              <h1><%= group.friend.name %></h1>
+              <div class="team-flags">
+                <% group.teams.each do |team| %>
+                  <%= image_tag(team.flag_url, alt: team.name, class: 'flag') if team.flag_url.present? %>
+                <% end %>
+              </div>
+            </td>
+            <td><h1 class="spin"><%= group.total_points.to_i %></h1></td>
+          </tr>
+        <% end %>
+      <% end %>
+    </tbody>
+  </table>
+</div>

@@ -1,25 +1,88 @@
-<div class="leaderboard-show-container">
-  <h1>Leaderboard</h1>
-  <table>
+<div class="relative min-h-screen flex flex-col p-6 pb-28">
+  <!-- Header -->
+  <header class="flex items-center justify-between mb-8">
+    <button class="text-2xl text-gray-400 hover:text-white">
+      <i class="fas fa-cog"></i>
+    </button>
+    <h1 class="text-lg font-semibold text-text-primary-light dark:text-text-primary-dark">Friends Leaderboard</h1>
+    <button class="text-xl text-gray-400 hover:text-white">
+      <i class="fas fa-share-alt"></i>
+    </button>
+  </header>
 
-    <tbody>
-      <% @leaderboard.each_with_index do |group, index| %>
-        <% if group.friend %>
-          <tr>
-            <td><h1><%= index + 1 %></h1></td>
-            <td class="friend-info">
-              <%= image_tag(group.friend.profile_picture_url, alt: group.friend.name, class: 'profile-picture') if group.friend.profile_picture_url.present? %>
-              <h1><%= group.friend.name %></h1>
-              <div class="team-flags">
-                <% group.teams.each do |team| %>
-                  <%= image_tag(team.flag_url, alt: team.name, class: 'flag') if team.flag_url.present? %>
+  <main class="flex-grow">
+    <!-- Page Title -->
+    <section class="mb-6">
+      <h2 class="text-4xl font-bold text-text-primary-light dark:text-text-primary-dark">World Cup Sweepstake</h2>
+    </section>
+
+    <!-- AI Insights (Optional) -->
+    <section class="bg-card-light dark:bg-card-dark p-4 rounded-2xl mb-6 border border-border-light dark:border-border-dark">
+      <div class="flex items-center mb-2">
+        <i class="fas fa-robot text-lg text-text-secondary-light dark:text-text-secondary-dark mr-3"></i>
+        <h3 class="font-bold text-text-primary-light dark:text-text-primary-dark">AI Game Insights</h3>
+      </div>
+      <p class="text-sm text-text-secondary-light dark:text-text-secondary-dark leading-relaxed">
+        The competition is heating up! <%= @leaderboard.first&.friend&.name || "The leader" %> is in first place with <%= @leaderboard.first&.total_points&.to_i || 0 %> points.
+      </p>
+    </section>
+
+    <!-- Leaderboard List -->
+    <section>
+      <div class="space-y-2">
+        <% @leaderboard.each_with_index do |group, index| %>
+          <% next unless group.friend %>
+
+          <article class="<%= index < 3 ? 'bg-card-light dark:bg-card-dark' : 'bg-card-light dark:bg-card-dark' %> p-3 rounded-2xl flex items-center border border-border-light dark:border-border-dark">
+            <!-- Rank Icon/Number -->
+            <div class="w-10 flex-shrink-0 flex items-center justify-center">
+              <% if index == 0 %>
+                <i class="fas fa-star text-2xl text-yellow-400"></i>
+              <% elsif index == 1 %>
+                <i class="fas fa-medal text-2xl text-gray-400"></i>
+              <% elsif index == 2 %>
+                <i class="fas fa-award text-2xl text-orange-600"></i>
+              <% else %>
+                <span class="text-lg font-bold text-text-secondary-light dark:text-text-secondary-dark"><%= index + 1 %></span>
+              <% end %>
+            </div>
+
+            <!-- Profile Picture -->
+            <% if group.friend.profile_picture_url.present? %>
+              <%= image_tag group.friend.profile_picture_url, alt: group.friend.name, class: "w-12 h-12 rounded-full mx-3 object-cover" %>
+            <% else %>
+              <div class="w-12 h-12 rounded-full mx-3 bg-secondary/20 flex items-center justify-center">
+                <span class="text-lg font-bold text-secondary"><%= group.friend.name[0] %></span>
+              </div>
+            <% end %>
+
+            <!-- Name and Points -->
+            <div class="flex-grow">
+              <p class="font-semibold text-text-primary-light dark:text-text-primary-dark"><%= group.friend.name %></p>
+              <p class="text-sm text-text-secondary-light dark:text-text-secondary-dark"><%= group.total_points.to_i %> pts</p>
+
+              <!-- Team Flags -->
+              <div class="flex gap-1 mt-1">
+                <% group.teams.limit(3).each do |team| %>
+                  <% if team.flag_url.present? %>
+                    <%= image_tag team.flag_url, alt: team.name, class: "h-4 w-4 rounded-full object-cover" %>
+                  <% end %>
+                <% end %>
+                <% if group.teams.count > 3 %>
+                  <span class="text-xs text-text-secondary-light dark:text-text-secondary-dark">+<%= group.teams.count - 3 %></span>
                 <% end %>
               </div>
-            </td>
-            <td><h1 class="spin"><%= group.total_points.to_i %></h1></td>
-          </tr>
+            </div>
+
+            <!-- Expand Icon (optional for future) -->
+            <div class="ml-2">
+              <i class="fas fa-chevron-right text-text-secondary-light dark:text-text-secondary-dark"></i>
+            </div>
+          </article>
         <% end %>
-      <% end %>
-    </tbody>
-  </table>
+      </div>
+    </section>
+  </main>
 </div>
+
+<%= render 'layouts/bottom_nav' %>

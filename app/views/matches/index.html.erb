@@ -1,82 +1,145 @@
-<!-- app/views/matches/index.html.erb -->
-<h1>Matches</h1>
-<button class="refresh-button" onclick="refreshPage()">Refresh Matches</button>
-<%= form_with url: matches_path, method: :get, local: true, id: 'filter-form' do %>
-  <div class="filters">
-    <%= hidden_field_tag 'filter[PostEvent]', '0', id: 'filter_PostEvent' %>
-    <%= hidden_field_tag 'filter[MidEvent]', '0', id: 'filter_MidEvent' %>
-    <%= hidden_field_tag 'filter[PreEvent]', '0', id: 'filter_PreEvent' %>
-
-    <label class="filter-label <%= 'active' if @filter_params['PostEvent'] == '1' %>" onclick="applyFilter('PostEvent')">
-      Past Games
-    </label>
-    <label class="filter-label <%= 'active' if @filter_params['MidEvent'] == '1' %>" onclick="applyFilter('MidEvent')">
-      In Play
-    </label>
-    <label class="filter-label <%= 'active' if @filter_params['PreEvent'] == '1' %>" onclick="applyFilter('PreEvent')">
-      Upcoming
-    </label>
+<header class="sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm">
+  <div class="flex items-center p-4">
+    <div class="flex w-12 shrink-0 items-center justify-start">
+      <%= link_to leaderboard_path(:show), class: "flex items-center justify-center rounded-full h-10 w-10 text-text-primary-light dark:text-text-primary-dark" do %>
+        <span class="material-symbols-outlined text-2xl">trophy</span>
+      <% end %>
+    </div>
+    <h1 class="text-lg font-bold text-text-primary-light dark:text-text-primary-dark flex-1 text-center">World Cup Matches</h1>
+    <div class="flex w-12 items-center justify-end">
+      <button onclick="location.reload()" class="flex items-center justify-center rounded-full h-10 w-10 text-text-primary-light dark:text-text-primary-dark">
+        <span class="material-symbols-outlined text-2xl">refresh</span>
+      </button>
+    </div>
   </div>
-<% end %>
+</header>
 
-<% if @error_message %>
-  <p><%= @error_message %></p>
-<% else %>
-  <div class="matches-list">
-    <% @matches.each do |match| %>
-      <div class="match">
-        <div class="team-scores">
-          <div class="team-score">
-            <%= image_tag(match.home_friend_profile_picture_url, alt: match.home_friend_name) if match.home_friend_profile_picture_url.present? %>
-            <div class="friend-name">
-              <%= match.home_friend_name %>
-            </div>
-            <div class="team-name">
-              <%= match.home_team.name %>
-            </div>
-            <%= match.home_score %>
-          </div>
-          <div class="winner">
-            <% if match.status != 'MidEvent' %>
-              Winner:
-              <% if match.status == 'PreEvent' %>
-                TBC
-              <% elsif match.winner == "draw" %>
-                Draw
-              <% elsif match.winner == "home" %>
-                <%= match.home_team.name %>
-              <% elsif match.winner == "away" %>
-                <%= match.away_team.name %>
-              <% else %>
-                TBC
-              <% end %>
-              <% elsif match.status == 'MidEvent' %>
-            <!-- Display event summary for 'MidEvent' matches -->
-            <p><%= match.accessible_event_summary %></p>
-            <% end %>
-          </div>
-          <div class="team-score">
-            <%= image_tag(match.away_friend_profile_picture_url, alt: match.away_friend_name) if match.away_friend_profile_picture_url.present? %>
-            <div class="friend-name">
-              <%= match.away_friend_name %>
-            </div>
-            <div class="team-name">
-              <%= match.away_team.name %>
-            </div>
-            <%= match.away_score %>
-          </div>
-        </div>
-        <div class="event-summary">
-          <p><%= match.accessible_event_summary %></p>
-        </div>
-        <div class="match-details">
-          <p><strong>Stage:</strong> <%= match.stage %></p>
-          <p><strong>Fixture Date:</strong> <%= match.start_time.strftime("%B %d, %Y %H:%M") %></p>
-        </div>
+<nav class="sticky top-[64px] z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm">
+  <div class="border-b border-border-light dark:border-border-dark px-4">
+    <%= form_with url: matches_path, method: :get, local: true, id: 'filter-form' do %>
+      <%= hidden_field_tag 'filter[PostEvent]', @filter_params['PostEvent'] || '0', id: 'filter_PostEvent' %>
+      <%= hidden_field_tag 'filter[MidEvent]', @filter_params['MidEvent'] || '0', id: 'filter_MidEvent' %>
+      <%= hidden_field_tag 'filter[PreEvent]', @filter_params['PreEvent'] || '0', id: 'filter_PreEvent' %>
+
+      <div class="flex justify-between">
+        <a href="javascript:void(0)" onclick="applyFilter('MidEvent')" class="flex flex-col items-center justify-center border-b-[3px] <%= @filter_params['MidEvent'] == '1' ? 'border-primary' : 'border-b-transparent text-text-secondary-light dark:text-text-secondary-dark' %> pb-[13px] pt-4 flex-1">
+          <p class="text-sm font-bold leading-normal tracking-[0.015em] <%= @filter_params['MidEvent'] == '1' ? 'text-primary' : '' %>">Live</p>
+        </a>
+        <a href="javascript:void(0)" onclick="applyFilter('PreEvent')" class="flex flex-col items-center justify-center border-b-[3px] <%= @filter_params['PreEvent'] == '1' ? 'border-primary' : 'border-b-transparent text-text-secondary-light dark:text-text-secondary-dark' %> pb-[13px] pt-4 flex-1">
+          <p class="text-sm font-bold leading-normal tracking-[0.015em] <%= @filter_params['PreEvent'] == '1' ? 'text-primary' : '' %>">Upcoming</p>
+        </a>
+        <a href="javascript:void(0)" onclick="applyFilter('PostEvent')" class="flex flex-col items-center justify-center border-b-[3px] <%= @filter_params['PostEvent'] == '1' ? 'border-primary' : 'border-b-transparent text-text-secondary-light dark:text-text-secondary-dark' %> pb-[13px] pt-4 flex-1">
+          <p class="text-sm font-bold leading-normal tracking-[0.015em] <%= @filter_params['PostEvent'] == '1' ? 'text-primary' : '' %>">Finished</p>
+        </a>
       </div>
     <% end %>
   </div>
-<% end %>
+</nav>
+
+<main class="flex-1 px-4 pb-24">
+  <% if @error_message %>
+    <div class="text-center py-16">
+      <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-primary/10 mb-4">
+        <span class="material-symbols-outlined text-primary text-4xl">error</span>
+      </div>
+      <h3 class="text-lg font-bold text-text-primary-light dark:text-text-primary-dark">Error Loading Matches</h3>
+      <p class="text-sm text-text-secondary-light dark:text-text-secondary-dark mt-1"><%= @error_message %></p>
+    </div>
+  <% elsif @matches.empty? %>
+    <div class="text-center py-16">
+      <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-primary/10 mb-4">
+        <span class="material-symbols-outlined text-primary text-4xl">sports_soccer</span>
+      </div>
+      <h3 class="text-lg font-bold text-text-primary-light dark:text-text-primary-dark">No Matches Found</h3>
+      <p class="text-sm text-text-secondary-light dark:text-text-secondary-dark mt-1">Check back later or view other games.</p>
+    </div>
+  <% else %>
+    <% # Group matches by date %>
+    <% matches_by_date = @matches.group_by { |m| m.start_time.to_date } %>
+    <% matches_by_date.sort.each do |date, matches| %>
+      <% if date == Date.today %>
+        <h2 class="text-lg font-bold leading-tight tracking-[-0.015em] text-text-primary-light dark:text-text-primary-dark pb-2 pt-6">TODAY</h2>
+      <% elsif date == Date.tomorrow %>
+        <h2 class="text-lg font-bold leading-tight tracking-[-0.015em] text-text-primary-light dark:text-text-primary-dark pb-2 pt-6">TOMORROW, <%= date.strftime('%d %b').upcase %></h2>
+      <% else %>
+        <h2 class="text-lg font-bold leading-tight tracking-[-0.015em] text-text-primary-light dark:text-text-primary-dark pb-2 pt-6"><%= date.strftime('%A, %d %b').upcase %></h2>
+      <% end %>
+
+      <% matches.each do |match| %>
+        <div class="py-2">
+          <div class="flex flex-col gap-4 rounded-lg bg-card-light dark:bg-card-dark p-4 shadow-sm">
+            <div class="flex justify-between items-center text-xs text-text-secondary-light dark:text-text-secondary-dark font-medium">
+              <span><%= match.stage %></span>
+              <% if match.status == 'MidEvent' %>
+                <div class="flex items-center gap-1.5 text-accent-live font-bold">
+                  <div class="h-2 w-2 rounded-full bg-accent-live animate-pulse"></div>
+                  <span>LIVE</span>
+                </div>
+              <% elsif match.status == 'PostEvent' %>
+                <span class="font-bold text-text-primary-light dark:text-text-primary-dark">FT</span>
+              <% else %>
+                <span class="font-bold text-text-primary-light dark:text-text-primary-dark"><%= match.start_time.strftime('%H:%M') %></span>
+              <% end %>
+            </div>
+
+            <div class="flex items-center justify-between">
+              <!-- Home Team -->
+              <div class="flex items-center gap-3 w-2/5">
+                <% if match.home_friend_profile_picture_url.present? %>
+                  <%= image_tag match.home_friend_profile_picture_url, alt: match.home_friend_name, class: "h-8 w-8 object-cover rounded-full" %>
+                <% else %>
+                  <div class="h-8 w-8 rounded-full bg-secondary/20 flex items-center justify-center">
+                    <span class="text-xs font-bold text-secondary"><%= match.home_team.name[0] %></span>
+                  </div>
+                <% end %>
+                <div class="flex flex-col">
+                  <span class="text-base font-bold text-text-primary-light dark:text-text-primary-dark"><%= match.home_team.name %></span>
+                  <% if match.home_friend_name != 'No owner' %>
+                    <span class="text-xs text-text-secondary-light dark:text-text-secondary-dark"><%= match.home_friend_name %></span>
+                  <% end %>
+                </div>
+              </div>
+
+              <!-- Score or VS -->
+              <div class="text-xl font-bold text-text-primary-light dark:text-text-primary-dark">
+                <% if match.status == 'PreEvent' %>
+                  <span class="text-text-secondary-light dark:text-text-secondary-dark">vs</span>
+                <% else %>
+                  <span><%= match.home_score %> - <%= match.away_score %></span>
+                <% end %>
+              </div>
+
+              <!-- Away Team -->
+              <div class="flex items-center gap-3 w-2/5 justify-end">
+                <div class="flex flex-col items-end">
+                  <span class="text-base font-bold text-text-primary-light dark:text-text-primary-dark text-right"><%= match.away_team.name %></span>
+                  <% if match.away_friend_name != 'No owner' %>
+                    <span class="text-xs text-text-secondary-light dark:text-text-secondary-dark"><%= match.away_friend_name %></span>
+                  <% end %>
+                </div>
+                <% if match.away_friend_profile_picture_url.present? %>
+                  <%= image_tag match.away_friend_profile_picture_url, alt: match.away_friend_name, class: "h-8 w-8 object-cover rounded-full" %>
+                <% else %>
+                  <div class="h-8 w-8 rounded-full bg-secondary/20 flex items-center justify-center">
+                    <span class="text-xs font-bold text-secondary"><%= match.away_team.name[0] %></span>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+
+            <% if match.status == 'MidEvent' && match.accessible_event_summary.present? %>
+              <div class="text-xs text-text-secondary-light dark:text-text-secondary-dark border-t border-border-light dark:border-border-dark pt-3">
+                <%= match.accessible_event_summary %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+  <% end %>
+</main>
+
+<%= render 'layouts/bottom_nav' %>
 
 <script>
   function applyFilter(filterType) {
@@ -84,9 +147,5 @@
     document.getElementById('filter_MidEvent').value = (filterType === 'MidEvent') ? '1' : '0';
     document.getElementById('filter_PreEvent').value = (filterType === 'PreEvent') ? '1' : '0';
     document.getElementById('filter-form').submit();
-  }
-    function refreshPage() {
-    location.reload(); // Reload the current page
-
   }
 </script>

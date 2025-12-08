@@ -1,0 +1,18 @@
+<nav class="fixed bottom-0 left-0 right-0 bg-card-light dark:bg-card-dark border-t border-border-light dark:border-border-dark z-50">
+  <div class="flex justify-around items-center h-20">
+    <%= link_to matches_path, class: "flex flex-col items-center justify-center flex-1 h-full #{current_page?(matches_path) ? 'text-primary' : 'text-text-secondary-light dark:text-text-secondary-dark'}" do %>
+      <i class="fas fa-futbol text-xl mb-1"></i>
+      <span class="text-xs font-medium">Matches</span>
+    <% end %>
+
+    <%= link_to leaderboard_path(:show), class: "flex flex-col items-center justify-center flex-1 h-full #{current_page?(leaderboard_path(:show)) ? 'text-primary' : 'text-text-secondary-light dark:text-text-secondary-dark'}" do %>
+      <i class="fas fa-trophy text-xl mb-1"></i>
+      <span class="text-xs font-medium">Leaderboard</span>
+    <% end %>
+
+    <%= link_to leaderboard_index_path, class: "flex flex-col items-center justify-center flex-1 h-full #{current_page?(leaderboard_index_path) ? 'text-primary' : 'text-text-secondary-light dark:text-text-secondary-dark'}" do %>
+      <i class="fas fa-users text-xl mb-1"></i>
+      <span class="text-xs font-medium">Groups</span>
+    <% end %>
+  </div>
+</nav>

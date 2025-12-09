@@ -1,0 +1,70 @@
+/* Match Card Components */
+
+.match-card {
+  @apply flex flex-col gap-4 rounded-lg bg-card-light dark:bg-card-dark p-4 shadow-sm;
+}
+
+.match-header {
+  @apply flex justify-between items-center text-xs text-text-secondary-light dark:text-text-secondary-dark font-medium;
+}
+
+.match-status-live {
+  @apply flex items-center gap-1.5 text-accent-live font-bold;
+}
+
+.match-status-live .pulse-dot {
+  @apply h-2 w-2 rounded-full bg-accent-live animate-pulse;
+}
+
+.match-team {
+  @apply flex items-center gap-3 w-2/5;
+}
+
+.match-team-avatar {
+  @apply h-8 w-8 rounded-full bg-secondary/20 flex items-center justify-center;
+}
+
+.match-team-avatar-initial {
+  @apply text-xs font-bold text-secondary;
+}
+
+.match-team-name {
+  @apply text-base font-bold text-text-primary-light dark:text-text-primary-dark;
+}
+
+.match-team-owner {
+  @apply text-xs text-text-secondary-light dark:text-text-secondary-dark;
+}
+
+.match-score {
+  @apply text-xl font-bold text-text-primary-light dark:text-text-primary-dark;
+}
+
+.match-vs {
+  @apply text-xl font-bold text-text-secondary-light dark:text-text-secondary-dark;
+}
+
+.match-summary {
+  @apply text-xs text-text-secondary-light dark:text-text-secondary-dark border-t border-border-light dark:border-border-dark pt-3;
+}
+
+/* Ben Motson Commentary Box */
+.commentary-box {
+  @apply flex flex-col gap-3 rounded-lg bg-secondary/10 dark:bg-secondary/20 p-4 border border-secondary/20 dark:border-secondary/30;
+}
+
+.commentary-header {
+  @apply flex items-center gap-3;
+}
+
+.commentary-icon {
+  @apply text-secondary dark:text-blue-300 text-2xl;
+}
+
+.commentary-title {
+  @apply text-base font-bold text-secondary dark:text-blue-300;
+}
+
+.commentary-text {
+  @apply text-sm text-secondary/80 dark:text-blue-200/80;
+}

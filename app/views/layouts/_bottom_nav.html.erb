@@ -1,18 +1,56 @@
-<nav class="fixed bottom-0 left-0 right-0 bg-card-light dark:bg-card-dark border-t border-border-light dark:border-border-dark z-50">
-  <div class="flex justify-around items-center h-20">
-    <%= link_to matches_path, class: "flex flex-col items-center justify-center flex-1 h-full #{current_page?(matches_path) ? 'text-primary' : 'text-text-secondary-light dark:text-text-secondary-dark'}" do %>
-      <i class="fas fa-futbol text-xl mb-1"></i>
-      <span class="text-xs font-medium">Matches</span>
+<nav class="bottom-nav">
+  <div class="bottom-nav-container">
+    <%= link_to matches_path, class: "bottom-nav-link #{current_page?(matches_path) ? 'active' : ''}" do %>
+      <i class="fas fa-futbol bottom-nav-icon"></i>
+      <span class="bottom-nav-label">Matches</span>
     <% end %>
 
-    <%= link_to leaderboard_path(:show), class: "flex flex-col items-center justify-center flex-1 h-full #{current_page?(leaderboard_path(:show)) ? 'text-primary' : 'text-text-secondary-light dark:text-text-secondary-dark'}" do %>
-      <i class="fas fa-trophy text-xl mb-1"></i>
-      <span class="text-xs font-medium">Leaderboard</span>
+    <%= link_to leaderboard_path(:show), class: "bottom-nav-link #{current_page?(leaderboard_path(:show)) ? 'active' : ''}" do %>
+      <i class="fas fa-trophy bottom-nav-icon"></i>
+      <span class="bottom-nav-label">Leaderboard</span>
     <% end %>
 
-    <%= link_to leaderboard_index_path, class: "flex flex-col items-center justify-center flex-1 h-full #{current_page?(leaderboard_index_path) ? 'text-primary' : 'text-text-secondary-light dark:text-text-secondary-dark'}" do %>
-      <i class="fas fa-users text-xl mb-1"></i>
-      <span class="text-xs font-medium">Groups</span>
+    <%= link_to leaderboard_index_path, class: "bottom-nav-link #{current_page?(leaderboard_index_path) ? 'active' : ''}" do %>
+      <i class="fas fa-users bottom-nav-icon"></i>
+      <span class="bottom-nav-label">Groups</span>
     <% end %>
+
+    <button id="darkModeToggle" class="bottom-nav-link">
+      <span class="material-symbols-outlined bottom-nav-icon" id="darkModeIcon">dark_mode</span>
+      <span class="bottom-nav-label">Theme</span>
+    </button>
   </div>
 </nav>
+
+<script>
+  (function() {
+    const toggle = document.getElementById('darkModeToggle');
+    const icon = document.getElementById('darkModeIcon');
+    const html = document.documentElement;
+
+    // Get saved preference or default to dark
+    const currentMode = localStorage.getItem('darkMode') || 'dark';
+
+    // Apply initial mode
+    if (currentMode === 'dark') {
+      html.classList.add('dark');
+      icon.textContent = 'dark_mode';
+    } else {
+      html.classList.remove('dark');
+      icon.textContent = 'light_mode';
+    }
+
+    // Toggle on click
+    toggle.addEventListener('click', () => {
+      if (html.classList.contains('dark')) {
+        html.classList.remove('dark');
+        localStorage.setItem('darkMode', 'light');
+        icon.textContent = 'light_mode';
+      } else {
+        html.classList.add('dark');
+        localStorage.setItem('darkMode', 'dark');
+        icon.textContent = 'dark_mode';
+      }
+    });
+  })();
+</script>

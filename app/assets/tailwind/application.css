@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+/* Enable class-based dark mode instead of media query */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Custom Theme Configuration */
+@theme {
+  /* USA Flag Colors */
+  --color-primary: #BF0A30;
+  --color-secondary: #0A3161;
+
+  /* Background Colors */
+  --color-background-light: #f0f2f5;
+  --color-background-dark: #0A101C;
+
+  /* Card Colors */
+  --color-card-light: #ffffff;
+  --color-card-dark: #161D2B;
+
+  /* Text Colors */
+  --color-text-primary-light: #0A101C;
+  --color-text-primary-dark: #ffffff;
+  --color-text-secondary-light: #6b7280;
+  --color-text-secondary-dark: #9da6b9;
+
+  /* Border Colors */
+  --color-border-light: #e5e7eb;
+  --color-border-dark: #3b4354;
+
+  /* Accent Colors */
+  --color-accent-live: #22c55e;
+
+  /* Blue Palette (for commentary box in dark mode) */
+  --color-blue-100: #dbeafe;
+  --color-blue-200: #bfdbfe;
+  --color-blue-300: #93c5fd;
+  --color-blue-400: #60a5fa;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
+  --color-blue-700: #1d4ed8;
+  --color-blue-800: #1e40af;
+  --color-blue-900: #1e3a8a;
+
+  /* Font Family */
+  --font-family-display: "Plus Jakarta Sans", sans-serif;
+
+  /* Border Radius */
+  --radius-DEFAULT: 1rem;
+  --radius-lg: 2rem;
+  --radius-xl: 3rem;
+  --radius-full: 9999px;
+}
+
+/* Import component styles */
+@import "./components/match-card";
+@import "./components/leaderboard";
+@import "./components/navigation";

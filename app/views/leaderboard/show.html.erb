@@ -16,13 +16,13 @@
       <h2 class="text-4xl font-bold text-text-primary-light dark:text-text-primary-dark">World Cup Sweepstake</h2>
     </section>
 
-    <!-- AI Insights (Optional) -->
-    <section class="bg-card-light dark:bg-card-dark p-4 rounded-2xl mb-6 border border-border-light dark:border-border-dark">
-      <div class="flex items-center mb-2">
-        <i class="fas fa-robot text-lg text-text-secondary-light dark:text-text-secondary-dark mr-3"></i>
-        <h3 class="font-bold text-text-primary-light dark:text-text-primary-dark">AI Game Insights</h3>
+    <!-- Ben Motson Insights -->
+    <section class="insights-box">
+      <div class="insights-header">
+        <i class="fas fa-microphone insights-icon"></i>
+        <h3 class="insights-title">Ben Motson's Analysis</h3>
       </div>
-      <p class="text-sm text-text-secondary-light dark:text-text-secondary-dark leading-relaxed">
+      <p class="insights-text">
         The competition is heating up! <%= @leaderboard.first&.friend&.name || "The leader" %> is in first place with <%= @leaderboard.first&.total_points&.to_i || 0 %> points.
       </p>
     </section>
@@ -33,9 +33,9 @@
         <% @leaderboard.each_with_index do |group, index| %>
           <% next unless group.friend %>
 
-          <article class="<%= index < 3 ? 'bg-card-light dark:bg-card-dark' : 'bg-card-light dark:bg-card-dark' %> p-3 rounded-2xl flex items-center border border-border-light dark:border-border-dark">
+          <article class="leaderboard-entry">
             <!-- Rank Icon/Number -->
-            <div class="w-10 flex-shrink-0 flex items-center justify-center">
+            <div class="leaderboard-rank">
               <% if index == 0 %>
                 <i class="fas fa-star text-2xl text-yellow-400"></i>
               <% elsif index == 1 %>
@@ -43,29 +43,29 @@
               <% elsif index == 2 %>
                 <i class="fas fa-award text-2xl text-orange-600"></i>
               <% else %>
-                <span class="text-lg font-bold text-text-secondary-light dark:text-text-secondary-dark"><%= index + 1 %></span>
+                <span class="leaderboard-rank-number"><%= index + 1 %></span>
               <% end %>
             </div>
 
             <!-- Profile Picture -->
             <% if group.friend.profile_picture_url.present? %>
-              <%= image_tag group.friend.profile_picture_url, alt: group.friend.name, class: "w-12 h-12 rounded-full mx-3 object-cover" %>
+              <%= image_tag group.friend.profile_picture_url, alt: group.friend.name, class: "leaderboard-avatar" %>
             <% else %>
-              <div class="w-12 h-12 rounded-full mx-3 bg-secondary/20 flex items-center justify-center">
-                <span class="text-lg font-bold text-secondary"><%= group.friend.name[0] %></span>
+              <div class="leaderboard-avatar-placeholder">
+                <span class="leaderboard-avatar-initial"><%= group.friend.name[0] %></span>
               </div>
             <% end %>
 
             <!-- Name and Points -->
-            <div class="flex-grow">
-              <p class="font-semibold text-text-primary-light dark:text-text-primary-dark"><%= group.friend.name %></p>
-              <p class="text-sm text-text-secondary-light dark:text-text-secondary-dark"><%= group.total_points.to_i %> pts</p>
+            <div class="leaderboard-info">
+              <p class="leaderboard-name"><%= group.friend.name %></p>
+              <p class="leaderboard-points"><%= group.total_points.to_i %> pts</p>
 
               <!-- Team Flags -->
-              <div class="flex gap-1 mt-1">
+              <div class="leaderboard-flags">
                 <% group.teams.limit(3).each do |team| %>
                   <% if team.flag_url.present? %>
-                    <%= image_tag team.flag_url, alt: team.name, class: "h-4 w-4 rounded-full object-cover" %>
+                    <%= image_tag team.flag_url, alt: team.name, class: "leaderboard-flag" %>
                   <% end %>
                 <% end %>
                 <% if group.teams.count > 3 %>
@@ -74,7 +74,7 @@
               </div>
             </div>
 
-            <!-- Expand Icon (optional for future) -->
+            <!-- Expand Icon -->
             <div class="ml-2">
               <i class="fas fa-chevron-right text-text-secondary-light dark:text-text-secondary-dark"></i>
             </div>

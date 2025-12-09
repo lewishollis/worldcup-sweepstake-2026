@@ -1,0 +1,36 @@
+<button id="darkModeToggle" class="flex items-center justify-center rounded-full h-10 w-10 text-text-primary-light dark:text-text-primary-dark">
+  <span class="material-symbols-outlined text-2xl" id="darkModeIcon">dark_mode</span>
+</button>
+
+<script>
+  (function() {
+    const toggle = document.getElementById('darkModeToggle');
+    const icon = document.getElementById('darkModeIcon');
+    const html = document.documentElement;
+
+    // Get saved preference or default to dark
+    const currentMode = localStorage.getItem('darkMode') || 'dark';
+
+    // Apply initial mode
+    if (currentMode === 'dark') {
+      html.classList.add('dark');
+      icon.textContent = 'dark_mode';
+    } else {
+      html.classList.remove('dark');
+      icon.textContent = 'light_mode';
+    }
+
+    // Toggle on click
+    toggle.addEventListener('click', () => {
+      if (html.classList.contains('dark')) {
+        html.classList.remove('dark');
+        localStorage.setItem('darkMode', 'light');
+        icon.textContent = 'light_mode';
+      } else {
+        html.classList.add('dark');
+        localStorage.setItem('darkMode', 'dark');
+        icon.textContent = 'dark_mode';
+      }
+    });
+  })();
+</script>

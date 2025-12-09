@@ -1,0 +1,67 @@
+/* Navigation Components */
+
+.bottom-nav {
+  @apply fixed bottom-0 left-0 right-0 bg-card-light dark:bg-card-dark border-t border-border-light dark:border-border-dark z-50;
+}
+
+.bottom-nav-container {
+  @apply flex justify-around items-center h-20;
+}
+
+.bottom-nav-link {
+  @apply flex flex-col items-center justify-center flex-1 h-full text-text-secondary-light dark:text-text-secondary-dark;
+}
+
+.bottom-nav-link.active {
+  @apply text-primary;
+}
+
+.bottom-nav-icon {
+  @apply text-xl mb-1;
+}
+
+.bottom-nav-label {
+  @apply text-xs font-medium;
+}
+
+/* Page Header */
+.page-header {
+  @apply sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm;
+}
+
+.page-header-container {
+  @apply flex items-center p-4;
+}
+
+.page-header-button {
+  @apply flex items-center justify-center rounded-full h-10 w-10 text-text-primary-light dark:text-text-primary-dark;
+}
+
+.page-title {
+  @apply text-lg font-bold text-text-primary-light dark:text-text-primary-dark flex-1 text-center;
+}
+
+/* Tab Navigation */
+.tab-nav {
+  @apply sticky top-[64px] z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm;
+}
+
+.tab-nav-container {
+  @apply border-b border-border-light dark:border-border-dark px-4;
+}
+
+.tab-nav-items {
+  @apply flex justify-between;
+}
+
+.tab-nav-item {
+  @apply flex flex-col items-center justify-center border-b-[3px] border-b-transparent text-text-secondary-light dark:text-text-secondary-dark pb-[13px] pt-4 flex-1;
+}
+
+.tab-nav-item.active {
+  @apply border-primary text-primary;
+}
+
+.tab-nav-label {
+  @apply text-sm font-bold leading-normal tracking-[0.015em];
+}

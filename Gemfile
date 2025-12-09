@@ -31,6 +31,7 @@ gem "jbuilder"
 gem 'net-http'
 gem "sass-embedded"
 gem 'dartsass-rails'
+gem "tailwindcss-rails"
 
 
 # Use Redis adapter to run Action Cable in production

@@ -7,10 +7,13 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
-    <%= javascript_importmap_tags %>
+    <!-- Force dark mode -->
+    <script>
+      document.documentElement.classList.add('dark');
+    </script>
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,40 +25,6 @@
 
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-
-    <script>
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            colors: {
-              "primary": "#BF0A30",
-              "secondary": "#0A3161",
-              "background-light": "#f0f2f5",
-              "background-dark": "#0A101C",
-              "card-light": "#ffffff",
-              "card-dark": "#161D2B",
-              "text-primary-light": "#0A101C",
-              "text-primary-dark": "#ffffff",
-              "text-secondary-light": "#6b7280",
-              "text-secondary-dark": "#9da6b9",
-              "border-light": "#e5e7eb",
-              "border-dark": "#3b4354",
-              "accent-live": "#22c55e"
-            },
-            fontFamily: {
-              "display": ["Plus Jakarta Sans", "sans-serif"]
-            },
-            borderRadius: {
-              "DEFAULT": "1rem",
-              "lg": "2rem",
-              "xl": "3rem",
-              "full": "9999px"
-            },
-          },
-        },
-      }
-    </script>
 
     <style>
       .material-symbols-outlined {

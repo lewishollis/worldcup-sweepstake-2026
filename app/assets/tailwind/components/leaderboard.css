@@ -1,0 +1,91 @@
+/* Leaderboard Components */
+
+.leaderboard-entry {
+  @apply bg-card-light dark:bg-card-dark p-3 rounded-2xl flex items-center border border-border-light dark:border-border-dark;
+}
+
+.leaderboard-rank {
+  @apply w-10 flex-shrink-0 flex items-center justify-center;
+}
+
+.leaderboard-rank-number {
+  @apply text-lg font-bold text-text-secondary-light dark:text-text-secondary-dark;
+}
+
+.leaderboard-avatar {
+  @apply w-12 h-12 rounded-full mx-3 object-cover;
+}
+
+.leaderboard-avatar-placeholder {
+  @apply w-12 h-12 rounded-full mx-3 bg-secondary/20 flex items-center justify-center;
+}
+
+.leaderboard-avatar-initial {
+  @apply text-lg font-bold text-secondary;
+}
+
+.leaderboard-info {
+  @apply flex-grow;
+}
+
+.leaderboard-name {
+  @apply font-semibold text-text-primary-light dark:text-text-primary-dark;
+}
+
+.leaderboard-points {
+  @apply text-sm text-text-secondary-light dark:text-text-secondary-dark;
+}
+
+.leaderboard-flags {
+  @apply flex gap-1 mt-1;
+}
+
+.leaderboard-flag {
+  @apply h-4 w-4 rounded-full object-cover;
+}
+
+/* Group Card Components */
+.group-card {
+  @apply bg-card-light dark:bg-card-dark rounded-2xl border border-border-light dark:border-border-dark overflow-hidden;
+}
+
+.group-header {
+  @apply bg-secondary/10 dark:bg-secondary/20 p-4;
+}
+
+.group-title {
+  @apply font-bold text-text-primary-light dark:text-text-primary-dark;
+}
+
+.group-subtitle {
+  @apply text-sm text-text-secondary-light dark:text-text-secondary-dark;
+}
+
+.group-points {
+  @apply text-2xl font-bold text-primary;
+}
+
+.group-multiplier {
+  @apply px-2 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold;
+}
+
+/* Insights Box */
+.insights-box {
+  @apply bg-card-light dark:bg-card-dark p-4 rounded-2xl mb-6 border border-border-light dark:border-border-dark;
+}
+
+.insights-header {
+  @apply flex items-center mb-2;
+}
+
+.insights-icon {
+  @apply text-lg text-text-secondary-light dark:text-text-secondary-dark mr-3;
+}
+
+.insights-title {
+  @apply font-bold text-text-primary-light dark:text-text-primary-dark;
+}
+
+.insights-text {
+  @apply text-sm text-text-secondary-light dark:text-text-secondary-dark leading-relaxed;
+}

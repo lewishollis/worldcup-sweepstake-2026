@@ -1,39 +1,42 @@
-<div class="relative min-h-screen flex flex-col p-6 pb-28">
-  <!-- Header -->
-  <header class="flex items-center justify-between mb-8">
-    <button class="text-2xl text-gray-400 hover:text-white">
-      <i class="fas fa-cog"></i>
-    </button>
-    <h1 class="text-lg font-semibold text-text-primary-light dark:text-text-primary-dark">Friends Leaderboard</h1>
-    <button class="text-xl text-gray-400 hover:text-white">
-      <i class="fas fa-share-alt"></i>
-    </button>
-  </header>
+<div class="relative min-h-screen flex flex-col">
+  <!-- Desktop Wrapper -->
+  <div class="max-w-7xl mx-auto w-full px-4 md:px-6 lg:px-8">
+    <div class="p-6 pb-28 md:pt-8 md:pb-8">
+      <!-- Header -->
+      <header class="flex items-center justify-between mb-8">
+        <button class="text-2xl text-gray-400 hover:text-white md:hidden">
+          <i class="fas fa-cog"></i>
+        </button>
+        <h1 class="text-lg font-semibold text-text-primary-light dark:text-text-primary-dark">Friends Leaderboard</h1>
+        <button class="text-xl text-gray-400 hover:text-white">
+          <i class="fas fa-share-alt"></i>
+        </button>
+      </header>
 
-  <main class="flex-grow">
-    <!-- Page Title -->
-    <section class="mb-6">
-      <h2 class="text-4xl font-bold text-text-primary-light dark:text-text-primary-dark">World Cup Sweepstake</h2>
-    </section>
+      <main class="flex-grow">
+        <!-- Page Title -->
+        <section class="mb-6">
+          <h2 class="text-4xl md:text-5xl lg:text-6xl font-bold text-text-primary-light dark:text-text-primary-dark">World Cup Sweepstake</h2>
+        </section>
 
-    <!-- Ben Motson Insights -->
-    <section class="insights-box">
-      <div class="insights-header">
-        <i class="fas fa-microphone insights-icon"></i>
-        <h3 class="insights-title">Ben Motson's Analysis</h3>
-      </div>
-      <p class="insights-text">
-        The competition is heating up! <%= @leaderboard.first&.friend&.name || "The leader" %> is in first place with <%= @leaderboard.first&.total_points&.to_i || 0 %> points.
-      </p>
-    </section>
+        <!-- Ben Motson Insights -->
+        <section class="insights-box md:max-w-2xl">
+          <div class="insights-header">
+            <i class="fas fa-microphone insights-icon"></i>
+            <h3 class="insights-title">Ben Motson's Analysis</h3>
+          </div>
+          <p class="insights-text">
+            <%= @ben_motson_insight %>
+          </p>
+        </section>
 
-    <!-- Leaderboard List -->
-    <section>
-      <div class="space-y-2">
-        <% @leaderboard.each_with_index do |group, index| %>
-          <% next unless group.friend %>
+        <!-- Leaderboard List -->
+        <section>
+          <div class="space-y-2">
+            <% @leaderboard.each_with_index do |group, index| %>
+              <% next unless group.friend %>
 
-          <article class="leaderboard-entry">
+              <article class="leaderboard-entry">
             <!-- Rank Icon/Number -->
             <div class="leaderboard-rank">
               <% if index == 0 %>
@@ -82,7 +85,9 @@
         <% end %>
       </div>
     </section>
-  </main>
+      </main>
+    </div>
+  </div>
 </div>
 
 <%= render 'layouts/bottom_nav' %>

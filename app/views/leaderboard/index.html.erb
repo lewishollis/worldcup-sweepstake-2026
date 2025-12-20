@@ -1,24 +1,21 @@
-<div class="relative min-h-screen flex flex-col p-6 pb-28">
-  <!-- Header -->
-  <header class="flex items-center justify-between mb-8">
-    <button class="text-2xl text-gray-400 hover:text-white">
-      <i class="fas fa-cog"></i>
-    </button>
-    <h1 class="text-lg font-semibold text-text-primary-light dark:text-text-primary-dark">Groups</h1>
-    <button class="text-xl text-gray-400 hover:text-white">
-      <i class="fas fa-filter"></i>
-    </button>
-  </header>
+<div class="relative min-h-screen flex flex-col">
+  <!-- Desktop Wrapper -->
+  <div class="max-w-7xl mx-auto w-full px-4 md:px-6 lg:px-8">
+    <div class="p-6 pb-28 md:pt-8 md:pb-8">
+      <!-- Header -->
+      <header class="flex items-center justify-center mb-8">
+        <h1 class="text-lg font-semibold text-text-primary-light dark:text-text-primary-dark">Groups</h1>
+      </header>
 
-  <main class="flex-grow">
-    <!-- Page Title -->
-    <section class="mb-6">
-      <h2 class="text-4xl font-bold text-text-primary-light dark:text-text-primary-dark">Team Groups</h2>
-      <p class="text-sm text-text-secondary-light dark:text-text-secondary-dark mt-2">Manage your teams and track progress</p>
-    </section>
+      <main class="flex-grow">
+        <!-- Page Title -->
+        <section class="mb-6">
+          <h2 class="text-4xl md:text-5xl lg:text-6xl font-bold text-text-primary-light dark:text-text-primary-dark">Team Groups</h2>
+          <p class="text-sm md:text-base text-text-secondary-light dark:text-text-secondary-dark mt-2">Manage your teams and track progress</p>
+        </section>
 
-    <!-- Groups Grid -->
-    <section class="space-y-4">
+        <!-- Groups Grid -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
       <% @groups.each do |group| %>
         <article class="group-card">
           <!-- Group Header -->
@@ -73,16 +70,17 @@
                 </div>
 
                 <!-- Progressed Badge -->
-                <%= form_with url: update_team_progress_leaderboard_path(team), method: :patch, local: true, class: "flex items-center gap-2" do %>
+                <%= form_with url: update_team_progress_leaderboard_path(team), method: :patch, local: true, class: "flex items-center" do %>
                   <button type="submit" class="transition-all hover:scale-105">
                     <% if team.progressed? %>
-                      <span class="px-3 py-1 rounded-full bg-accent-live/20 text-accent-live text-xs font-semibold flex items-center gap-1.5 cursor-pointer hover:bg-accent-live/30">
-                        <i class="fas fa-trophy"></i>
-                        Advanced
+                      <span class="px-2 py-1 rounded-full bg-accent-live/20 text-accent-live text-xs font-semibold flex items-center gap-1 cursor-pointer hover:bg-accent-live/30">
+                        <i class="fas fa-check text-xs"></i>
+                        <span class="hidden sm:inline">Advanced</span>
                       </span>
                     <% else %>
-                      <span class="px-3 py-1 rounded-full bg-gray-500/20 text-gray-500 text-xs font-semibold cursor-pointer hover:bg-gray-500/30">
-                        Group Stage
+                      <span class="px-2 py-1 rounded-full bg-red-500/20 text-red-500 text-xs font-semibold cursor-pointer hover:bg-red-500/30 flex items-center gap-1">
+                        <i class="fas fa-times text-xs"></i>
+                        <span class="hidden sm:inline">Group</span>
                       </span>
                     <% end %>
                   </button>
@@ -105,10 +103,12 @@
               <% end %>
             <% end %>
           </div>
-        </article>
-      <% end %>
-    </section>
-  </main>
+          </article>
+        <% end %>
+        </section>
+      </main>
+    </div>
+  </div>
 </div>
 
 <%= render 'layouts/bottom_nav' %>

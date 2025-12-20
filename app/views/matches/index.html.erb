@@ -1,60 +1,57 @@
-<header class="page-header">
-  <div class="page-header-container">
-    <div class="flex w-12 shrink-0 items-center justify-start">
-      <%= link_to leaderboard_path(:show), class: "page-header-button" do %>
-        <span class="material-symbols-outlined text-2xl">trophy</span>
+<div class="max-w-7xl mx-auto w-full">
+  <header class="page-header">
+    <div class="page-header-container">
+      <div class="flex w-12 shrink-0 items-center justify-start md:hidden">
+        <%= link_to leaderboard_path(:show), class: "page-header-button" do %>
+          <span class="material-symbols-outlined text-2xl">trophy</span>
+        <% end %>
+      </div>
+      <h1 class="page-title md:text-3xl lg:text-4xl">World Cup Matches</h1>
+      <div class="flex w-12 items-center justify-end">
+        <button onclick="location.reload()" class="page-header-button">
+          <span class="material-symbols-outlined text-2xl">refresh</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="tab-nav">
+    <div class="tab-nav-container">
+      <%= form_with url: matches_path, method: :get, local: true, id: 'filter-form' do %>
+        <%= hidden_field_tag 'filter[PostEvent]', @filter_params['PostEvent'] || '0', id: 'filter_PostEvent' %>
+        <%= hidden_field_tag 'filter[MidEvent]', @filter_params['MidEvent'] || '0', id: 'filter_MidEvent' %>
+        <%= hidden_field_tag 'filter[PreEvent]', @filter_params['PreEvent'] || '0', id: 'filter_PreEvent' %>
+
+        <div class="tab-nav-items md:justify-center md:gap-8">
+          <a href="javascript:void(0)" onclick="applyFilter('MidEvent')" class="tab-nav-item <%= @filter_params['MidEvent'] == '1' ? 'active' : '' %>">
+            <p class="tab-nav-label md:text-base">Live</p>
+          </a>
+          <a href="javascript:void(0)" onclick="applyFilter('PreEvent')" class="tab-nav-item <%= @filter_params['PreEvent'] == '1' ? 'active' : '' %>">
+            <p class="tab-nav-label md:text-base">Upcoming</p>
+          </a>
+          <a href="javascript:void(0)" onclick="applyFilter('PostEvent')" class="tab-nav-item <%= @filter_params['PostEvent'] == '1' ? 'active' : '' %>">
+            <p class="tab-nav-label md:text-base">Finished</p>
+          </a>
+        </div>
       <% end %>
     </div>
-    <h1 class="page-title">World Cup Matches</h1>
-    <div class="flex w-12 items-center justify-end">
-      <button onclick="location.reload()" class="page-header-button">
-        <span class="material-symbols-outlined text-2xl">refresh</span>
-      </button>
-    </div>
-  </div>
-</header>
+  </nav>
 
-<nav class="tab-nav">
-  <div class="tab-nav-container">
-    <%= form_with url: matches_path, method: :get, local: true, id: 'filter-form' do %>
-      <%= hidden_field_tag 'filter[PostEvent]', @filter_params['PostEvent'] || '0', id: 'filter_PostEvent' %>
-      <%= hidden_field_tag 'filter[MidEvent]', @filter_params['MidEvent'] || '0', id: 'filter_MidEvent' %>
-      <%= hidden_field_tag 'filter[PreEvent]', @filter_params['PreEvent'] || '0', id: 'filter_PreEvent' %>
-
-      <div class="tab-nav-items">
-        <a href="javascript:void(0)" onclick="applyFilter('MidEvent')" class="tab-nav-item <%= @filter_params['MidEvent'] == '1' ? 'active' : '' %>">
-          <p class="tab-nav-label">Live</p>
-        </a>
-        <a href="javascript:void(0)" onclick="applyFilter('PreEvent')" class="tab-nav-item <%= @filter_params['PreEvent'] == '1' ? 'active' : '' %>">
-          <p class="tab-nav-label">Upcoming</p>
-        </a>
-        <a href="javascript:void(0)" onclick="applyFilter('PostEvent')" class="tab-nav-item <%= @filter_params['PostEvent'] == '1' ? 'active' : '' %>">
-          <p class="tab-nav-label">Finished</p>
-        </a>
+  <main class="flex-1 px-4 md:px-6 lg:px-8 pb-24 md:pb-8">
+    <!-- Ben Motson Commentary -->
+    <% if @matches.present? && @ben_motson_commentary.present? %>
+      <div class="py-6">
+        <div class="commentary-box md:max-w-2xl">
+          <div class="commentary-header">
+            <i class="fas fa-microphone commentary-icon"></i>
+            <h3 class="commentary-title">Ben Motson's Commentary</h3>
+          </div>
+          <p class="commentary-text">
+            <%= @ben_motson_commentary %>
+          </p>
+        </div>
       </div>
     <% end %>
-  </div>
-</nav>
-
-<main class="flex-1 px-4 pb-24">
-  <!-- Ben Motson Commentary -->
-  <% if @matches.present? && (@filter_params['MidEvent'] == '1' || @filter_params['PostEvent'] == '1') %>
-    <div class="py-6">
-      <div class="commentary-box">
-        <div class="commentary-header">
-          <i class="fas fa-microphone commentary-icon"></i>
-          <h3 class="commentary-title">Ben Motson's Commentary</h3>
-        </div>
-        <p class="commentary-text">
-          <% if @filter_params['MidEvent'] == '1' %>
-            <%= @matches.count %> <%= 'match'.pluralize(@matches.count) %> currently in progress! The action is heating up across the tournament.
-          <% else %>
-            <%= @matches.count %> <%= 'match'.pluralize(@matches.count) %> completed. Check out the results below!
-          <% end %>
-        </p>
-      </div>
-    </div>
-  <% end %>
 
   <% if @error_message %>
     <div class="text-center py-16">
@@ -72,22 +69,22 @@
       <h3 class="text-lg font-bold text-text-primary-light dark:text-text-primary-dark">No Matches Found</h3>
       <p class="text-sm text-text-secondary-light dark:text-text-secondary-dark mt-1">Check back later or view other games.</p>
     </div>
-  <% else %>
-    <% # Group matches by date (most recent first) %>
-    <% matches_by_date = @matches.group_by { |m| m.start_time.to_date } %>
-    <% matches_by_date.sort.reverse.each do |date, matches| %>
-      <% matches = matches.sort_by(&:start_time).reverse %>
-      <% if date == Date.today %>
-        <h2 class="text-lg font-bold leading-tight tracking-[-0.015em] text-text-primary-light dark:text-text-primary-dark pb-2 pt-6">TODAY</h2>
-      <% elsif date == Date.tomorrow %>
-        <h2 class="text-lg font-bold leading-tight tracking-[-0.015em] text-text-primary-light dark:text-text-primary-dark pb-2 pt-6">TOMORROW, <%= date.strftime('%d %b').upcase %></h2>
-      <% else %>
-        <h2 class="text-lg font-bold leading-tight tracking-[-0.015em] text-text-primary-light dark:text-text-primary-dark pb-2 pt-6"><%= date.strftime('%A, %d %b').upcase %></h2>
-      <% end %>
+    <% else %>
+      <% # Group matches by date (most recent first) %>
+      <% matches_by_date = @matches.group_by { |m| m.start_time.to_date } %>
+      <% matches_by_date.sort.reverse.each do |date, matches| %>
+        <% matches = matches.sort_by(&:start_time).reverse %>
+        <% if date == Date.today %>
+          <h2 class="text-lg md:text-xl font-bold leading-tight tracking-[-0.015em] text-text-primary-light dark:text-text-primary-dark pb-2 pt-6">TODAY</h2>
+        <% elsif date == Date.tomorrow %>
+          <h2 class="text-lg md:text-xl font-bold leading-tight tracking-[-0.015em] text-text-primary-light dark:text-text-primary-dark pb-2 pt-6">TOMORROW, <%= date.strftime('%d %b').upcase %></h2>
+        <% else %>
+          <h2 class="text-lg md:text-xl font-bold leading-tight tracking-[-0.015em] text-text-primary-light dark:text-text-primary-dark pb-2 pt-6"><%= date.strftime('%A, %d %b').upcase %></h2>
+        <% end %>
 
-      <% matches.each do |match| %>
-        <div class="py-2">
-          <div class="match-card">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4">
+          <% matches.each do |match| %>
+            <div class="match-card">
             <div class="match-header">
               <span><%= match.stage %></span>
               <% if match.status == 'MidEvent' %>
@@ -145,17 +142,18 @@
               </div>
             </div>
 
-            <% if match.status == 'MidEvent' && match.accessible_event_summary.present? %>
-              <div class="match-summary">
-                <%= match.accessible_event_summary %>
-              </div>
-            <% end %>
-          </div>
+              <% if match.status == 'MidEvent' && match.accessible_event_summary.present? %>
+                <div class="match-summary">
+                  <%= match.accessible_event_summary %>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
         </div>
       <% end %>
     <% end %>
-  <% end %>
-</main>
+  </main>
+</div>
 
 <%= render 'layouts/bottom_nav' %>
 

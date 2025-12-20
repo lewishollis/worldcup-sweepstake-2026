@@ -5,6 +5,7 @@ class LeaderboardController < ApplicationController
 
   def show
     @leaderboard = Group.includes(:friend).sort_by { |group| -group.total_points }
+    @ben_motson_insight = BenMotsonService.new(:leaderboard).generate_insight
   end
 
 

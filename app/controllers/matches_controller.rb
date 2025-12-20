@@ -86,6 +86,15 @@ class MatchesController < ApplicationController
 
       @matches.sort_by! { |match| match.start_time } if @filter_params['PostEvent'] == '1'
       @matches.reverse! if @filter_params['PostEvent'] == '1'
+
+      # Generate AI insight for matches
+      if @matches.any? && @filter_params.present?
+        filter_type = @filter_params.find { |k, v| v == '1' }&.first
+        @ben_motson_commentary = BenMotsonService.new(:matches, {
+          matches: @matches,
+          filter_type: filter_type
+        }).generate_insight
+      end
     else
       @error_message = "Failed to fetch match data: #{response.code} - #{response.message}"
     end

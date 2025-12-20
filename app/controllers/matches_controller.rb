@@ -2,10 +2,11 @@ class MatchesController < ApplicationController
   def index
     @filter_params = filter_params
     today_date = Time.now.strftime("%Y-%m-%d")
-    url = URI("https://web-cdn.api.bbci.co.uk/wc-poll-data/container/sport-data-scores-fixtures?selectedEndDate=2024-07-30&selectedStartDate=2024-06-14&todayDate=#{today_date}&urn=urn%3Abbc%3Asportsdata%3Afootball%3Atournament%3Aeuropean-championship&useSdApi=false")
+    url = URI("https://www.bbc.co.uk/wc-data/container/sport-data-scores-fixtures?selectedEndDate=2022-12-31&selectedStartDate=2022-11-01&todayDate=#{today_date}&urn=urn%3Abbc%3Asportsdata%3Afootball%3Atournament%3Aworld-cup")
 
     http = Net::HTTP.new(url.host, url.port)
     http.use_ssl = true
+    http.verify_mode = OpenSSL::SSL::VERIFY_NONE # Disable SSL verification for development
 
     request = Net::HTTP::Get.new(url)
     request["accept"] = 'application/json'
@@ -106,6 +107,21 @@ class MatchesController < ApplicationController
 
     stage = match.stage
 
+    # Automatically mark teams as progressed and award 1 point if they're playing in knockout stages
+    knockout_stages = ['Last 16', 'Quarter-finals', 'Semi-finals', 'Final', '3rd Place Final']
+    if knockout_stages.include?(stage)
+      unless match.home_team.progressed?
+        match.home_team.update(progressed: true)
+        update_team_points(match.home_team, 1)
+        puts "#{match.home_team.name} marked as progressed and awarded 1 point for progression"
+      end
+      unless match.away_team.progressed?
+        match.away_team.update(progressed: true)
+        update_team_points(match.away_team, 1)
+        puts "#{match.away_team.name} marked as progressed and awarded 1 point for progression"
+      end
+    end
+
     case stage
     when 'Group Stage'
       match.home_points = 0
@@ -150,19 +166,6 @@ class MatchesController < ApplicationController
       match.away_points = 0
       match.result = 'TBC'
       puts "Unknown stage. No points awarded. Stage: #{stage}"
-    end
-
-    # Automatically mark teams as progressed if they're playing in knockout stages
-    knockout_stages = ['Last 16', 'Quarter-finals', 'Semi-finals', 'Final', '3rd Place Final']
-    if knockout_stages.include?(stage)
-      unless match.home_team.progressed?
-        match.home_team.update(progressed: true)
-        puts "#{match.home_team.name} marked as progressed (playing in #{stage})"
-      end
-      unless match.away_team.progressed?
-        match.away_team.update(progressed: true)
-        puts "#{match.away_team.name} marked as progressed (playing in #{stage})"
-      end
     end
 
     update_team_points(match.home_team, match.home_points)

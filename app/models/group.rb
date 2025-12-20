@@ -8,6 +8,6 @@ class Group < ApplicationRecord
   end
 
   def total_points
-    teams.sum { |team| team.points + (team.progressed? ? 1 : 0) } * multiplier
+    teams.sum { |team| team.points || 0 } * multiplier
   end
 end

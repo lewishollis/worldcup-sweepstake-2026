@@ -72,30 +72,33 @@
                   </div>
                 </div>
 
-                <!-- Progressed Toggle -->
-                <div class="flex items-center gap-2">
-                  <%= form_with url: update_team_progress_leaderboard_path(team), method: :patch, local: true, class: "flex items-center" do %>
-                    <%= hidden_field_tag 'authenticity_token', form_authenticity_token %>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <%= check_box_tag :progressed, team.id, team.progressed?,
-                          class: "sr-only peer",
-                          onchange: 'this.form.submit();' %>
-                      <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                    </label>
-                  <% end %>
-                  <% if team.progressed? %>
-                    <i class="fas fa-check-circle text-accent-live"></i>
-                  <% end %>
-                </div>
+                <!-- Progressed Badge -->
+                <%= form_with url: update_team_progress_leaderboard_path(team), method: :patch, local: true, class: "flex items-center gap-2" do %>
+                  <button type="submit" class="transition-all hover:scale-105">
+                    <% if team.progressed? %>
+                      <span class="px-3 py-1 rounded-full bg-accent-live/20 text-accent-live text-xs font-semibold flex items-center gap-1.5 cursor-pointer hover:bg-accent-live/30">
+                        <i class="fas fa-trophy"></i>
+                        Advanced
+                      </span>
+                    <% else %>
+                      <span class="px-3 py-1 rounded-full bg-gray-500/20 text-gray-500 text-xs font-semibold cursor-pointer hover:bg-gray-500/30">
+                        Group Stage
+                      </span>
+                    <% end %>
+                  </button>
+                <% end %>
               </div>
 
               <!-- Match Results -->
               <% if team.matches.where(status: 'PostEvent').any? %>
                 <div class="ml-11 text-xs text-text-secondary-light dark:text-text-secondary-dark space-y-1">
-                  <% team.matches.where(status: 'PostEvent').limit(3).each do |match| %>
+                  <% team.matches.where(status: 'PostEvent').order(:start_time).each do |match| %>
                     <div class="flex items-center gap-2">
                       <i class="fas fa-circle text-[4px]"></i>
-                      <span>vs <%= match.home_team_id == team.id ? match.away_team.name : match.home_team.name %>: <%= match.result_for(team) %></span>
+                      <span class="<%= match.stage != 'Group Stage' ? 'font-semibold text-accent-live' : '' %>">
+                        <%= "[#{match.stage}]" unless match.stage == 'Group Stage' %>
+                        vs <%= match.home_team_id == team.id ? match.away_team.name : match.home_team.name %>: <%= match.result_for(team) %>
+                      </span>
                     </div>
                   <% end %>
                 </div>

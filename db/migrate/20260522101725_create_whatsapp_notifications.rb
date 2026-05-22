@@ -10,5 +10,6 @@ class CreateWhatsappNotifications < ActiveRecord::Migration[7.1]
 
     add_index :whatsapp_notifications, :dedupe_key, unique: true
     add_index :whatsapp_notifications, :match_id
+    add_foreign_key :whatsapp_notifications, :matches, column: :match_id
   end
 end

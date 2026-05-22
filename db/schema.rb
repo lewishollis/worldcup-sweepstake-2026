@@ -128,4 +128,5 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_22_101725) do
   add_foreign_key "matches", "teams", column: "away_team_id"
   add_foreign_key "matches", "teams", column: "home_team_id"
   add_foreign_key "teams", "friends", column: "friends_id"
+  add_foreign_key "whatsapp_notifications", "matches"
 end

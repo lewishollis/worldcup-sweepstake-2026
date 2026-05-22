@@ -20,7 +20,9 @@ Credentials stored as Rails environment variables (via credentials or `.env`):
 
 - `WHATSAPP_API_TOKEN` — Bearer token from Meta Business App
 - `WHATSAPP_PHONE_NUMBER_ID` — ID of the registered WhatsApp sender number
-- `WHATSAPP_GROUP_CHAT_ID` — WhatsApp group chat ID (retrieved after adding the bot number to the group)
+- `WHATSAPP_GROUP_ID` — Target chat ID (confirm exact API field name during Meta setup; retrieved after adding the bot number to the group)
+
+> **Note:** WhatsApp group messaging via the Cloud API may require specific account eligibility or approval. Verify group chat support is available on your Meta Business account before implementation.
 
 **Manual setup steps (outside the app):**
 1. Create a Meta Business App at developers.facebook.com
@@ -59,12 +61,13 @@ Two Rake tasks under the `whatsapp` namespace:
 **`whatsapp:morning_digest`**
 - Queries matches scheduled for today
 - Only sends if at least one match exists
+- Idempotent at the job level: checks for an existing `WhatsappNotification` with `dedupe_key = "morning_digest:#{Date.today}"` before sending — overlapping cron runs cannot produce a duplicate digest
 - Runs at 8:00am daily via cron
 
 **`whatsapp:check_results`**
 - Queries matches with `status = 'PostEvent'` that have no corresponding `WhatsappNotification` record
 - For each new result: sends `MatchResultMessage` then `LeaderboardSnapshotMessage`
-- Creates a `WhatsappNotification` record to prevent re-sending
+- Creates a `WhatsappNotification` record to prevent re-sending; idempotent at the job level via the `dedupe_key` unique index (see Notification Tracking)
 - Runs every 15 minutes via cron
 
 Scheduling managed by the `whenever` gem, which writes to crontab from `config/schedule.rb`.
@@ -78,10 +81,11 @@ Scheduling managed by the `whenever` gem, which writes to crontab from `config/s
 | `id` | integer | PK |
 | `match_id` | integer | FK to matches, nullable (nil for non-match messages) |
 | `notification_type` | string | e.g. `"match_result"`, `"morning_digest"` |
+| `dedupe_key` | string | Unique key per logical send event (e.g. `"match_result:42"`, `"morning_digest:2026-06-14"`) |
 | `sent_at` | datetime | When the message was sent |
 | `created_at` | datetime | |
 
-The `check_results` job uses this table to determine which results have already been notified. A unique index on `[match_id, notification_type]` prevents duplicate sends even if the job overlaps.
+A unique index on `dedupe_key` is the single source of truth for idempotency — both at the job level (checked before sending) and at the DB level (enforced on insert). Using `dedupe_key` rather than `[match_id, notification_type]` also supports future cases like multiple digests per day or retries with distinct keys.
 
 ## Data Flow
 
@@ -103,7 +107,7 @@ Cron at 8am daily
 
 - `WhatsappSender` logs errors and re-raises; Rake tasks rescue and log so a single failure doesn't break the cron run
 - Missing credentials: sender stubs to logger — framework is safe to deploy before Meta setup is complete
-- Duplicate sends: prevented by `whatsapp_notifications` unique index
+- Duplicate sends: prevented by `dedupe_key` unique index (enforced at DB level) and pre-flight check in each job (enforced at job level)
 
 ## Testing
 

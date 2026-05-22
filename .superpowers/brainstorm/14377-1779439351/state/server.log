@@ -1,0 +1,8 @@
+{"type":"server-started","port":65018,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:65018","screen_dir":"/Users/lewishollis/Documents/worldcup-sweepstake-2026/worldcup-sweepstake-2026/.superpowers/brainstorm/14377-1779439351/content","state_dir":"/Users/lewishollis/Documents/worldcup-sweepstake-2026/worldcup-sweepstake-2026/.superpowers/brainstorm/14377-1779439351/state"}
+{"type":"screen-added","file":"/Users/lewishollis/Documents/worldcup-sweepstake-2026/worldcup-sweepstake-2026/.superpowers/brainstorm/14377-1779439351/content/game-type.html"}
+{"source":"user-event","type":"click","text":"⚽ 🥅\n    \n    \n      Penalty Shootout\n      Click a zone to shoot, the keeper dives randomly. Best streak / most goals on the leaderboard. Quick, arcade-y, very shareable.","choice":"penalties","id":null,"timestamp":1779439399841}
+{"type":"screen-added","file":"/Users/lewishollis/Documents/worldcup-sweepstake-2026/worldcup-sweepstake-2026/.superpowers/brainstorm/14377-1779439351/content/waiting-1.html"}
+{"type":"screen-added","file":"/Users/lewishollis/Documents/worldcup-sweepstake-2026/worldcup-sweepstake-2026/.superpowers/brainstorm/14377-1779439351/content/game-ui.html"}
+{"type":"screen-added","file":"/Users/lewishollis/Documents/worldcup-sweepstake-2026/worldcup-sweepstake-2026/.superpowers/brainstorm/14377-1779439351/content/game-ui-v2.html"}
+{"type":"screen-added","file":"/Users/lewishollis/Documents/worldcup-sweepstake-2026/worldcup-sweepstake-2026/.superpowers/brainstorm/14377-1779439351/content/waiting-2.html"}
+{"type":"server-stopped","reason":"idle timeout"}

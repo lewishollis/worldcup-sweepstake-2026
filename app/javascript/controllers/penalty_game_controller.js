@@ -1,8 +1,10 @@
 // app/javascript/controllers/penalty_game_controller.js
 import { Controller } from "@hotwired/stimulus"
 
-const DIRECTION_SPEED = 1.2  // % per frame
-const POWER_SPEED     = 1.0
+const DIRECTION_SPEED     = 1.2  // % per frame
+const POWER_SPEED         = 1.0
+const DIRECTION_MISS_EDGE = 8    // 0–8% or 92–100% = too wide (miss)
+const POWER_MISS_EDGE     = 92   // 92–100% = over the bar (miss)
 
 const BLUFF_RATES = [
   { upTo: 5,        rate: 0.00 },
@@ -28,6 +30,14 @@ function powerLevel(pct) {
   return "high"
 }
 
+function isMissDirection(pct) {
+  return pct < DIRECTION_MISS_EDGE || pct > (100 - DIRECTION_MISS_EDGE)
+}
+
+function isMissPower(pct) {
+  return pct > POWER_MISS_EDGE
+}
+
 function timeAgo(isoString) {
   if (!isoString) return ""
   const diff = Math.floor((Date.now() - new Date(isoString)) / 1000)
@@ -49,10 +59,10 @@ export default class extends Controller {
     "setupSection", "playSection",
     "friendGrid", "startBtn",
     "playingAsLabel", "streakLabel", "pbLabel",
-    "goalPost", "cursor", "keeper", "resultOverlay", "resultText",
+    "goalPost", "cursor", "ballMark", "keeper", "resultOverlay", "resultText",
     "directionWrapper", "directionFill", "directionCursor",
     "powerWrapper", "powerFill", "powerCursor",
-    "hintText", "leaderboard", "emptyLeaderboard"
+    "hintText", "ballBtn", "playAgainBtn", "leaderboard", "emptyLeaderboard"
   ]
 
   static values = {
@@ -108,6 +118,7 @@ export default class extends Controller {
     this.streak = 0
     this._updateStreakLabel()
     this.resultOverlayTarget.classList.remove("hidden")
+    this.playAgainBtnTarget.classList.remove("hidden")
     const text     = this.resultTextTarget
     text.textContent = "TIMED OUT ⌛"
     text.className   = "game-result-text saved"
@@ -197,7 +208,8 @@ export default class extends Controller {
     this.directionWrapperTarget.classList.remove("hidden")
     this.powerWrapperTarget.classList.add("hidden")
     this.resultOverlayTarget.classList.add("hidden")
-    this.hintTextTarget.textContent = "Tap the direction bar to aim"
+    this.ballMarkTarget.classList.add("hidden")
+    this.hintTextTarget.textContent = "Tap the ball to aim"
     this.keeperTarget.className = "game-keeper"
     this._startTapTimeout()
     this._sweepDirection()
@@ -220,12 +232,21 @@ export default class extends Controller {
     this.cursorTarget.style.left          = `${goalPct}%`
   }
 
+  tapBall() {
+    if (!this.dirLocked) {
+      this.lockDirection()
+    } else {
+      this.lockPower()
+    }
+  }
+
   lockDirection() {
     if (this.dirLocked) return
     this._clearTapTimeout()
     cancelAnimationFrame(this.raf)
-    this.dirLocked     = true
-    this.directionZone = zone(this.dirPct)
+    this.dirLocked      = true
+    this.directionZone  = zone(this.dirPct)
+    this.directionMiss  = isMissDirection(this.dirPct)
     this._showKeeperTelegraph()
   }
 
@@ -234,19 +255,16 @@ export default class extends Controller {
     const bluff = Math.random() < rate
     const zones = ["left", "center", "right"]
 
-    if (bluff) {
-      const others        = zones.filter(z => z !== this.directionZone)
-      this.actualDiveZone = others[Math.floor(Math.random() * others.length)]
-    } else {
-      this.actualDiveZone = this.directionZone
-    }
+    // Keeper independently picks a zone to dive (1/3 chance each direction)
+    this.actualDiveZone = zones[Math.floor(Math.random() * zones.length)]
 
-    // Telegraph shows actual dive when honest; shows a random wrong zone when bluffing
     if (bluff) {
-      const wrongZones        = zones.filter(z => z !== this.actualDiveZone)
-      this.telegraphedZone    = wrongZones[Math.floor(Math.random() * wrongZones.length)]
+      // Show a false telegraph — any zone other than where they'll actually dive
+      const wrongZones     = zones.filter(z => z !== this.actualDiveZone)
+      this.telegraphedZone = wrongZones[Math.floor(Math.random() * wrongZones.length)]
     } else {
-      this.telegraphedZone    = this.actualDiveZone
+      // Honest — telegraph matches actual dive
+      this.telegraphedZone = this.actualDiveZone
     }
 
     this.keeperTarget.className = `game-keeper lean-${this.telegraphedZone}`
@@ -259,7 +277,7 @@ export default class extends Controller {
     this.pwrPct = 0
     this.pwrDir = 1
     this.powerWrapperTarget.classList.remove("hidden")
-    this.hintTextTarget.textContent = "Tap the power bar to shoot!"
+    this.hintTextTarget.textContent = "Tap the ball to shoot!"
     this._startTapTimeout()
     this._sweepPower()
   }
@@ -277,48 +295,85 @@ export default class extends Controller {
     this._clearTapTimeout()
     cancelAnimationFrame(this.raf)
     const powerZone = powerLevel(this.pwrPct)
-    this._resolveShot(powerZone)
+    const powerMiss = isMissPower(this.pwrPct)
+    this._resolveShot(powerZone, powerMiss)
   }
 
   // ── Shot resolution ─────────────────────────────────────
 
-  _resolveShot(powerZone) {
-    // Goal if: keeper dived the wrong way, OR same direction but power too high to save
-    const sameZone = this.directionZone === this.actualDiveZone
-    const goal     = !sameZone || powerZone === "high"
+  _placeBallMark() {
+    const mark = this.ballMarkTarget
+
+    if (this.directionMiss) {
+      // Wide shot — outside the posts, scaled by power
+      const wideLeft = this.dirPct < DIRECTION_MISS_EDGE
+      const offset   = 5 + this.pwrPct * 0.25  // 5% (low power) → 30% (high power) outside post
+      const topPct   = Math.round(82 - this.pwrPct * 0.77)  // same height mapping as normal shots
+      mark.style.left = wideLeft ? `-${offset}%` : `${100 + offset}%`
+      mark.style.top  = `${topPct}%`
+      mark.classList.add("miss")
+    } else if (isMissPower(this.pwrPct)) {
+      // Over the bar — above the crossbar
+      mark.style.left = `${this.dirPct}%`
+      mark.style.top  = "-25%"
+      mark.classList.add("miss")
+    } else {
+      // Normal shot — inside goal
+      // y: map power 0–100 → top 82%–5% (low = near ground, high = near crossbar)
+      mark.style.left = `${this.dirPct}%`
+      mark.style.top  = `${Math.round(82 - this.pwrPct * 0.77)}%`
+      mark.classList.remove("miss")
+    }
+
+    mark.classList.remove("hidden")
+  }
+
+  _resolveShot(powerZone, powerMiss) {
+    const missed = this.directionMiss || powerMiss
 
     this.keeperTarget.className = `game-keeper dive-${this.actualDiveZone}`
     this.cursorTarget.classList.add("hidden")
+    this._placeBallMark()
 
-    setTimeout(() => this._showResult(goal), 300)
+    if (missed) {
+      setTimeout(() => this._showResult("missed"), 300)
+      return
+    }
+
+    // Goal if: keeper dived the wrong way, OR same direction but power too high to save
+    const sameZone = this.directionZone === this.actualDiveZone
+    const result   = (!sameZone || powerZone === "high") ? "goal" : "saved"
+    setTimeout(() => this._showResult(result), 300)
   }
 
-  _showResult(goal) {
+  _showResult(result) {
     this.resultOverlayTarget.classList.remove("hidden")
     const text = this.resultTextTarget
-    if (goal) {
+    if (result === "goal") {
       this.streak++
       text.textContent = "GOAL ⚽"
       text.className   = "game-result-text goal"
+      this.playAgainBtnTarget.classList.add("hidden")
       this._updateStreakLabel()
+      setTimeout(() => this._startDirectionBar(), 1200)
+      return
+    } else if (result === "missed") {
+      text.textContent = "MISSED ↗"
+      text.className   = "game-result-text missed"
+      this.playAgainBtnTarget.classList.remove("hidden")
+      this._saveScore()
     } else {
       text.textContent = "SAVED 🧤"
       text.className   = "game-result-text saved"
+      this.playAgainBtnTarget.classList.remove("hidden")
       this._saveScore()
     }
   }
 
   playAgain() {
-    const wasSaved = this.resultTextTarget.classList.contains("saved")
-    if (wasSaved) {
-      // Streak already saved — return to friend picker
-      this.playSectionTarget.classList.add("hidden")
-      this.setupSectionTarget.classList.remove("hidden")
-      this.streak = 0
-      this._updateStreakLabel()
-    } else {
-      this._startDirectionBar()
-    }
+    this.streak = 0
+    this._updateStreakLabel()
+    this._startDirectionBar()
   }
 
   // ── Score persistence ───────────────────────────────────

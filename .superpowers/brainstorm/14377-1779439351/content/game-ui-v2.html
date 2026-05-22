@@ -1,0 +1,46 @@
+<h2>Penalty Shootout — Game UI v2</h2>
+<p class="subtitle">Keeper upgraded</p>
+
+<div class="mockup">
+  <div class="mockup-header">⚽ Penalty Shootout — Playing as Lewis</div>
+  <div class="mockup-body" style="background:#111;padding:0;overflow:hidden;">
+
+    <!-- Goal graphic -->
+    <div style="background:linear-gradient(180deg,#1a472a 0%,#2d6a4f 60%,#3a7a5a 100%);padding:20px 20px 0;text-align:center;">
+      <div style="color:#fff;font-size:11px;letter-spacing:2px;margin-bottom:8px;opacity:0.7;">STREAK: 4 ⚡</div>
+      <!-- Goal posts -->
+      <div style="position:relative;display:inline-block;width:220px;height:120px;border:5px solid white;border-bottom:none;background:rgba(0,0,0,0.35);">
+        <!-- Net lines -->
+        <div style="position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(255,255,255,0.08) 0,rgba(255,255,255,0.08) 1px,transparent 1px,transparent 20px),repeating-linear-gradient(180deg,rgba(255,255,255,0.08) 0,rgba(255,255,255,0.08) 1px,transparent 1px,transparent 20px);"></div>
+        <!-- Keeper — big lad -->
+        <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);font-size:52px;line-height:1;filter:drop-shadow(0 0 8px rgba(255,255,255,0.3));">🧤</div>
+      </div>
+      <!-- Ball -->
+      <div style="font-size:32px;margin-top:10px;margin-bottom:4px;">⚽</div>
+    </div>
+
+    <!-- Controls -->
+    <div style="background:#1a1a2e;padding:16px;">
+      <div style="margin-bottom:12px;">
+        <div style="color:#aaa;font-size:10px;letter-spacing:1px;margin-bottom:4px;">DIRECTION ← →</div>
+        <div style="background:#333;border-radius:4px;height:14px;position:relative;overflow:hidden;">
+          <div style="position:absolute;left:0;top:0;bottom:0;width:35%;background:linear-gradient(90deg,#22c55e,#86efac);border-radius:4px;"></div>
+          <div style="position:absolute;left:35%;top:-2px;bottom:-2px;width:4px;background:#fff;border-radius:2px;box-shadow:0 0 6px #fff;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;color:#666;font-size:9px;margin-top:2px;"><span>LEFT</span><span>CENTER</span><span>RIGHT</span></div>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <div style="color:#aaa;font-size:10px;letter-spacing:1px;margin-bottom:4px;">POWER ↑</div>
+        <div style="background:#333;border-radius:4px;height:14px;position:relative;overflow:hidden;">
+          <div style="position:absolute;left:0;top:0;bottom:0;width:68%;background:linear-gradient(90deg,#f59e0b,#fbbf24);border-radius:4px;"></div>
+          <div style="position:absolute;left:68%;top:-2px;bottom:-2px;width:4px;background:#fff;border-radius:2px;box-shadow:0 0 6px #fff;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;color:#666;font-size:9px;margin-top:2px;"><span>LOW</span><span>MID</span><span>HIGH</span></div>
+      </div>
+
+      <button class="mock-button" style="width:100%;background:#22c55e;color:#000;font-weight:700;font-size:14px;border:none;padding:12px;border-radius:8px;">TAP TO SHOOT</button>
+      <p style="color:#555;font-size:10px;text-align:center;margin-top:8px;">First tap locks direction · Second tap locks power · Shoot!</p>
+    </div>
+  </div>
+</div>

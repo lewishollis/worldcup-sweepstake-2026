@@ -22,6 +22,12 @@ function zone(pct) {
   return "right"
 }
 
+function powerLevel(pct) {
+  if (pct < 33) return "low"
+  if (pct < 67) return "mid"
+  return "high"
+}
+
 function timeAgo(isoString) {
   if (!isoString) return ""
   const diff = Math.floor((Date.now() - new Date(isoString)) / 1000)
@@ -270,7 +276,7 @@ export default class extends Controller {
   lockPower() {
     this._clearTapTimeout()
     cancelAnimationFrame(this.raf)
-    const powerZone = zone(this.pwrPct)
+    const powerZone = powerLevel(this.pwrPct)
     this._resolveShot(powerZone)
   }
 

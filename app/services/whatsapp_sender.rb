@@ -1,3 +1,7 @@
+require "net/http"
+require "uri"
+require "json"
+
 class WhatsappSender
   GRAPH_URL = "https://graph.facebook.com/v19.0"
 

@@ -66,7 +66,7 @@
 
               <!-- Team Flags -->
               <div class="leaderboard-flags">
-                <% group.teams.limit(3).each do |team| %>
+                <% group.teams.first(3).each do |team| %>
                   <% if team.flag_url.present? %>
                     <%= image_tag team.flag_url, alt: team.name, class: "leaderboard-flag" %>
                   <% end %>

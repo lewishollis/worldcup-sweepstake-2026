@@ -1,4 +1,6 @@
 class LeaderboardController < ApplicationController
+  before_action :require_admin, only: [:update_team_progress]
+
   def index
     @groups = Group.includes(:teams, :friend).all.sort_by { |group| -group_total_points(group) }
   end
@@ -15,22 +17,23 @@ class LeaderboardController < ApplicationController
     was_progressed = team.progressed?
     new_progressed = !was_progressed
 
-    # Update progressed status
-    team.update(progressed: new_progressed)
-
-    # Award or remove the progression point
     if new_progressed && !was_progressed
-      # Team is now progressed, add 1 point
-      team.update(points: (team.points || 0) + 1)
+      team.update!(progressed: true, points: (team.points || 0) + 1)
     elsif !new_progressed && was_progressed
-      # Team is no longer progressed, remove 1 point
-      team.update(points: [(team.points || 0) - 1, 0].max)
+      team.update!(progressed: false, points: [(team.points || 0) - 1, 0].max)
     end
 
     redirect_to leaderboard_index_path
   end
 
   private
+
+  def require_admin
+    admin_password = ENV.fetch("ADMIN_PASSWORD", "onlymesucker!")
+    authenticate_or_request_with_http_basic("Admin") do |_username, password|
+      ActiveSupport::SecurityUtils.secure_compare(password, admin_password)
+    end
+  end
 
   def group_total_points(group)
     group.teams.sum(&:points).to_i

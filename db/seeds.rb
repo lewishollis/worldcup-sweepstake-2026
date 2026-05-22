@@ -1,76 +1,108 @@
 friend_data = [
   { name: "Lewis", profile_picture_url: ActionController::Base.helpers.asset_path('images-ben/Lewis.jpeg') },
-  { name: "Claire", profile_picture_url: ActionController::Base.helpers.asset_path('images-ben/Claire.jpeg') },
-  { name: "Craig", profile_picture_url: ActionController::Base.helpers.asset_path('images-ben/Craig.jpeg') },
-  { name: "Emma", profile_picture_url: ActionController::Base.helpers.asset_path('images-ben/Emma.jpeg') },
-  { name: "Sam", profile_picture_url: ActionController::Base.helpers.asset_path('images-ben/Sam.jpeg') },
-  { name: "Ella", profile_picture_url: ActionController::Base.helpers.asset_path('images-ben/Ella.jpeg') },
-  { name: "Richard", profile_picture_url: ActionController::Base.helpers.asset_path('images-ben/Richard.jpeg') },
-  { name: "Nhien", profile_picture_url: ActionController::Base.helpers.asset_path('images-ben/Nhien.jpeg') },
-  { name: "Matt", profile_picture_url: ActionController::Base.helpers.asset_path('images-ben/Matt.jpeg') },
   { name: "Ben", profile_picture_url: ActionController::Base.helpers.asset_path('images-ben/Ben.jpeg') },
-  { name: "Aimee", profile_picture_url: ActionController::Base.helpers.asset_path('images-ben/Aimee.jpeg') }
+  { name: "Aimee", profile_picture_url: ActionController::Base.helpers.asset_path('images-ben/Aimee.jpeg') },
+  { name: "Claire", profile_picture_url: ActionController::Base.helpers.asset_path('images-ben/Claire.jpeg') },
+  { name: "Ella", profile_picture_url: ActionController::Base.helpers.asset_path('images-ben/Ella.jpeg') },
+  { name: "Emma", profile_picture_url: ActionController::Base.helpers.asset_path('images-ben/Emma.jpeg') },
+  { name: "Jamie", profile_picture_url: "https://ui-avatars.com/api/?name=Jamie&size=150&background=random" },
+  { name: "Matt", profile_picture_url: ActionController::Base.helpers.asset_path('images-ben/Matt.jpeg') },
+  { name: "Richard", profile_picture_url: ActionController::Base.helpers.asset_path('images-ben/Richard.jpeg') },
+  { name: "Sam", profile_picture_url: ActionController::Base.helpers.asset_path('images-ben/Sam.jpeg') },
+  { name: "Bea", profile_picture_url: "https://ui-avatars.com/api/?name=Bea&size=150&background=random" },
+  { name: "Nhien", profile_picture_url: ActionController::Base.helpers.asset_path('images-ben/Nhien.jpeg') }
 ]
 
 friends = friend_data.map { |data| Friend.create!(data) }
 
 team_data = [
-  # 2022 World Cup Teams
-  { name: "Qatar", flag_url: "https://flagcdn.com/qa.svg" },
-  { name: "Ecuador", flag_url: "https://flagcdn.com/ec.svg" },
-  { name: "Senegal", flag_url: "https://flagcdn.com/sn.svg" },
-  { name: "Netherlands", flag_url: "https://flagcdn.com/nl.svg" },
-  { name: "England", flag_url: "https://flagcdn.com/gb-eng.svg" },
-  { name: "Iran", flag_url: "https://flagcdn.com/ir.svg" },
-  { name: "United States", flag_url: "https://flagcdn.com/us.svg" },
-  { name: "Wales", flag_url: "https://flagcdn.com/gb-wls.svg" },
-  { name: "Argentina", flag_url: "https://flagcdn.com/ar.svg" },
-  { name: "Saudi Arabia", flag_url: "https://flagcdn.com/sa.svg" },
+  # Group A
   { name: "Mexico", flag_url: "https://flagcdn.com/mx.svg" },
-  { name: "Poland", flag_url: "https://flagcdn.com/pl.svg" },
-  { name: "France", flag_url: "https://flagcdn.com/fr.svg" },
-  { name: "Australia", flag_url: "https://flagcdn.com/au.svg" },
-  { name: "Denmark", flag_url: "https://flagcdn.com/dk.svg" },
-  { name: "Tunisia", flag_url: "https://flagcdn.com/tn.svg" },
-  { name: "Spain", flag_url: "https://flagcdn.com/es.svg" },
-  { name: "Costa Rica", flag_url: "https://flagcdn.com/cr.svg" },
-  { name: "Germany", flag_url: "https://flagcdn.com/de.svg" },
-  { name: "Japan", flag_url: "https://flagcdn.com/jp.svg" },
-  { name: "Belgium", flag_url: "https://flagcdn.com/be.svg" },
+  { name: "South Africa", flag_url: "https://flagcdn.com/za.svg" },
+  { name: "South Korea", flag_url: "https://flagcdn.com/kr.svg" },
+  { name: "Czech Republic", flag_url: "https://flagcdn.com/cz.svg" },
+  # Group B
   { name: "Canada", flag_url: "https://flagcdn.com/ca.svg" },
-  { name: "Morocco", flag_url: "https://flagcdn.com/ma.svg" },
-  { name: "Croatia", flag_url: "https://flagcdn.com/hr.svg" },
-  { name: "Brazil", flag_url: "https://flagcdn.com/br.svg" },
-  { name: "Serbia", flag_url: "https://flagcdn.com/rs.svg" },
+  { name: "Bosnia-Herzegovina", flag_url: "https://flagcdn.com/ba.svg" },
+  { name: "Qatar", flag_url: "https://flagcdn.com/qa.svg" },
   { name: "Switzerland", flag_url: "https://flagcdn.com/ch.svg" },
-  { name: "Cameroon", flag_url: "https://flagcdn.com/cm.svg" },
-  { name: "Portugal", flag_url: "https://flagcdn.com/pt.svg" },
-  { name: "Ghana", flag_url: "https://flagcdn.com/gh.svg" },
+  # Group C
+  { name: "Brazil", flag_url: "https://flagcdn.com/br.svg" },
+  { name: "Morocco", flag_url: "https://flagcdn.com/ma.svg" },
+  { name: "Haiti", flag_url: "https://flagcdn.com/ht.svg" },
+  { name: "Scotland", flag_url: "https://flagcdn.com/gb-sct.svg" },
+  # Group D
+  { name: "United States", flag_url: "https://flagcdn.com/us.svg" },
+  { name: "Paraguay", flag_url: "https://flagcdn.com/py.svg" },
+  { name: "Australia", flag_url: "https://flagcdn.com/au.svg" },
+  { name: "Turkey", flag_url: "https://flagcdn.com/tr.svg" },
+  # Group E
+  { name: "Germany", flag_url: "https://flagcdn.com/de.svg" },
+  { name: "Curaçao", flag_url: "https://flagcdn.com/cw.svg" },
+  { name: "Ivory Coast", flag_url: "https://flagcdn.com/ci.svg" },
+  { name: "Ecuador", flag_url: "https://flagcdn.com/ec.svg" },
+  # Group F
+  { name: "Netherlands", flag_url: "https://flagcdn.com/nl.svg" },
+  { name: "Japan", flag_url: "https://flagcdn.com/jp.svg" },
+  { name: "Sweden", flag_url: "https://flagcdn.com/se.svg" },
+  { name: "Tunisia", flag_url: "https://flagcdn.com/tn.svg" },
+  # Group G
+  { name: "Belgium", flag_url: "https://flagcdn.com/be.svg" },
+  { name: "Egypt", flag_url: "https://flagcdn.com/eg.svg" },
+  { name: "Iran", flag_url: "https://flagcdn.com/ir.svg" },
+  { name: "New Zealand", flag_url: "https://flagcdn.com/nz.svg" },
+  # Group H
+  { name: "Spain", flag_url: "https://flagcdn.com/es.svg" },
+  { name: "Cape Verde", flag_url: "https://flagcdn.com/cv.svg" },
+  { name: "Saudi Arabia", flag_url: "https://flagcdn.com/sa.svg" },
   { name: "Uruguay", flag_url: "https://flagcdn.com/uy.svg" },
-  { name: "South Korea", flag_url: "https://flagcdn.com/kr.svg" }
+  # Group I
+  { name: "France", flag_url: "https://flagcdn.com/fr.svg" },
+  { name: "Senegal", flag_url: "https://flagcdn.com/sn.svg" },
+  { name: "Iraq", flag_url: "https://flagcdn.com/iq.svg" },
+  { name: "Norway", flag_url: "https://flagcdn.com/no.svg" },
+  # Group J
+  { name: "Argentina", flag_url: "https://flagcdn.com/ar.svg" },
+  { name: "Algeria", flag_url: "https://flagcdn.com/dz.svg" },
+  { name: "Austria", flag_url: "https://flagcdn.com/at.svg" },
+  { name: "Jordan", flag_url: "https://flagcdn.com/jo.svg" },
+  # Group K
+  { name: "Portugal", flag_url: "https://flagcdn.com/pt.svg" },
+  { name: "Congo DR", flag_url: "https://flagcdn.com/cd.svg" },
+  { name: "Colombia", flag_url: "https://flagcdn.com/co.svg" },
+  { name: "Uzbekistan", flag_url: "https://flagcdn.com/uz.svg" },
+  # Group L
+  { name: "England", flag_url: "https://flagcdn.com/gb-eng.svg" },
+  { name: "Croatia", flag_url: "https://flagcdn.com/hr.svg" },
+  { name: "Ghana", flag_url: "https://flagcdn.com/gh.svg" },
+  { name: "Panama", flag_url: "https://flagcdn.com/pa.svg" }
 ]
 
 teams = team_data.map { |data| Team.create!(data) }
 
-group_details = [
-  { name: "Group 1", friend: "Lewis", multiplier: 3, teams: ["Argentina", "Brazil", "France"] },
-  { name: "Group 2", friend: "Claire", multiplier: 3, teams: ["Qatar", "Saudi Arabia", "Tunisia"] },
-  { name: "Group 3", friend: "Craig", multiplier: 4, teams: ["England", "Portugal", "Spain"] },
-  { name: "Group 4", friend: "Emma", multiplier: 4, teams: ["Ecuador", "Senegal", "Cameroon"] },
-  { name: "Group 5", friend: "Sam", multiplier: 4, teams: ["Netherlands", "Croatia", "Morocco"] },
-  { name: "Group 6", friend: "Ella", multiplier: 4, teams: ["United States", "Wales", "Iran"] },
-  { name: "Group 7", friend: "Richard", multiplier: 5, teams: ["Germany", "Belgium", "Serbia"] },
-  { name: "Group 8", friend: "Nhien", multiplier: 5, teams: ["Poland", "Denmark", "Switzerland"] },
-  { name: "Group 9", friend: "Matt", multiplier: 5, teams: ["Mexico", "Costa Rica", "Canada"] },
-  { name: "Group 10", friend: "Ben", multiplier: 6, teams: ["Japan", "South Korea", "Australia"] },
-  { name: "Group 11", friend: "Aimee", multiplier: 6, teams: ["Uruguay", "Ghana"] },
-]
+# Group assignments are randomised — update after the actual draw
+groups_by_letter = {
+  "A" => ["Mexico", "South Africa", "South Korea", "Czech Republic"],
+  "B" => ["Canada", "Bosnia-Herzegovina", "Qatar", "Switzerland"],
+  "C" => ["Brazil", "Morocco", "Haiti", "Scotland"],
+  "D" => ["United States", "Paraguay", "Australia", "Turkey"],
+  "E" => ["Germany", "Curaçao", "Ivory Coast", "Ecuador"],
+  "F" => ["Netherlands", "Japan", "Sweden", "Tunisia"],
+  "G" => ["Belgium", "Egypt", "Iran", "New Zealand"],
+  "H" => ["Spain", "Cape Verde", "Saudi Arabia", "Uruguay"],
+  "I" => ["France", "Senegal", "Iraq", "Norway"],
+  "J" => ["Argentina", "Algeria", "Austria", "Jordan"],
+  "K" => ["Portugal", "Congo DR", "Colombia", "Uzbekistan"],
+  "L" => ["England", "Croatia", "Ghana", "Panama"]
+}
 
-group_details.each do |details|
-  friend = friends.find { |f| f.name == details[:friend] }
-  group = Group.create!(name: details[:name], multiplier: details[:multiplier], friend: friend)
+shuffled_friends = friends.shuffle
 
-  details[:teams].each do |team_name|
+groups_by_letter.each_with_index do |(letter, team_names), index|
+  friend = shuffled_friends[index]
+  group = Group.create!(name: "Group #{letter}", multiplier: 3, friend: friend)
+
+  team_names.each do |team_name|
     team = teams.find { |t| t.name == team_name }
     group.teams << team if team
   end

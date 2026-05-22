@@ -2,11 +2,12 @@ class MatchesController < ApplicationController
   def index
     @filter_params = filter_params
     today_date = Time.now.strftime("%Y-%m-%d")
-    url = URI("https://www.bbc.co.uk/wc-data/container/sport-data-scores-fixtures?selectedEndDate=2022-12-31&selectedStartDate=2022-11-01&todayDate=#{today_date}&urn=urn%3Abbc%3Asportsdata%3Afootball%3Atournament%3Aworld-cup")
+    url = URI("https://web-cdn.api.bbci.co.uk/wc-poll-data/container/sport-data-scores-fixtures?selectedEndDate=2026-07-19&selectedStartDate=2026-06-01&todayDate=#{today_date}&urn=urn%3Abbc%3Asportsdata%3Afootball%3Atournament%3Aworld-cup")
 
     http = Net::HTTP.new(url.host, url.port)
     http.use_ssl = true
-    http.verify_mode = OpenSSL::SSL::VERIFY_NONE # Disable SSL verification for development
+    http.open_timeout = 10
+    http.read_timeout = 15
 
     request = Net::HTTP::Get.new(url)
     request["accept"] = 'application/json'
@@ -16,6 +17,11 @@ class MatchesController < ApplicationController
     if response.is_a?(Net::HTTPSuccess)
       data = JSON.parse(response.body)
       @matches = []
+
+      unless data['eventGroups'].is_a?(Array)
+        @error_message = "Unexpected response from match data source."
+        return
+      end
 
       data['eventGroups'].each do |event_group|
         event_group['secondaryGroups'].each do |secondary_group|
@@ -68,10 +74,20 @@ class MatchesController < ApplicationController
         end
       end
 
-      # Call assign_points only for matches that have changed
+      # Recalculate points only for matches that have changed.
+      # Reverse previously awarded match points before applying the new calculation
+      # to prevent points accumulating across page loads.
       @matches.each do |match|
         if match.persisted? && match.changed?
+          prev_home_pts = match.home_points.to_i
+          prev_away_pts = match.away_points.to_i
+
           assign_points(match)
+
+          # Subtract what was previously awarded so the net change is correct
+          update_team_points(match.home_team, -prev_home_pts) if prev_home_pts > 0
+          update_team_points(match.away_team, -prev_away_pts) if prev_away_pts > 0
+
           match.save!
         end
       end

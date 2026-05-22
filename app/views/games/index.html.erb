@@ -1,1 +1,101 @@
-<%# Penalty shootout game — view implemented in Task 4 %>
+<%# app/views/games/index.html.erb %>
+<div class="max-w-lg mx-auto w-full" data-controller="penalty-game"
+     data-penalty-game-friends-value="<%= @friends.to_json(only: [:id, :name, :profile_picture_url]) %>"
+     data-penalty-game-leaderboard-value="<%= @leaderboard.to_json %>">
+
+  <header class="page-header">
+    <div class="page-header-container">
+      <div class="flex w-12 shrink-0 items-center justify-start md:hidden"></div>
+      <h1 class="page-title">Penalty Shootout</h1>
+      <div class="w-12"></div>
+    </div>
+  </header>
+
+  <main class="flex-1 px-4 md:px-6 pb-24 md:pb-8 flex flex-col gap-4 pt-4">
+
+    <%# ── Setup: Friend Picker ─────────────────────────── %>
+    <div data-penalty-game-target="setupSection">
+      <p class="text-sm text-text-secondary-light dark:text-text-secondary-dark mb-3">Who's playing?</p>
+      <div class="game-friend-grid" data-penalty-game-target="friendGrid">
+        <%# Rendered by Stimulus from friends value %>
+      </div>
+      <button class="game-shoot-btn mt-4" disabled
+              data-penalty-game-target="startBtn"
+              data-action="click->penalty-game#startGame">
+        Play ⚽
+      </button>
+    </div>
+
+    <%# ── Playing Area ─────────────────────────────────── %>
+    <div data-penalty-game-target="playSection" class="hidden flex flex-col gap-3">
+
+      <%# Streak bar %>
+      <div class="game-streak-bar">
+        <span class="game-playing-as" data-penalty-game-target="playingAsLabel">Playing as —</span>
+        <span class="game-streak-counter" data-penalty-game-target="streakLabel">Streak: 0</span>
+        <span class="game-pb-label" data-penalty-game-target="pbLabel">PB: —</span>
+      </div>
+
+      <%# Goal graphic %>
+      <div class="game-goal-wrapper">
+        <div style="background:linear-gradient(180deg,#1a472a 0%,#2d6a4f 60%,#3a7a5a 100%); padding:16px 16px 0; text-align:center; border-radius:12px 12px 0 0;">
+          <div class="game-goal-post" data-penalty-game-target="goalPost">
+            <div class="game-cursor hidden" data-penalty-game-target="cursor"></div>
+            <div class="game-keeper" data-penalty-game-target="keeper">🧤</div>
+
+            <%# Result overlay — hidden until shot resolves %>
+            <div class="game-result-overlay hidden" data-penalty-game-target="resultOverlay">
+              <div class="game-result-text" data-penalty-game-target="resultText"></div>
+              <button class="game-play-again-btn" data-action="click->penalty-game#playAgain">Play Again</button>
+            </div>
+          </div>
+          <div class="game-ball">⚽</div>
+        </div>
+      </div>
+
+      <%# Controls %>
+      <div style="background:#1a1a2e; padding:16px; border-radius:0 0 12px 12px;">
+
+        <%# Direction bar %>
+        <div class="game-bar-wrapper" data-penalty-game-target="directionWrapper">
+          <div class="game-bar-label">DIRECTION ← →</div>
+          <div class="game-bar-track" data-action="click->penalty-game#lockDirection">
+            <div class="game-bar-fill direction" data-penalty-game-target="directionFill" style="width:0%"></div>
+            <div class="game-bar-cursor" data-penalty-game-target="directionCursor" style="left:0%"></div>
+          </div>
+          <div class="game-bar-zones"><span>LEFT</span><span>CENTER</span><span>RIGHT</span></div>
+        </div>
+
+        <%# Power bar — hidden until direction locked %>
+        <div class="game-bar-wrapper hidden" data-penalty-game-target="powerWrapper">
+          <div class="game-bar-label">POWER ↑</div>
+          <div class="game-bar-track" data-action="click->penalty-game#lockPower">
+            <div class="game-bar-fill power" data-penalty-game-target="powerFill" style="width:0%"></div>
+            <div class="game-bar-cursor" data-penalty-game-target="powerCursor" style="left:0%"></div>
+          </div>
+          <div class="game-bar-zones"><span>LOW</span><span>MID</span><span>HIGH</span></div>
+        </div>
+
+        <div class="game-hint" data-penalty-game-target="hintText">Tap the direction bar to aim</div>
+      </div>
+
+      <button class="text-xs text-text-secondary-light dark:text-text-secondary-dark underline text-center mt-1"
+              data-action="click->penalty-game#switchPlayer">Switch player</button>
+    </div>
+
+    <%# ── Leaderboard ──────────────────────────────────── %>
+    <div class="mt-2">
+      <h2 class="text-sm font-bold tracking-widest text-text-secondary-light dark:text-text-secondary-dark mb-2">BEST STREAKS</h2>
+      <div class="flex flex-col gap-2" data-penalty-game-target="leaderboard">
+        <%# Rendered by Stimulus from leaderboard value %>
+      </div>
+      <p class="text-center text-xs text-text-secondary-light dark:text-text-secondary-dark mt-3 hidden"
+         data-penalty-game-target="emptyLeaderboard">
+        No scores yet — be the first!
+      </p>
+    </div>
+
+  </main>
+</div>
+
+<%= render 'layouts/bottom_nav' %>

@@ -4,4 +4,5 @@ class Friend < ApplicationRecord
   has_many :teams, through: :friends_group
   has_one_attached :profile_picture
   has_many :friend_groups
+  has_many :game_scores, dependent: :destroy
 end

@@ -11,6 +11,11 @@ class GameScoreTest < ActiveSupport::TestCase
     assert score.valid?
   end
 
+  test "valid with streak of zero" do
+    score = GameScore.new(friend: @friend, streak: 0)
+    assert score.valid?
+  end
+
   test "invalid without friend" do
     score = GameScore.new(streak: 5)
     assert_not score.valid?

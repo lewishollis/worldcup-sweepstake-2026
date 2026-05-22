@@ -16,6 +16,11 @@
       <span class="bottom-nav-label">Groups</span>
     <% end %>
 
+    <%= link_to '/game', class: "bottom-nav-link #{request.path == '/game' ? 'active' : ''}" do %>
+      <i class="fas fa-futbol bottom-nav-icon"></i>
+      <span class="bottom-nav-label">Game</span>
+    <% end %>
+
     <button id="darkModeToggleMobile" class="bottom-nav-link">
       <span class="material-symbols-outlined bottom-nav-icon darkModeIcon">dark_mode</span>
       <span class="bottom-nav-label">Theme</span>
@@ -42,6 +47,11 @@
         <%= link_to leaderboard_index_path, class: "flex items-center gap-2 px-4 py-2 rounded-lg transition-colors #{current_page?(leaderboard_index_path) ? 'bg-primary text-white' : 'text-text-secondary-light dark:text-text-secondary-dark hover:bg-gray-100 dark:hover:bg-gray-800'}" do %>
           <i class="fas fa-users"></i>
           <span class="font-medium">Groups</span>
+        <% end %>
+
+        <%= link_to '/game', class: "flex items-center gap-2 px-4 py-2 rounded-lg transition-colors #{request.path == '/game' ? 'bg-primary text-white' : 'text-text-secondary-light dark:text-text-secondary-dark hover:bg-gray-100 dark:hover:bg-gray-800'}" do %>
+          <i class="fas fa-futbol"></i>
+          <span class="font-medium">Game</span>
         <% end %>
       </div>
 

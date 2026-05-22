@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_05_22_081710) do
+ActiveRecord::Schema[7.1].define(version: 2026_05_22_090513) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -38,6 +38,14 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_22_081710) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["friend_id"], name: "index_friends_groups_on_friend_id"
+  end
+
+  create_table "game_scores", force: :cascade do |t|
+    t.bigint "friend_id", null: false
+    t.integer "streak", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["friend_id"], name: "index_game_scores_on_friend_id"
   end
 
   create_table "groups", force: :cascade do |t|
@@ -103,6 +111,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_22_081710) do
   add_foreign_key "friend_group_teams", "teams"
   add_foreign_key "friends", "groups"
   add_foreign_key "friends_groups", "friends"
+  add_foreign_key "game_scores", "friends"
   add_foreign_key "groups", "friends"
   add_foreign_key "matches", "teams"
   add_foreign_key "matches", "teams", column: "away_team_id"

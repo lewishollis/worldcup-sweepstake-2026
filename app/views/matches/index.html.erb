@@ -95,7 +95,10 @@
               <% elsif match.status == 'PostEvent' %>
                 <span class="font-bold text-text-primary-light dark:text-text-primary-dark">FT</span>
               <% else %>
-                <span class="font-bold text-text-primary-light dark:text-text-primary-dark"><%= match.start_time.strftime('%H:%M') %></span>
+                <div class="flex flex-col items-end">
+                  <span class="font-bold text-text-primary-light dark:text-text-primary-dark"><%= match.start_time.strftime('%H:%M') %></span>
+                  <span class="text-[10px] text-text-secondary-light dark:text-text-secondary-dark">BST</span>
+                </div>
               <% end %>
             </div>
 
@@ -109,7 +112,7 @@
                     <span class="match-team-avatar-initial"><%= match.home_team.name[0] %></span>
                   </div>
                 <% end %>
-                <div class="flex flex-col">
+                <div class="flex flex-col min-w-0">
                   <span class="match-team-name"><%= match.home_team.name %></span>
                   <% if match.home_friend_name != 'No owner' %>
                     <span class="match-team-owner"><%= match.home_friend_name %></span>
@@ -126,7 +129,7 @@
 
               <!-- Away Team -->
               <div class="match-team justify-end">
-                <div class="flex flex-col items-end">
+                <div class="flex flex-col items-end min-w-0">
                   <span class="match-team-name text-right"><%= match.away_team.name %></span>
                   <% if match.away_friend_name != 'No owner' %>
                     <span class="match-team-owner"><%= match.away_friend_name %></span>

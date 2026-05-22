@@ -1,0 +1,96 @@
+<div class="relative min-h-screen flex flex-col">
+  <div class="max-w-7xl mx-auto w-full px-4 md:px-6 lg:px-8">
+    <div class="p-6 pb-28 md:pt-8 md:pb-8">
+
+      <!-- Header -->
+      <header class="flex items-center justify-between mb-8">
+        <%= link_to leaderboard_path(:show), class: "text-text-secondary-light dark:text-text-secondary-dark hover:text-text-primary-light dark:hover:text-text-primary-dark" do %>
+          <i class="fas fa-arrow-left text-xl"></i>
+        <% end %>
+        <h1 class="text-lg font-semibold text-text-primary-light dark:text-text-primary-dark">Group Detail</h1>
+        <div class="w-6"></div>
+      </header>
+
+      <main>
+        <!-- Friend Profile -->
+        <section class="flex items-center gap-4 mb-8">
+          <% if @group.friend&.profile_picture_url.present? %>
+            <%= image_tag @group.friend.profile_picture_url, alt: @group.friend.name, class: "w-20 h-20 rounded-full object-cover" %>
+          <% else %>
+            <div class="w-20 h-20 rounded-full bg-secondary/30 flex items-center justify-center">
+              <i class="fas fa-user text-3xl text-secondary"></i>
+            </div>
+          <% end %>
+          <div>
+            <h2 class="text-3xl font-bold text-text-primary-light dark:text-text-primary-dark"><%= @group.friend&.name || "No Friend Assigned" %></h2>
+            <p class="text-text-secondary-light dark:text-text-secondary-dark"><%= @group.name %></p>
+            <div class="flex items-center gap-3 mt-1">
+              <span class="text-2xl font-bold text-primary"><%= @group.total_points.to_i %> pts</span>
+              <span class="group-multiplier">×<%= @group.multiplier.to_i %> multiplier</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Teams -->
+        <section>
+          <h3 class="text-lg font-semibold text-text-primary-light dark:text-text-primary-dark mb-3">Teams</h3>
+          <div class="space-y-4">
+            <% @group.teams.each do |team| %>
+              <%= link_to team_leaderboard_index_path(team_id: team.id), class: "block no-underline" do %>
+              <div class="bg-card-light dark:bg-card-dark rounded-2xl border border-border-light dark:border-border-dark overflow-hidden">
+                <!-- Team Header -->
+                <div class="flex items-center gap-3 p-4">
+                  <% if team.flag_url.present? %>
+                    <%= image_tag team.flag_url, alt: team.name, class: "h-10 w-10 rounded-full object-cover" %>
+                  <% else %>
+                    <div class="h-10 w-10 rounded-full bg-secondary/20 flex items-center justify-center">
+                      <span class="text-sm font-bold text-secondary"><%= team.name[0] %></span>
+                    </div>
+                  <% end %>
+                  <div class="flex-1">
+                    <p class="font-semibold text-text-primary-light dark:text-text-primary-dark"><%= team.name %></p>
+                    <p class="text-xs text-text-secondary-light dark:text-text-secondary-dark">
+                      <%= team.matches.where(status: 'PostEvent').count %> matches played
+                    </p>
+                  </div>
+                  <div class="text-right">
+                    <div class="text-xl font-bold text-text-primary-light dark:text-text-primary-dark"><%= team.points.to_i %></div>
+                    <div class="text-xs text-text-secondary-light dark:text-text-secondary-dark">pts</div>
+                  </div>
+                  <% if team.progressed? %>
+                    <span class="px-2 py-1 rounded-full bg-accent-live/20 text-accent-live text-xs font-semibold flex items-center gap-1">
+                      <i class="fas fa-check text-xs"></i>
+                      <span>Advanced</span>
+                    </span>
+                  <% end %>
+                  <i class="fas fa-chevron-right text-text-secondary-light dark:text-text-secondary-dark ml-2"></i>
+                </div>
+
+                <!-- Match Results -->
+                <% played = team.matches.where(status: 'PostEvent').order(:start_time) %>
+                <% if played.any? %>
+                  <div class="border-t border-border-light dark:border-border-dark px-4 py-3 space-y-2">
+                    <% played.each do |match| %>
+                      <div class="flex items-center gap-2 text-sm">
+                        <i class="fas fa-circle text-[4px] text-text-secondary-light dark:text-text-secondary-dark"></i>
+                        <% is_knockout = match.stage != 'Group Stage' %>
+                        <span class="<%= is_knockout ? 'font-semibold text-accent-live' : 'text-text-secondary-light dark:text-text-secondary-dark' %>">
+                          <%= "[#{match.stage}] " if is_knockout %>vs <%= match.home_team_id == team.id ? match.away_team.name : match.home_team.name %>:
+                          <span class="font-semibold text-text-primary-light dark:text-text-primary-dark"><%= match.result_for(team) %></span>
+                        </span>
+                      </div>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
+              <% end %>
+            <% end %>
+          </div>
+        </section>
+      </main>
+
+    </div>
+  </div>
+</div>
+
+<%= render 'layouts/bottom_nav' %>

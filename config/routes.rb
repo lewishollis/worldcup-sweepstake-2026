@@ -5,6 +5,7 @@ Rails.application.routes.draw do
   # Define routes for LeaderboardController
   resources :leaderboard, only: [:index, :show] do
     patch :update_team_progress, on: :member
+    get :team, on: :collection
   end
 
   # Set root route

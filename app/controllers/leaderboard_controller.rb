@@ -6,11 +6,21 @@ class LeaderboardController < ApplicationController
   end
 
   def show
-    @leaderboard = Group.includes(:friend).sort_by { |group| -group.total_points }
-    @ben_motson_insight = BenMotsonService.new(:leaderboard).generate_insight
+    if params[:id] =~ /\A\d+\z/
+      @group = Group.includes(:teams).find(params[:id])
+      render :group_detail
+    else
+      @leaderboard = Group.includes(:friend).sort_by { |group| -group.total_points }
+      @ben_motson_insight = BenMotsonService.new(:leaderboard).generate_insight
+    end
   end
 
 
+
+  def team
+    @team = Team.find(params[:team_id])
+    @matches = @team.matches.order(:start_time)
+  end
 
   def update_team_progress
     team = Team.find(params[:id])

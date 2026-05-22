@@ -8,6 +8,11 @@ Rails.application.routes.draw do
     get :team, on: :collection
   end
 
+  # Game routes
+  get  '/game',        to: 'games#index'
+  post '/game/scores', to: 'games#create'
+  get  '/game/scores', to: 'games#scores'
+
   # Set root route
   root 'matches#index'
 end

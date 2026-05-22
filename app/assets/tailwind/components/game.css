@@ -1,0 +1,198 @@
+/* ── Friend Picker ─────────────────────────────────── */
+.game-friend-grid {
+  @apply grid grid-cols-3 gap-3 sm:grid-cols-4;
+}
+
+.game-friend-btn {
+  @apply flex flex-col items-center gap-2 p-3 rounded-xl bg-card-light dark:bg-card-dark
+         border-2 border-transparent cursor-pointer transition-all;
+}
+
+.game-friend-btn:hover {
+  @apply border-primary/50;
+}
+
+.game-friend-btn.selected {
+  @apply border-primary bg-primary/10;
+}
+
+.game-friend-avatar {
+  @apply h-12 w-12 rounded-full object-cover;
+}
+
+.game-friend-avatar-placeholder {
+  @apply h-12 w-12 rounded-full bg-secondary/20 flex items-center justify-center
+         text-secondary font-bold text-lg;
+}
+
+.game-friend-name {
+  @apply text-xs font-semibold text-text-primary-light dark:text-text-primary-dark text-center;
+}
+
+/* ── Goal Graphic ──────────────────────────────────── */
+.game-goal-wrapper {
+  @apply flex flex-col items-center;
+}
+
+.game-goal-post {
+  @apply relative border-4 border-white mx-auto;
+  width: 240px;
+  height: 130px;
+  border-bottom: none;
+  background: rgba(0, 0, 0, 0.35);
+  background-image:
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.07) 0, rgba(255,255,255,0.07) 1px, transparent 1px, transparent 24px),
+    repeating-linear-gradient(180deg, rgba(255,255,255,0.07) 0, rgba(255,255,255,0.07) 1px, transparent 1px, transparent 24px);
+}
+
+.game-cursor {
+  @apply absolute pointer-events-none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(255, 255, 0, 0.85);
+  box-shadow: 0 0 8px 2px rgba(255, 255, 0, 0.5);
+  transform: translate(-50%, -50%);
+  top: 50%;
+}
+
+.game-keeper {
+  @apply absolute bottom-0 left-1/2 -translate-x-1/2 text-5xl leading-none select-none transition-all duration-300;
+}
+
+.game-keeper.lean-left  { transform: translateX(-70%) scaleX(-1); }
+.game-keeper.lean-right { transform: translateX(10%); }
+.game-keeper.dive-left  { transform: translateX(-90%) rotate(-30deg); }
+.game-keeper.dive-right { transform: translateX(30%) rotate(30deg); }
+
+.game-ball {
+  @apply text-4xl text-center mt-2 select-none;
+}
+
+/* ── Streak Counter ────────────────────────────────── */
+.game-streak-bar {
+  @apply flex items-center justify-between px-4 py-2 rounded-xl bg-card-light dark:bg-card-dark mb-3;
+}
+
+.game-streak-counter {
+  @apply text-base font-bold text-text-primary-light dark:text-text-primary-dark;
+}
+
+.game-pb-label {
+  @apply text-sm text-text-secondary-light dark:text-text-secondary-dark;
+}
+
+.game-playing-as {
+  @apply text-sm font-semibold text-primary;
+}
+
+/* ── Bars ──────────────────────────────────────────── */
+.game-bar-wrapper {
+  @apply mb-3;
+}
+
+.game-bar-label {
+  @apply text-xs tracking-widest text-text-secondary-light dark:text-text-secondary-dark mb-1;
+}
+
+.game-bar-track {
+  @apply relative h-4 rounded bg-gray-700 overflow-hidden cursor-pointer;
+}
+
+.game-bar-fill {
+  @apply absolute left-0 top-0 bottom-0 rounded;
+}
+
+.game-bar-fill.direction {
+  @apply bg-green-400;
+}
+
+.game-bar-fill.power {
+  @apply bg-amber-400;
+}
+
+.game-bar-cursor {
+  @apply absolute top-0 bottom-0 w-1 bg-white rounded;
+  box-shadow: 0 0 6px #fff;
+}
+
+.game-bar-zones {
+  @apply flex justify-between text-gray-500 mt-1;
+  font-size: 9px;
+}
+
+/* ── Shoot Button ──────────────────────────────────── */
+.game-shoot-btn {
+  @apply w-full py-3 rounded-xl font-bold text-sm tracking-wide transition-opacity;
+  background: #22c55e;
+  color: #000;
+  border: none;
+}
+
+.game-shoot-btn:disabled {
+  @apply opacity-40 cursor-not-allowed;
+}
+
+.game-hint {
+  @apply text-center text-xs text-text-secondary-light dark:text-text-secondary-dark mt-2;
+}
+
+/* ── Result Overlay ────────────────────────────────── */
+.game-result-overlay {
+  @apply absolute inset-0 flex flex-col items-center justify-center rounded-xl z-10;
+  background: rgba(0, 0, 0, 0.75);
+}
+
+.game-result-text {
+  @apply text-4xl font-black mb-4;
+}
+
+.game-result-text.goal  { color: #22c55e; }
+.game-result-text.saved { color: #ef4444; }
+
+.game-play-again-btn {
+  @apply px-6 py-2 rounded-lg font-bold text-sm bg-white text-black cursor-pointer border-none;
+}
+
+/* ── Leaderboard ───────────────────────────────────── */
+.game-leaderboard-row {
+  @apply flex items-center gap-3 px-3 py-2 rounded-xl bg-card-light dark:bg-card-dark;
+}
+
+.game-leaderboard-row.new-pb {
+  animation: pb-flash 1s ease-out;
+}
+
+@keyframes pb-flash {
+  0%   { background-color: rgba(34, 197, 94, 0.3); }
+  100% { background-color: transparent; }
+}
+
+.game-leaderboard-rank {
+  @apply w-5 font-bold text-sm text-text-secondary-light dark:text-text-secondary-dark;
+}
+
+.game-leaderboard-rank.gold   { color: gold; }
+.game-leaderboard-rank.silver { color: silver; }
+.game-leaderboard-rank.bronze { color: #cd7f32; }
+
+.game-leaderboard-avatar {
+  @apply h-8 w-8 rounded-full object-cover;
+}
+
+.game-leaderboard-avatar-placeholder {
+  @apply h-8 w-8 rounded-full bg-secondary/20 flex items-center justify-center
+         text-xs font-bold text-secondary;
+}
+
+.game-leaderboard-name {
+  @apply flex-1 font-semibold text-sm text-text-primary-light dark:text-text-primary-dark;
+}
+
+.game-leaderboard-streak {
+  @apply font-bold text-accent-live text-sm;
+}
+
+.game-leaderboard-time {
+  @apply text-xs text-text-secondary-light dark:text-text-secondary-dark;
+}

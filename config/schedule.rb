@@ -2,8 +2,6 @@
 # Apply with: bundle exec whenever --update-crontab
 # Remove with: bundle exec whenever --clear-crontab
 
-require_relative '../config/environment'
-
 set :output, Rails.root.join("log/cron.log")
 
 every :day, at: "8:00 am" do

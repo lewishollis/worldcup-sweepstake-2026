@@ -1,7 +1,7 @@
 namespace :whatsapp do
   desc "Send morning fixture digest if matches exist today and not already sent"
   task morning_digest: :environment do
-    dedupe_key = "morning_digest:#{Date.today}"
+    dedupe_key = "morning_digest:#{Time.current.to_date}"
 
     if WhatsappNotification.exists?(dedupe_key: dedupe_key)
       Rails.logger.info("[whatsapp:morning_digest] Already sent today, skipping")
@@ -27,16 +27,11 @@ namespace :whatsapp do
 
   desc "Send result and leaderboard notifications for any unnotified PostEvent matches"
   task check_results: :environment do
-    notified_ids = WhatsappNotification.where(notification_type: "match_result").pluck(:match_id).compact
-
     Match.where(status: "PostEvent")
-         .where.not(id: notified_ids)
          .includes(home_team: :groups, away_team: :groups)
          .each do |match|
       dedupe_key = "match_result:#{match.id}"
-      next if WhatsappNotification.exists?(dedupe_key: dedupe_key)
 
-      WhatsappSender.call(MatchResultMessage.call(match))
       WhatsappNotification.create!(
         notification_type: "match_result",
         match_id: match.id,
@@ -44,10 +39,14 @@ namespace :whatsapp do
         sent_at: Time.current
       )
 
+      WhatsappSender.call(MatchResultMessage.call(match))
+
       sleep 1
 
       WhatsappSender.call(LeaderboardSnapshotMessage.call)
       Rails.logger.info("[whatsapp:check_results] Sent result for match #{match.id}")
+    rescue ActiveRecord::RecordNotUnique
+      next
     rescue => e
       Rails.logger.error("[whatsapp:check_results] Failed for match #{match.id}: #{e.message}")
     end

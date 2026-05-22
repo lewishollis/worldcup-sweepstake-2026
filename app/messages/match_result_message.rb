@@ -26,6 +26,6 @@ class MatchResultMessage
   def points_label(pts)
     return "" if pts.to_i.zero?
 
-    " (+#{pts} pt#{pts > 1 ? 's' : ''})"
+    " (+#{pts.to_i} pt#{pts.to_i > 1 ? 's' : ''})"
   end
 end

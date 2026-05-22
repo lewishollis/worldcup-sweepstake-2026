@@ -3,7 +3,7 @@ require "uri"
 require "json"
 
 class WhatsappSender
-  GRAPH_URL = "https://graph.facebook.com/v19.0"
+  GRAPH_URL = "https://graph.facebook.com/v22.0"
 
   def self.call(message)
     new.call(message)

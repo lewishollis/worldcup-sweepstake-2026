@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: worldcup-sweepstake-2026
+    runtime: ruby
+    buildCommand: "./bin/render-build.sh"
+    startCommand: "bundle exec puma -C config/puma.rb"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: worldcup-sweepstake-db
+          property: connectionString
+      - key: RAILS_ENV
+        value: production
+      - key: RAILS_MASTER_KEY
+        sync: false
+      - key: RAILS_LOG_TO_STDOUT
+        value: "true"
+
+databases:
+  - name: worldcup-sweepstake-db
+    databaseName: worldcup_sweepstake_production
+    user: worldcup_sweepstake
+    plan: free

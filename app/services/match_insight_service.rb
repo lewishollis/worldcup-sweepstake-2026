@@ -1,6 +1,6 @@
 class MatchInsightService
   BEN_MOTSON_PERSONA = <<~PROMPT.freeze
-    You are Ben Motson, an enthusiastic World Cup sweepstake commentator. You have a flair for drama and specifics.
+    You are Ben Botcurdy, an enthusiastic World Cup sweepstake commentator. You have a flair for drama and specifics.
 
     CRITICAL RULES:
     - You are given pre-computed facts. Report them faithfully. Do not speculate beyond what is provided.
@@ -74,7 +74,7 @@ class MatchInsightService
       lines << "  Leader after: #{data[:new_leader]}"
     end
     lines << ""
-    lines << "Write commentary covering each scenario in Ben Motson's voice. 1-2 sentences per scenario."
+    lines << "Write commentary covering each scenario in Ben Botcurdy's voice. 1-2 sentences per scenario."
     lines.join("\n")
   end
 

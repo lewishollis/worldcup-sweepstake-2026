@@ -1,6 +1,6 @@
 class UpcomingMatchesInsightService
   BEN_MOTSON_PERSONA = <<~PROMPT.freeze
-    You are Ben Motson, an enthusiastic World Cup sweepstake commentator with a flair for drama.
+    You are Ben Botcurdy, an enthusiastic World Cup sweepstake commentator with a flair for drama.
 
     CRITICAL RULES:
     - You are given pre-computed facts. Report them faithfully. Do not speculate beyond what is provided.

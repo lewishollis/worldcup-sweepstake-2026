@@ -1,8 +1,8 @@
 // app/javascript/controllers/penalty_game_controller.js
 import { Controller } from "@hotwired/stimulus"
 
-const DIRECTION_SPEED     = 2.2  // % per frame
-const POWER_SPEED         = 2.0
+const DIRECTION_SPEED     = 1.4  // % per frame
+const POWER_SPEED         = 1.3
 const DIRECTION_MISS_EDGE = 8    // 0–8% or 92–100% = too wide (miss)
 const POWER_MISS_EDGE     = 92   // 92–100% = over the bar (miss)
 
@@ -170,6 +170,54 @@ export default class extends Controller {
     this._selectFriend(friend)
     this.friendGridTarget.querySelectorAll(".game-friend-btn").forEach(b => b.classList.remove("selected"))
     btn.classList.add("selected")
+    this._showPlayerConfirmPopup(friend)
+  }
+
+  _showPlayerConfirmPopup(friend) {
+    // Remove any existing popup
+    const existing = document.getElementById("player-confirm-popup")
+    if (existing) existing.remove()
+
+    const overlay = document.createElement("div")
+    overlay.id = "player-confirm-popup"
+    overlay.style.cssText = "position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9999;background:rgba(0,0,0,0.55);backdrop-filter:blur(2px)"
+
+    const card = document.createElement("div")
+    card.style.cssText = "background:#1a1a2e;border:2px solid #4a9d6f;border-radius:16px;padding:28px 32px;text-align:center;max-width:280px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,0.6)"
+
+    const emoji = document.createElement("div")
+    emoji.style.cssText = "font-size:2.5rem;margin-bottom:8px"
+    emoji.textContent = "⚽"
+
+    const name = document.createElement("div")
+    name.style.cssText = "color:#fff;font-size:1.15rem;font-weight:700;margin-bottom:4px"
+    name.textContent = friend.name
+
+    const sub = document.createElement("div")
+    sub.style.cssText = "color:#a0a0c0;font-size:0.85rem;margin-bottom:20px"
+    sub.textContent = "Ready to take penalties?"
+
+    const playBtn = document.createElement("button")
+    playBtn.style.cssText = "background:#4a9d6f;color:#fff;border:none;border-radius:10px;padding:12px 32px;font-size:1rem;font-weight:700;cursor:pointer;width:100%"
+    playBtn.textContent = "Play ⚽"
+    playBtn.addEventListener("click", () => {
+      overlay.remove()
+      this.startGame()
+    })
+
+    card.appendChild(emoji)
+    card.appendChild(name)
+    card.appendChild(sub)
+    card.appendChild(playBtn)
+    overlay.appendChild(card)
+
+    // Tap outside to dismiss
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) overlay.remove()
+    })
+
+    document.body.appendChild(overlay)
+    playBtn.focus()
   }
 
   _selectFriend(friend) {

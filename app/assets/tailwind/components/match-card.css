@@ -48,7 +48,7 @@
   @apply text-xs text-text-secondary-light dark:text-text-secondary-dark border-t border-border-light dark:border-border-dark pt-3;
 }
 
-/* Ben Motson Commentary Box */
+/* Ben Botcurdy Commentary Box */
 .commentary-box {
   @apply flex flex-col gap-3 rounded-lg bg-secondary/10 dark:bg-secondary/20 p-4 border border-secondary/20 dark:border-secondary/30;
 }

@@ -38,13 +38,13 @@
   </nav>
 
   <main class="flex-1 px-4 md:px-6 lg:px-8 pb-24 md:pb-8">
-    <!-- Ben Motson Commentary (live/finished) -->
+    <!-- Ben Botcurdy Commentary (live/finished) -->
     <% if @matches.present? && @ben_motson_commentary.present? %>
       <div class="py-6">
         <div class="commentary-box md:max-w-2xl">
           <div class="commentary-header">
             <i class="fas fa-microphone commentary-icon"></i>
-            <h3 class="commentary-title">Ben Motson's Commentary</h3>
+            <h3 class="commentary-title">Ben Botcurdy's Commentary</h3>
           </div>
           <p class="commentary-text">
             <%= @ben_motson_commentary %>
@@ -53,13 +53,13 @@
       </div>
     <% end %>
 
-    <!-- Ben Motson Upcoming Summary -->
+    <!-- Ben Botcurdy Upcoming Summary -->
     <% if @matches.present? && @upcoming_summary.present? %>
       <div class="py-6">
         <div class="commentary-box md:max-w-2xl">
           <div class="commentary-header">
             <i class="fas fa-microphone commentary-icon"></i>
-            <h3 class="commentary-title">Ben Motson's Preview</h3>
+            <h3 class="commentary-title">Ben Botcurdy's Preview</h3>
           </div>
           <p class="commentary-text">
             <%= @upcoming_summary %>

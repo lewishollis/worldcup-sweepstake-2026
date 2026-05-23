@@ -1,12 +1,16 @@
 class BenMotsonService
   BEN_MOTSON_PERSONA = <<~PROMPT.freeze
-    You are Ben Motson, an enthusiastic World Cup sweepstake commentator with a flair for drama.
+    You are Ben Botcurdy, an enthusiastic World Cup sweepstake commentator with a flair for drama.
 
     CRITICAL RULES:
     - You are given pre-computed facts. Report them faithfully. Do not speculate beyond what is provided.
     - Never invent alternative outcomes, scores, or standings.
     - Keep responses concise: 2-4 sentences maximum.
     - Be specific: use names, numbers, and positions from the data.
+    - ACCURACY: If two players are on the same points, say they are LEVEL or TIED — never say one is "leading" or "ahead".
+    - ACCURACY: Only use words like "dominating" or "runaway leader" if the gap is 5+ points.
+    - ACCURACY: The gap between 1st and 2nd place is exactly as shown in the standings. Do not exaggerate it.
+    - Write naturally and interestingly — no bullet points, no lists, just flowing commentary.
   PROMPT
 
   def initialize(context_type, context_data = {})
@@ -23,7 +27,8 @@ class BenMotsonService
 
     system_prompt = build_system_prompt
     user_message  = build_user_message
-    result = GroqClient.call(system_prompt: system_prompt, user_message: user_message, max_tokens: 250) || fallback_insight
+    result = GroqClient.call(system_prompt: system_prompt, user_message: user_message, max_tokens: 250) ||
+             _call_claude(system_prompt: system_prompt, user_message: user_message)
 
     if @context_type == :leaderboard && result && defined?(AiInsightCache) && AiInsightCache.table_exists?
       AiInsightCache.store(key: "leaderboard_battleground", version: leaderboard_cache_version, content: result)
@@ -75,7 +80,7 @@ class BenMotsonService
       end
     end
     lines << ""
-    lines << "Write 3-4 sentences of exciting leaderboard commentary in Ben Motson's voice."
+    lines << "Write 3-4 sentences of exciting leaderboard commentary in Ben Botcurdy's voice."
     lines.join("\n")
   end
 
@@ -98,38 +103,31 @@ class BenMotsonService
     lines.join("\n")
   end
 
-  def fallback_insight
-    case @context_type
-    when :leaderboard
-      groups = Group.includes(:friend, :teams).sort_by { |g| -g.total_points }
-      leader = groups.first
-      second = groups[1]
-      upcoming = Match.where(status: "PreEvent").where.not(stage: "Group Stage").where("start_time > ?", Time.current).order(:start_time).first
-      if upcoming
-        home_friend = upcoming.home_team.groups.first&.friend&.name
-        away_friend = upcoming.away_team.groups.first&.friend&.name
-        "#{leader.friend&.name} leads with #{leader.total_points.to_i} points! Next up: #{upcoming.home_team.name}#{home_friend ? " (#{home_friend})" : ""} faces #{upcoming.away_team.name}#{away_friend ? " (#{away_friend})" : ""} in the #{upcoming.stage}. Everything could change!"
-      elsif second
-        gap = leader.total_points - second.total_points
-        "#{leader.friend&.name} is dominating with #{leader.total_points.to_i} points, #{gap.to_i} ahead of #{second.friend&.name}. Can anyone catch them?"
-      else
-        "#{leader.friend&.name} is leading with #{leader.total_points.to_i} points! The race is on!"
-      end
-    when :matches
-      filter = @context_data[:filter_type]
-      matches = @context_data[:matches] || []
-      case filter
-      when "MidEvent"
-        live = matches.select { |m| m.status == "MidEvent" }.first
-        live ? "#{live.home_team.name} #{live.home_score}–#{live.away_score} #{live.away_team.name} and more matches in progress!" : "#{matches.count} matches LIVE!"
-      when "PostEvent"
-        ko = matches.reject { |m| m.stage == "Group Stage" }.first
-        ko ? "#{ko.home_team.name} #{ko.home_score}–#{ko.away_score} #{ko.away_team.name}. #{ko.winner == "home" ? ko.home_team.name : ko.away_team.name} marches on!" : "#{matches.count} matches completed."
-      when "PreEvent"
-        upcoming = matches.first
-        upcoming ? "#{upcoming.home_team.name} vs #{upcoming.away_team.name} kicks off soon!" : "#{matches.count} matches coming up."
-      end
-    end
+  def _call_claude(system_prompt:, user_message:)
+    api_key = ENV["ANTHROPIC_API_KEY"] || Rails.application.credentials.dig(:anthropic, :api_key)
+    return nil unless api_key
+
+    uri = URI("https://api.anthropic.com/v1/messages")
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl    = true
+    http.read_timeout = 15
+
+    request = Net::HTTP::Post.new(uri.path)
+    request["x-api-key"]         = api_key
+    request["anthropic-version"] = "2023-06-01"
+    request["content-type"]      = "application/json"
+    request.body = {
+      model:      "claude-haiku-4-5-20251001",
+      max_tokens: 250,
+      system:     system_prompt,
+      messages:   [{ role: "user", content: user_message }]
+    }.to_json
+
+    response = http.request(request)
+    JSON.parse(response.body).dig("content", 0, "text")
+  rescue => e
+    Rails.logger.error("Claude API fallback failed: #{e.message}")
+    nil
   end
 
   def leaderboard_cache_version

@@ -16,7 +16,7 @@ class LeaderboardController < ApplicationController
       render :group_detail
     else
       @leaderboard = Group.includes(:friend).sort_by { |group| -group.total_points }
-      @ben_motson_insight = BenMotsonService.new(:leaderboard).generate_insight
+      @ben_botcurdy_insight = BenBotcurdyService.new(:leaderboard).generate_insight
     end
   end
 

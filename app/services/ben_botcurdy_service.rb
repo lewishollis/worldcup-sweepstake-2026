@@ -1,4 +1,4 @@
-class BenMotsonService
+class BenBotcurdyService
   BEN_MOTSON_PERSONA = <<~PROMPT.freeze
     You are Ben Botcurdy, an enthusiastic World Cup sweepstake commentator with a flair for drama.
 

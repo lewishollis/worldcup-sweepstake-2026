@@ -114,7 +114,7 @@ class MatchesController < ApplicationController
           @upcoming_summary = result[:summary]
           @match_insights = result[:per_match]
         else
-          @ben_motson_commentary = BenMotsonService.new(:matches, {
+          @ben_botcurdy_commentary = BenBotcurdyService.new(:matches, {
             matches: @matches,
             filter_type: filter_type
           }).generate_insight

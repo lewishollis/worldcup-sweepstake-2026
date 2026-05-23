@@ -1,4 +1,4 @@
-namespace :ben_motson do
+namespace :ben_botcurdy do
   desc "Refresh all AI insights (clears cache and regenerates leaderboard + upcoming matches)"
   task refresh: :environment do
     puts "[#{Time.current}] Refreshing AI insights..."
@@ -6,7 +6,7 @@ namespace :ben_motson do
     AiInsightCache.delete_all
     puts "Cache cleared."
 
-    leaderboard_insight = BenMotsonService.new(:leaderboard).generate_insight
+    leaderboard_insight = BenBotcurdyService.new(:leaderboard).generate_insight
     puts leaderboard_insight ? "Leaderboard insight generated." : "Leaderboard insight failed."
 
     upcoming = Match.where(status: 'PreEvent').order(:start_time)
@@ -27,7 +27,7 @@ namespace :ben_motson do
     puts "TESTING BEN MOTSON - LEADERBOARD ANALYSIS"
     puts "="*60 + "\n"
 
-    service = BenMotsonService.new(:leaderboard)
+    service = BenBotcurdyService.new(:leaderboard)
     insight = service.generate_insight
 
     puts "Generated Insight:"
@@ -58,7 +58,7 @@ namespace :ben_motson do
     finished_matches = Match.where(status: 'PostEvent').order(start_time: :desc).limit(5)
 
     if finished_matches.any?
-      service = BenMotsonService.new(:matches, {
+      service = BenBotcurdyService.new(:matches, {
         matches: finished_matches,
         filter_type: 'PostEvent'
       })

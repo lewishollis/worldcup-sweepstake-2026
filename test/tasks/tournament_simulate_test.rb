@@ -1,5 +1,6 @@
 require "test_helper"
 require "rake"
+require Rails.root.join("lib", "tournament_simulation")
 
 class TournamentSimulateTest < ActiveSupport::TestCase
   setup do
@@ -18,8 +19,6 @@ class TournamentSimulateTest < ActiveSupport::TestCase
   # ── calculate_standings ──────────────────────────────────────────────────
 
   test "calculate_standings sorts teams by points" do
-    require Rails.root.join("lib", "tournament_simulation")
-
     t1 = Team.create!(name: "Alpha_#{SecureRandom.hex(4)}")
     t2 = Team.create!(name: "Beta_#{SecureRandom.hex(4)}")
     t3 = Team.create!(name: "Gamma_#{SecureRandom.hex(4)}")
@@ -41,8 +40,6 @@ class TournamentSimulateTest < ActiveSupport::TestCase
   end
 
   test "calculate_standings breaks ties by goal difference" do
-    require Rails.root.join("lib", "tournament_simulation")
-
     t1 = Team.create!(name: "TieA_#{SecureRandom.hex(4)}")
     t2 = Team.create!(name: "TieB_#{SecureRandom.hex(4)}")
     t3 = Team.create!(name: "TieC_#{SecureRandom.hex(4)}")
@@ -61,11 +58,28 @@ class TournamentSimulateTest < ActiveSupport::TestCase
     assert_equal t2.id, result[1].id, "t2 should be second"
   end
 
+  test "calculate_standings breaks ties by goals scored when points and gd are equal" do
+    t1 = Team.create!(name: "GFA_#{SecureRandom.hex(4)}")
+    t2 = Team.create!(name: "GFB_#{SecureRandom.hex(4)}")
+    t3 = Team.create!(name: "GFC_#{SecureRandom.hex(4)}")
+    t4 = Team.create!(name: "GFD_#{SecureRandom.hex(4)}")
+
+    # t1: wins 3-1 (3pts, GD+2, GF=3), t2: wins 2-0 (3pts, GD+2, GF=2) — t1 wins on goals scored
+    matches = [
+      Match.create!(home_team: t1, away_team: t3, home_score: 3, away_score: 1, status: "PostEvent", stage: "Group Stage", match_id: "gf-1", start_time: 1.day.ago),
+      Match.create!(home_team: t2, away_team: t4, home_score: 2, away_score: 0, status: "PostEvent", stage: "Group Stage", match_id: "gf-2", start_time: 1.day.ago),
+      Match.create!(home_team: t1, away_team: t2, home_score: 0, away_score: 0, status: "PostEvent", stage: "Group Stage", match_id: "gf-3", start_time: 1.day.ago),
+      Match.create!(home_team: t3, away_team: t4, home_score: 0, away_score: 0, status: "PostEvent", stage: "Group Stage", match_id: "gf-4", start_time: 1.day.ago)
+    ]
+
+    result = TournamentSimulation.calculate_standings([t1, t2, t3, t4], matches)
+    assert_equal t1.id, result[0].id, "t1 should lead on goals scored"
+    assert_equal t2.id, result[1].id, "t2 should be second"
+  end
+
   # ── standing_stats ───────────────────────────────────────────────────────
 
   test "standing_stats returns correct pts and gd for a team" do
-    require Rails.root.join("lib", "tournament_simulation")
-
     t1 = Team.create!(name: "StatsA_#{SecureRandom.hex(4)}")
     t2 = Team.create!(name: "StatsB_#{SecureRandom.hex(4)}")
     t3 = Team.create!(name: "StatsC_#{SecureRandom.hex(4)}")

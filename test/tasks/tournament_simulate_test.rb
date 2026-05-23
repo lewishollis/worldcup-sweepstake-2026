@@ -95,4 +95,95 @@ class TournamentSimulateTest < ActiveSupport::TestCase
     assert_equal 1, stats[:gd]   # (2-1) + (1-1)
     assert_equal 3, stats[:gf]   # 2 + 1
   end
+
+  # ── assign_simulation_points ─────────────────────────────────────────────
+
+  test "assign_simulation_points awards 0 points for Group Stage" do
+    friend = Friend.create!(name: "GS_#{SecureRandom.hex(4)}")
+    group  = Group.create!(name: "GS_Group_#{SecureRandom.hex(4)}", multiplier: 3, friend: friend)
+    home   = Team.create!(name: "GS_Home_#{SecureRandom.hex(4)}")
+    away   = Team.create!(name: "GS_Away_#{SecureRandom.hex(4)}")
+    group.teams << [home, away]
+
+    match = Match.new(
+      home_team: home, away_team: away,
+      home_score: 2, away_score: 1, winner: "home",
+      status: "PostEvent", stage: "Group Stage",
+      start_time: Time.now, match_id: "gs-pts-#{SecureRandom.hex(4)}"
+    )
+
+    TournamentSimulation.assign_simulation_points(match)
+
+    assert_equal 0, match.home_points
+    assert_equal 0, match.away_points
+    assert_equal 0, home.reload.points
+    assert_equal 0, away.reload.points
+  end
+
+  test "assign_simulation_points awards progression + win point in Last 16" do
+    friend = Friend.create!(name: "L16_#{SecureRandom.hex(4)}")
+    group  = Group.create!(name: "L16_Group_#{SecureRandom.hex(4)}", multiplier: 3, friend: friend)
+    home   = Team.create!(name: "L16_Home_#{SecureRandom.hex(4)}")
+    away   = Team.create!(name: "L16_Away_#{SecureRandom.hex(4)}")
+    group.teams << [home, away]
+
+    match = Match.new(
+      home_team: home, away_team: away,
+      home_score: 2, away_score: 1, winner: "home",
+      status: "PostEvent", stage: "Last 16",
+      start_time: Time.now, match_id: "l16-pts-#{SecureRandom.hex(4)}"
+    )
+
+    TournamentSimulation.assign_simulation_points(match)
+
+    assert_equal 1, match.home_points
+    assert_equal 0, match.away_points
+    assert_equal 2, home.reload.points  # +1 progression, +1 win
+    assert_equal 1, away.reload.points  # +1 progression, +0 win
+    assert home.reload.progressed?
+    assert away.reload.progressed?
+  end
+
+  test "assign_simulation_points does not double-award progression points" do
+    friend = Friend.create!(name: "Prog_#{SecureRandom.hex(4)}")
+    group  = Group.create!(name: "Prog_Group_#{SecureRandom.hex(4)}", multiplier: 3, friend: friend)
+    home   = Team.create!(name: "Prog_Home_#{SecureRandom.hex(4)}", progressed: true, points: 1)
+    away   = Team.create!(name: "Prog_Away_#{SecureRandom.hex(4)}", progressed: true, points: 1)
+    group.teams << [home, away]
+
+    match = Match.new(
+      home_team: home, away_team: away,
+      home_score: 1, away_score: 0, winner: "home",
+      status: "PostEvent", stage: "Quarter-finals",
+      start_time: Time.now, match_id: "prog-pts-#{SecureRandom.hex(4)}"
+    )
+
+    TournamentSimulation.assign_simulation_points(match)
+
+    # Already progressed → no extra progression point, just win point for home
+    assert_equal 2, home.reload.points  # was 1, +1 win
+    assert_equal 1, away.reload.points  # was 1, +0
+  end
+
+  test "assign_simulation_points awards 2 to Final winner and 1 to runner-up" do
+    friend = Friend.create!(name: "Final_#{SecureRandom.hex(4)}")
+    group  = Group.create!(name: "Final_Group_#{SecureRandom.hex(4)}", multiplier: 3, friend: friend)
+    home   = Team.create!(name: "Final_Home_#{SecureRandom.hex(4)}", progressed: true, points: 3)
+    away   = Team.create!(name: "Final_Away_#{SecureRandom.hex(4)}", progressed: true, points: 3)
+    group.teams << [home, away]
+
+    match = Match.new(
+      home_team: home, away_team: away,
+      home_score: 1, away_score: 0, winner: "home",
+      status: "PostEvent", stage: "Final",
+      start_time: Time.now, match_id: "final-pts-#{SecureRandom.hex(4)}"
+    )
+
+    TournamentSimulation.assign_simulation_points(match)
+
+    assert_equal 2, match.home_points
+    assert_equal 1, match.away_points
+    assert_equal 5, home.reload.points  # was 3, +2
+    assert_equal 4, away.reload.points  # was 3, +1
+  end
 end

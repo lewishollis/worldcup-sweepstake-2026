@@ -43,4 +43,43 @@ module TournamentSimulation
     end
     stats
   end
+
+  # Assigns sweepstake points to both teams for a simulated match. Modifies
+  # match.home_points / away_points in-place and persists updated team points.
+  # Also grants +1 progression point to any team appearing in a knockout match
+  # for the first time (mirrors MatchesController#assign_points logic).
+  def self.assign_simulation_points(match)
+    stage = match.stage
+    knockout_stages = ["Last 16", "Quarter-finals", "Semi-finals", "Final", "3rd Place Final"]
+
+    if knockout_stages.include?(stage)
+      home_team = match.home_team
+      unless home_team.progressed?
+        home_team.update!(progressed: true, points: home_team.points + 1)
+      end
+
+      away_team = match.away_team
+      unless away_team.progressed?
+        away_team.update!(progressed: true, points: away_team.points + 1)
+      end
+    end
+
+    case stage
+    when "Group Stage"
+      match.home_points = 0
+      match.away_points = 0
+    when "Last 16", "Quarter-finals", "Semi-finals", "3rd Place Final"
+      match.home_points = match.winner == "home" ? 1 : 0
+      match.away_points = match.winner == "away" ? 1 : 0
+    when "Final"
+      match.home_points = match.winner == "home" ? 2 : 1
+      match.away_points = match.winner == "away" ? 2 : 1
+    else
+      match.home_points = 0
+      match.away_points = 0
+    end
+
+    match.home_team.reload.update!(points: match.home_team.points + match.home_points) if match.home_points > 0
+    match.away_team.reload.update!(points: match.away_team.points + match.away_points) if match.away_points > 0
+  end
 end

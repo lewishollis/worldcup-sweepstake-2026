@@ -219,6 +219,50 @@ namespace :tournament do
 
     qualifiers = (group_winners + best_runners_up).shuffle
     puts "  ✅ #{qualifiers.size} teams qualify\n"
+
+    # ── Last 16 ───────────────────────────────────────────────────────────────
+    puts "⚔️  Simulating Last 16..."
+    last_16_winners = qualifiers.each_slice(2).map do |home, away|
+      match = TournamentSimulation.simulate_knockout_match(home, away, "Last 16", match_counter += 1, "sim-l16")
+      stats[:last_16] += 1
+      match.winner == "home" ? home : away
+    end
+    puts "  ✅ #{stats[:last_16]} matches\n"
+
+    # ── Quarter-finals ────────────────────────────────────────────────────────
+    puts "⚔️  Simulating Quarter-finals..."
+    qf_winners = last_16_winners.each_slice(2).map do |home, away|
+      match = TournamentSimulation.simulate_knockout_match(home, away, "Quarter-finals", match_counter += 1, "sim-qf")
+      stats[:quarter_finals] += 1
+      match.winner == "home" ? home : away
+    end
+    puts "  ✅ #{stats[:quarter_finals]} matches\n"
+
+    # ── Semi-finals ───────────────────────────────────────────────────────────
+    puts "⚔️  Simulating Semi-finals..."
+    sf_winners = []
+    sf_losers  = []
+    qf_winners.each_slice(2) do |home, away|
+      match = TournamentSimulation.simulate_knockout_match(home, away, "Semi-finals", match_counter += 1, "sim-sf")
+      stats[:semi_finals] += 1
+      sf_winners << (match.winner == "home" ? home : away)
+      sf_losers  << (match.winner == "home" ? away : home)
+    end
+    puts "  ✅ #{stats[:semi_finals]} matches\n"
+
+    # ── 3rd Place Final ───────────────────────────────────────────────────────
+    puts "🥉 Simulating 3rd Place Final..."
+    TournamentSimulation.simulate_knockout_match(sf_losers[0], sf_losers[1], "3rd Place Final", match_counter += 1, "sim-3rd")
+    stats[:third_place] = 1
+    puts "  ✅ 1 match\n"
+
+    # ── Final ─────────────────────────────────────────────────────────────────
+    puts "🏆 Simulating Final..."
+    final_match    = TournamentSimulation.simulate_knockout_match(sf_winners[0], sf_winners[1], "Final", match_counter += 1, "sim-final")
+    stats[:final]  = 1
+    champion       = final_match.winner == "home" ? sf_winners[0] : sf_winners[1]
+    champion_owner = champion.groups.first&.friend
+    puts "  ✅ 1 match\n"
   end
 
   desc "Reset all tournament data"

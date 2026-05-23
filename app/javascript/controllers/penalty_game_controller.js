@@ -1,8 +1,8 @@
 // app/javascript/controllers/penalty_game_controller.js
 import { Controller } from "@hotwired/stimulus"
 
-const DIRECTION_SPEED     = 1.2  // % per frame
-const POWER_SPEED         = 1.0
+const DIRECTION_SPEED     = 2.2  // % per frame
+const POWER_SPEED         = 2.0
 const DIRECTION_MISS_EDGE = 8    // 0–8% or 92–100% = too wide (miss)
 const POWER_MISS_EDGE     = 92   // 92–100% = over the bar (miss)
 
@@ -28,6 +28,12 @@ function powerLevel(pct) {
   if (pct < 33) return "low"
   if (pct < 67) return "mid"
   return "high"
+}
+
+function saveChance(power) {
+  if (power === "low")  return 1.0  // comfortable catch
+  if (power === "mid")  return 0.8  // keeper strains
+  return 0.5                        // hard to hold
 }
 
 function isMissDirection(pct) {
@@ -80,7 +86,6 @@ export default class extends Controller {
     this.dirLocked       = false
     this.directionZone   = null
     this.actualDiveZone  = null
-    this.telegraphedZone = null
     this.raf             = null
     this.tapTimeout      = null
 
@@ -244,31 +249,15 @@ export default class extends Controller {
     if (this.dirLocked) return
     this._clearTapTimeout()
     cancelAnimationFrame(this.raf)
-    this.dirLocked      = true
-    this.directionZone  = zone(this.dirPct)
-    this.directionMiss  = isMissDirection(this.dirPct)
-    this._showKeeperTelegraph()
+    this.dirLocked     = true
+    this.directionZone = zone(this.dirPct)
+    this.directionMiss = isMissDirection(this.dirPct)
+    this._startPowerBar()
   }
 
-  _showKeeperTelegraph() {
-    const rate  = bluffRate(this.streak)
-    const bluff = Math.random() < rate
+  _pickKeeperDiveZone() {
     const zones = ["left", "center", "right"]
-
-    // Keeper independently picks a zone to dive (1/3 chance each direction)
     this.actualDiveZone = zones[Math.floor(Math.random() * zones.length)]
-
-    if (bluff) {
-      // Show a false telegraph — any zone other than where they'll actually dive
-      const wrongZones     = zones.filter(z => z !== this.actualDiveZone)
-      this.telegraphedZone = wrongZones[Math.floor(Math.random() * wrongZones.length)]
-    } else {
-      // Honest — telegraph matches actual dive
-      this.telegraphedZone = this.actualDiveZone
-    }
-
-    this.keeperTarget.className = `game-keeper lean-${this.telegraphedZone}`
-    setTimeout(() => this._startPowerBar(), 500)
   }
 
   // ── Power bar ───────────────────────────────────────────
@@ -294,9 +283,7 @@ export default class extends Controller {
   lockPower() {
     this._clearTapTimeout()
     cancelAnimationFrame(this.raf)
-    const powerZone = powerLevel(this.pwrPct)
-    const powerMiss = isMissPower(this.pwrPct)
-    this._resolveShot(powerZone, powerMiss)
+    this._resolveShot(powerLevel(this.pwrPct), isMissPower(this.pwrPct))
   }
 
   // ── Shot resolution ─────────────────────────────────────
@@ -328,9 +315,10 @@ export default class extends Controller {
     mark.classList.remove("hidden")
   }
 
-  _resolveShot(powerZone, powerMiss) {
+  _resolveShot(power, powerMiss) {
     const missed = this.directionMiss || powerMiss
 
+    this._pickKeeperDiveZone()
     this.keeperTarget.className = `game-keeper dive-${this.actualDiveZone}`
     this.cursorTarget.classList.add("hidden")
     this._placeBallMark()
@@ -340,10 +328,9 @@ export default class extends Controller {
       return
     }
 
-    // Goal if: keeper dived the wrong way, OR same direction but power too high to save
     const sameZone = this.directionZone === this.actualDiveZone
-    const result   = (!sameZone || powerZone === "high") ? "goal" : "saved"
-    setTimeout(() => this._showResult(result), 300)
+    const saved    = sameZone && Math.random() < saveChance(power)
+    setTimeout(() => this._showResult(saved ? "saved" : "goal"), 300)
   }
 
   _showResult(result) {

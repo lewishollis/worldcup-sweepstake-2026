@@ -38,7 +38,7 @@
   </nav>
 
   <main class="flex-1 px-4 md:px-6 lg:px-8 pb-24 md:pb-8">
-    <!-- Ben Motson Commentary -->
+    <!-- Ben Motson Commentary (live/finished) -->
     <% if @matches.present? && @ben_motson_commentary.present? %>
       <div class="py-6">
         <div class="commentary-box md:max-w-2xl">
@@ -48,6 +48,21 @@
           </div>
           <p class="commentary-text">
             <%= @ben_motson_commentary %>
+          </p>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Ben Motson Upcoming Summary -->
+    <% if @matches.present? && @upcoming_summary.present? %>
+      <div class="py-6">
+        <div class="commentary-box md:max-w-2xl">
+          <div class="commentary-header">
+            <i class="fas fa-microphone commentary-icon"></i>
+            <h3 class="commentary-title">Ben Motson's Preview</h3>
+          </div>
+          <p class="commentary-text">
+            <%= @upcoming_summary %>
           </p>
         </div>
       </div>
@@ -149,6 +164,12 @@
               <% if match.status == 'MidEvent' && match.accessible_event_summary.present? %>
                 <div class="match-summary">
                   <%= match.accessible_event_summary %>
+                </div>
+              <% end %>
+
+              <% if match.status == 'PreEvent' && @match_insights&.dig(match.match_id).present? %>
+                <div class="match-summary text-xs italic text-text-secondary-light dark:text-text-secondary-dark pt-1">
+                  <%= @match_insights[match.match_id] %>
                 </div>
               <% end %>
             </div>

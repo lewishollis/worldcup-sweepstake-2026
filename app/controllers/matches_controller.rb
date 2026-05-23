@@ -106,10 +106,16 @@ class MatchesController < ApplicationController
       # Generate AI insight for matches
       if @matches.any? && @filter_params.present?
         filter_type = @filter_params.find { |k, v| v == '1' }&.first
-        @ben_motson_commentary = BenMotsonService.new(:matches, {
-          matches: @matches,
-          filter_type: filter_type
-        }).generate_insight
+        if filter_type == 'PreEvent'
+          result = UpcomingMatchesInsightService.call(@matches)
+          @upcoming_summary = result[:summary]
+          @match_insights = result[:per_match]
+        else
+          @ben_motson_commentary = BenMotsonService.new(:matches, {
+            matches: @matches,
+            filter_type: filter_type
+          }).generate_insight
+        end
       end
     else
       @error_message = "Failed to fetch match data: #{response.code} - #{response.message}"

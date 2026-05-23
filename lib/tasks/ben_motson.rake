@@ -1,4 +1,26 @@
 namespace :ben_motson do
+  desc "Refresh all AI insights (clears cache and regenerates leaderboard + upcoming matches)"
+  task refresh: :environment do
+    puts "[#{Time.current}] Refreshing AI insights..."
+
+    AiInsightCache.delete_all
+    puts "Cache cleared."
+
+    leaderboard_insight = BenMotsonService.new(:leaderboard).generate_insight
+    puts leaderboard_insight ? "Leaderboard insight generated." : "Leaderboard insight failed."
+
+    upcoming = Match.where(status: 'PreEvent').order(:start_time)
+    if upcoming.any?
+      result = UpcomingMatchesInsightService.call(upcoming)
+      puts result[:summary] ? "Upcoming matches insight generated." : "Upcoming matches insight failed."
+    else
+      puts "No upcoming matches."
+    end
+
+    puts "[#{Time.current}] Done."
+  end
+
+
   desc "Test Ben Motson AI commentary generation"
   task test_leaderboard: :environment do
     puts "\n" + "="*60

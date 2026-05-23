@@ -1,6 +1,4 @@
 class ScenarioEngine
-  KNOCKOUT_STAGES = %w[Last\ 16 Quarter-finals Semi-finals Final 3rd\ Place\ Final].freeze
-
   def initialize(match)
     @match = match
     @all_groups = Group.includes(:teams, :friend).all

@@ -263,6 +263,52 @@ namespace :tournament do
     champion       = final_match.winner == "home" ? sf_winners[0] : sf_winners[1]
     champion_owner = champion.groups.first&.friend
     puts "  ✅ 1 match\n"
+
+    # ── Report ────────────────────────────────────────────────────────────────
+    puts "\n" + "=" * 50
+    puts "  SIMULATION COMPLETE"
+    puts "=" * 50
+    puts ""
+    puts "Total matches simulated: #{stats.values.sum}"
+    puts "  Group Stage:     #{stats[:group_stage]}"
+    puts "  Last 16:         #{stats[:last_16]}"
+    puts "  Quarter-finals:  #{stats[:quarter_finals]}"
+    puts "  Semi-finals:     #{stats[:semi_finals]}"
+    puts "  3rd Place Final: #{stats[:third_place]}"
+    puts "  Final:           #{stats[:final]}"
+    puts ""
+
+    puts "FINAL LEADERBOARD"
+    puts "-" * 40
+    ranked = Group.includes(:friend, :teams).all.sort_by { |g| -g.total_points }
+    ranked.each_with_index do |group, i|
+      team_str = group.teams.map { |t| "#{t.name}(#{t.points})" }.join(", ")
+      puts "#{i + 1}. #{group.friend&.name.to_s.ljust(12)} — #{group.total_points.to_i}pts  (#{team_str})"
+    end
+    puts ""
+
+    puts "POINTS BREAKDOWN"
+    puts "-" * 40
+    ranked.each do |group|
+      breakdown = group.teams.map { |t| "#{t.name}(#{t.points})" }.join(" + ")
+      raw = group.teams.sum(&:points)
+      puts "#{group.friend&.name}: #{breakdown} = #{raw} raw × #{group.multiplier.to_i} = #{group.total_points.to_i}pts"
+    end
+    puts ""
+
+    puts "CHAMPION: #{champion.name} (owned by #{champion_owner&.name || 'Unowned'})"
+    puts ""
+
+    puts "BEN MOTSON SAYS:"
+    begin
+      context    = TournamentContextService.new
+      commentary = BenMotsonService.new(:leaderboard, { leaderboard: context.leaderboard, pivotal_matches: [] }).generate_insight
+      puts commentary
+    rescue => e
+      puts "[Could not generate commentary: #{e.message}]"
+    end
+    puts ""
+    puts "=" * 50
   end
 
   desc "Reset all tournament data"

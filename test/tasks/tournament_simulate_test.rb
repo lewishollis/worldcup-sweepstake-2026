@@ -235,8 +235,13 @@ class TournamentSimulateTest < ActiveSupport::TestCase
   test "simulate task creates 72 group stage matches and selects 16 qualifiers" do
     build_simulation_data
 
-    STDIN.stub(:gets, "yes\n") do
-      capture_io { Rake::Task["tournament:simulate"].invoke }
+    stub_commentary = Minitest::Mock.new
+    stub_commentary.expect(:generate_insight, "Great simulation!")
+
+    BenMotsonService.stub(:new, stub_commentary) do
+      STDIN.stub(:gets, "yes\n") do
+        capture_io { Rake::Task["tournament:simulate"].invoke }
+      end
     end
 
     assert_equal 88, Match.count, "Expected 88 total matches (72 group + 16 knockout)"
@@ -246,5 +251,26 @@ class TournamentSimulateTest < ActiveSupport::TestCase
     assert_equal 2,  Match.where(stage: "Semi-finals").count
     assert_equal 1,  Match.where(stage: "3rd Place Final").count
     assert_equal 1,  Match.where(stage: "Final").count
+  end
+
+  test "simulate task prints leaderboard and champion in report" do
+    build_simulation_data
+
+    stub_commentary = Minitest::Mock.new
+    stub_commentary.expect(:generate_insight, "Great simulation!")
+
+    output = nil
+    BenMotsonService.stub(:new, stub_commentary) do
+      STDIN.stub(:gets, "yes\n") do
+        output = capture_io { Rake::Task["tournament:simulate"].invoke }.first
+      end
+    end
+
+    assert_includes output, "SIMULATION COMPLETE"
+    assert_includes output, "FINAL LEADERBOARD"
+    assert_includes output, "CHAMPION:"
+    assert_includes output, "BEN MOTSON SAYS:"
+    assert_includes output, "Great simulation!"
+    stub_commentary.verify
   end
 end

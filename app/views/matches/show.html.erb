@@ -43,6 +43,16 @@
       </div>
     </div>
 
+    <% if @match_insight.present? %>
+      <div class="commentary-box">
+        <div class="commentary-header">
+          <i class="fas fa-microphone commentary-icon"></i>
+          <h3 class="commentary-title">Ben Motson's Preview</h3>
+        </div>
+        <p class="commentary-text"><%= @match_insight %></p>
+      </div>
+    <% end %>
+
     <!-- Scenario Insight Panel (PreEvent only) -->
     <% if @scenarios.present? %>
       <section>

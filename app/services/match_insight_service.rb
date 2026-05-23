@@ -10,16 +10,21 @@ class MatchInsightService
   PROMPT
 
   def self.cached_call(match)
+    cache_key = compute_cache_key_for(match)
+    return match.scenario_insight if match.scenario_insight_cache_key == cache_key && match.scenario_insight.present?
+
     service = new(match)
-    cache_key = service.send(:compute_cache_key)
-
-    if match.scenario_insight_cache_key == cache_key && match.scenario_insight.present?
-      return match.scenario_insight
-    end
-
     insight = service.call
     match.update_columns(scenario_insight: insight, scenario_insight_cache_key: cache_key) if insight
     insight
+  end
+
+  def self.compute_cache_key_for(match)
+    relevant_groups = Group.includes(:teams).select do |g|
+      g.teams.any? { |t| t.id == match.home_team_id || t.id == match.away_team_id }
+    end
+    state = relevant_groups.map { |g| "#{g.id}:#{g.total_points}" }.sort.join("|")
+    Digest::SHA256.hexdigest("#{match.status}|#{state}")[0, 16]
   end
 
   def initialize(match)
@@ -100,10 +105,6 @@ class MatchInsightService
   end
 
   def compute_cache_key
-    relevant_groups = Group.includes(:teams, :friend).select do |g|
-      g.teams.any? { |t| t.id == @match.home_team_id || t.id == @match.away_team_id }
-    end
-    state = relevant_groups.map { |g| "#{g.id}:#{g.total_points}" }.sort.join("|")
-    Digest::SHA256.hexdigest("#{@match.status}|#{state}")[0, 16]
+    self.class.compute_cache_key_for(@match)
   end
 end

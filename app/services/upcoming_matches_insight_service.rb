@@ -67,7 +67,17 @@ class UpcomingMatchesInsightService
 
   def build_user_message
     knockout_stages = ['Last 16', 'Quarter-finals', 'Semi-finals', '3rd Place Final', 'Final']
-    lines = ["Provide commentary for today's upcoming World Cup matches.", ""]
+    today = Date.today
+    first_match_date = @matches.map { |m| m.start_time.to_date }.min
+    tournament_started = today >= first_match_date
+
+    context_line = if tournament_started
+      "Today is #{today.strftime('%A, %d %B %Y')}. The tournament is underway."
+    else
+      "Today is #{today.strftime('%A, %d %B %Y')}. The tournament has NOT started yet — the first match is on #{first_match_date.strftime('%d %B %Y')}. Do NOT say the action continues today."
+    end
+
+    lines = ["#{context_line} Provide commentary for upcoming World Cup matches.", ""]
     lines << "Respond in this exact JSON format:"
     lines << '{ "summary": "...", "matches": { "<match_id>": "...", ... } }'
     lines << ""

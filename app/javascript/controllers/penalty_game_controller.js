@@ -1,8 +1,8 @@
 // app/javascript/controllers/penalty_game_controller.js
 import { Controller } from "@hotwired/stimulus"
 
-const DIRECTION_SPEED     = 1.4  // % per frame
-const POWER_SPEED         = 1.3
+const DIRECTION_SPEED     = 2.2  // % per frame
+const POWER_SPEED         = 2.0
 const DIRECTION_MISS_EDGE = 8    // 0–8% or 92–100% = too wide (miss)
 const POWER_MISS_EDGE     = 92   // 92–100% = over the bar (miss)
 

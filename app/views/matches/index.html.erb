@@ -3,13 +3,13 @@
     <div class="page-header-container">
       <div class="flex w-12 shrink-0 items-center justify-start md:hidden">
         <%= link_to leaderboard_index_path, class: "page-header-button" do %>
-          <span class="material-symbols-outlined text-2xl">trophy</span>
+          <i class="fas fa-trophy text-xl"></i>
         <% end %>
       </div>
       <h1 class="page-title md:text-3xl lg:text-4xl">World Cup Matches</h1>
-      <div class="flex w-12 items-center justify-end">
-        <button onclick="location.reload()" class="page-header-button">
-          <span class="material-symbols-outlined text-2xl">refresh</span>
+      <div class="hidden md:flex w-12 items-center justify-end">
+        <button type="button" aria-label="Refresh" onclick="location.reload()" class="page-header-button">
+          <i class="fas fa-sync-alt text-xl"></i>
         </button>
       </div>
     </div>
@@ -23,15 +23,15 @@
         <%= hidden_field_tag 'filter[PreEvent]', @filter_params['PreEvent'] || '0', id: 'filter_PreEvent' %>
 
         <div class="tab-nav-items md:justify-center md:gap-8">
-          <a href="javascript:void(0)" onclick="applyFilter('MidEvent')" class="tab-nav-item <%= @filter_params['MidEvent'] == '1' ? 'active' : '' %>">
+          <button type="button" onclick="applyFilter('MidEvent')" class="tab-nav-item <%= @filter_params['MidEvent'] == '1' ? 'active' : '' %>">
             <p class="tab-nav-label md:text-base">Live</p>
-          </a>
-          <a href="javascript:void(0)" onclick="applyFilter('PreEvent')" class="tab-nav-item <%= @filter_params['PreEvent'] == '1' ? 'active' : '' %>">
+          </button>
+          <button type="button" onclick="applyFilter('PreEvent')" class="tab-nav-item <%= @filter_params['PreEvent'] == '1' ? 'active' : '' %>">
             <p class="tab-nav-label md:text-base">Upcoming</p>
-          </a>
-          <a href="javascript:void(0)" onclick="applyFilter('PostEvent')" class="tab-nav-item <%= @filter_params['PostEvent'] == '1' ? 'active' : '' %>">
+          </button>
+          <button type="button" onclick="applyFilter('PostEvent')" class="tab-nav-item <%= @filter_params['PostEvent'] == '1' ? 'active' : '' %>">
             <p class="tab-nav-label md:text-base">Finished</p>
-          </a>
+          </button>
         </div>
       <% end %>
     </div>
@@ -71,7 +71,7 @@
   <% if @error_message %>
     <div class="text-center py-16">
       <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-primary/10 mb-4">
-        <span class="material-symbols-outlined text-primary text-4xl">error</span>
+        <i class="fas fa-exclamation-circle text-primary text-4xl"></i>
       </div>
       <h3 class="text-lg font-bold text-text-primary-light dark:text-text-primary-dark">Error Loading Matches</h3>
       <p class="text-sm text-text-secondary-light dark:text-text-secondary-dark mt-1"><%= @error_message %></p>
@@ -79,7 +79,7 @@
   <% elsif @matches.empty? %>
     <div class="text-center py-16">
       <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-primary/10 mb-4">
-        <span class="material-symbols-outlined text-primary text-4xl">sports_soccer</span>
+        <i class="fas fa-futbol text-primary text-4xl"></i>
       </div>
       <h3 class="text-lg font-bold text-text-primary-light dark:text-text-primary-dark">No Matches Found</h3>
       <p class="text-sm text-text-secondary-light dark:text-text-secondary-dark mt-1">Check back later or view other games.</p>
@@ -115,7 +115,6 @@
               <% else %>
                 <div class="flex flex-col items-end">
                   <span class="font-bold text-text-primary-light dark:text-text-primary-dark"><%= match.start_time.strftime('%H:%M') %></span>
-                  <span class="text-[10px] text-text-secondary-light dark:text-text-secondary-dark">BST</span>
                 </div>
               <% end %>
             </div>

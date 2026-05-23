@@ -3,14 +3,8 @@
   <div class="max-w-7xl mx-auto w-full px-4 md:px-6 lg:px-8">
     <div class="p-6 pb-28 md:pt-8 md:pb-8">
       <!-- Header -->
-      <header class="flex items-center justify-between mb-8">
-        <button class="text-2xl text-gray-400 hover:text-white md:hidden">
-          <i class="fas fa-cog"></i>
-        </button>
+      <header class="flex items-center justify-center mb-8">
         <h1 class="text-lg font-semibold text-text-primary-light dark:text-text-primary-dark">Leaderboard</h1>
-        <button class="text-xl text-gray-400 hover:text-white">
-
-        </button>
       </header>
 
       <main class="flex-grow">
@@ -20,15 +14,17 @@
         </section>
 
         <!-- Ben Botcurdy Insights -->
-        <section class="insights-box md:max-w-2xl">
-          <div class="insights-header">
-            <i class="fas fa-microphone insights-icon"></i>
-            <h3 class="insights-title">Ben Botcurdy's Analysis</h3>
-          </div>
-          <p class="insights-text">
-            <%= @ben_botcurdy_insight %>
-          </p>
-        </section>
+        <% if @ben_botcurdy_insight.present? %>
+          <section class="insights-box md:max-w-2xl">
+            <div class="insights-header">
+              <i class="fas fa-microphone insights-icon"></i>
+              <h3 class="insights-title">Ben Botcurdy's Analysis</h3>
+            </div>
+            <p class="insights-text">
+              <%= @ben_botcurdy_insight %>
+            </p>
+          </section>
+        <% end %>
 
         <!-- Leaderboard List -->
         <section>
@@ -72,8 +68,8 @@
                     <%= image_tag team.flag_url, alt: team.name, class: "leaderboard-flag" %>
                   <% end %>
                 <% end %>
-                <% if group.teams.count > 3 %>
-                  <span class="text-xs text-text-secondary-light dark:text-text-secondary-dark">+<%= group.teams.count - 3 %></span>
+                <% if group.teams.size > 3 %>
+                  <span class="text-xs text-text-secondary-light dark:text-text-secondary-dark">+<%= group.teams.size - 3 %></span>
                 <% end %>
               </div>
             </div>

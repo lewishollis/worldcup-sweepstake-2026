@@ -2,7 +2,7 @@
 class GameScore < ApplicationRecord
   belongs_to :friend
 
-  validates :streak, presence: true, numericality: { greater_than_or_equal_to: 0 }
+  validates :streak, presence: true, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 1000 }
 
   # Returns best streak per friend, ordered descending, tie-broken by earliest achieved.
   # Each element is a hash with: friend_id, best_streak, first_achieved, friend

@@ -24,8 +24,8 @@
 </nav>
 
 <!-- Floating theme toggle (mobile only) -->
-<button id="darkModeToggleMobile" class="md:hidden fixed top-4 right-4 z-50 flex items-center justify-center w-9 h-9 rounded-full bg-surface-light dark:bg-surface-dark text-text-secondary-light dark:text-text-secondary-dark shadow-md">
-  <span class="material-symbols-outlined darkModeIcon" style="font-size: 20px">dark_mode</span>
+<button id="darkModeToggleMobile" aria-label="Toggle theme" class="md:hidden fixed top-4 right-4 z-50 flex items-center justify-center w-9 h-9 rounded-full bg-surface-light dark:bg-surface-dark text-text-secondary-light dark:text-text-secondary-dark shadow-md">
+  <i class="darkModeIcon fas fa-sun" style="font-size: 16px"></i>
 </button>
 
 <!-- Desktop Top Nav -->
@@ -55,8 +55,8 @@
         <% end %>
       </div>
 
-      <button id="darkModeToggleDesktop" class="flex items-center justify-center w-9 h-9 rounded-full text-text-secondary-light dark:text-text-secondary-dark hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-        <span class="material-symbols-outlined darkModeIcon">dark_mode</span>
+      <button id="darkModeToggleDesktop" aria-label="Toggle theme" class="flex items-center justify-center w-9 h-9 rounded-full text-text-secondary-light dark:text-text-secondary-dark hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+        <i class="darkModeIcon fas fa-sun"></i>
       </button>
     </div>
   </div>
@@ -69,41 +69,25 @@
   (function() {
     const toggleMobile = document.getElementById('darkModeToggleMobile');
     const toggleDesktop = document.getElementById('darkModeToggleDesktop');
-    const icons = document.querySelectorAll('.darkModeIcon');
     const html = document.documentElement;
 
-    // Get saved preference or default to dark
-    const currentMode = localStorage.getItem('darkMode') || 'dark';
-
-    // Apply initial mode
-    function updateTheme(isDark) {
-      if (isDark) {
-        html.classList.add('dark');
-        icons.forEach(icon => icon.textContent = 'dark_mode');
-      } else {
-        html.classList.remove('dark');
-        icons.forEach(icon => icon.textContent = 'light_mode');
-      }
+    function updateIcons(isDark) {
+      document.querySelectorAll('.darkModeIcon').forEach(function(icon) {
+        icon.classList.toggle('fa-sun', isDark);
+        icon.classList.toggle('fa-moon', !isDark);
+      });
     }
 
-    // Initialize
-    updateTheme(currentMode === 'dark');
+    // Sync icons with current theme (already applied in <head>)
+    updateIcons(html.classList.contains('dark'));
 
-    // Toggle function
     function toggleTheme() {
       const isDark = html.classList.contains('dark');
-      if (isDark) {
-        html.classList.remove('dark');
-        localStorage.setItem('darkMode', 'light');
-        updateTheme(false);
-      } else {
-        html.classList.add('dark');
-        localStorage.setItem('darkMode', 'dark');
-        updateTheme(true);
-      }
+      html.classList.toggle('dark', !isDark);
+      localStorage.setItem('darkMode', isDark ? 'light' : 'dark');
+      updateIcons(!isDark);
     }
 
-    // Add event listeners
     if (toggleMobile) toggleMobile.addEventListener('click', toggleTheme);
     if (toggleDesktop) toggleDesktop.addEventListener('click', toggleTheme);
   })();

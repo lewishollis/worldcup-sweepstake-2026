@@ -186,4 +186,24 @@ class TournamentSimulateTest < ActiveSupport::TestCase
     assert_equal 5, home.reload.points  # was 3, +2
     assert_equal 4, away.reload.points  # was 3, +1
   end
+
+  # ── simulate_knockout_match ──────────────────────────────────────────────
+
+  test "simulate_knockout_match creates a PostEvent match with a winner and awards points" do
+    friend = Friend.create!(name: "KO_#{SecureRandom.hex(4)}")
+    group  = Group.create!(name: "KO_Group_#{SecureRandom.hex(4)}", multiplier: 3, friend: friend)
+    home   = Team.create!(name: "KO_Home_#{SecureRandom.hex(4)}")
+    away   = Team.create!(name: "KO_Away_#{SecureRandom.hex(4)}")
+    group.teams << [home, away]
+
+    match = TournamentSimulation.simulate_knockout_match(home, away, "Quarter-finals", 1, "test-qf")
+
+    assert match.persisted?
+    assert_equal "PostEvent", match.status
+    assert_equal "Quarter-finals", match.stage
+    assert_includes %w[home away], match.winner
+    assert match.home_score != match.away_score, "knockout match must have a winner (no draw)"
+    total_pts = home.reload.points + away.reload.points
+    assert total_pts >= 2, "both teams should have at least 1 progression point each"
+  end
 end

@@ -82,4 +82,36 @@ module TournamentSimulation
     match.home_team.reload.update!(points: match.home_team.points + match.home_points) if match.home_points > 0
     match.away_team.reload.update!(points: match.away_team.points + match.away_points) if match.away_points > 0
   end
+
+  # Creates and persists a PostEvent knockout match. Randomly picks a winner
+  # (no draws in knockout). Scores reflect the winner. Calls
+  # assign_simulation_points to award team points. Returns the saved Match.
+  def self.simulate_knockout_match(home_team, away_team, stage, idx, id_prefix)
+    winner = %w[home away].sample
+
+    if winner == "home"
+      home_score = rand(1..3)
+      away_score = rand(0..home_score - 1)
+    else
+      away_score = rand(1..3)
+      home_score = rand(0..away_score - 1)
+    end
+
+    match = Match.new(
+      home_team:  home_team,
+      away_team:  away_team,
+      home_score: home_score,
+      away_score: away_score,
+      winner:     winner,
+      status:     "PostEvent",
+      stage:      stage,
+      start_time: Time.now,
+      match_id:   "#{id_prefix}-#{idx}",
+      result:     winner == "home" ? "W" : "L"
+    )
+
+    assign_simulation_points(match)
+    match.save!
+    match
+  end
 end

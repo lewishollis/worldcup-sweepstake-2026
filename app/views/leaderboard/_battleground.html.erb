@@ -1,0 +1,31 @@
+<% if pivotal_matches.any? %>
+  <section class="mb-6">
+    <h2 class="text-xl font-bold text-text-primary-light dark:text-text-primary-dark mb-3">This Week's Battleground</h2>
+    <div class="space-y-4">
+      <% pivotal_matches.each do |match| %>
+        <% scenarios = pivotal_scenarios[match.id] %>
+        <div class="bg-surface-light dark:bg-surface-dark rounded-2xl p-4">
+          <p class="text-xs text-text-secondary-light dark:text-text-secondary-dark uppercase tracking-widest mb-2"><%= match.stage %></p>
+          <p class="font-bold text-text-primary-light dark:text-text-primary-dark mb-3">
+            <%= match.home_team.name %> vs <%= match.away_team.name %>
+            <span class="text-xs font-normal text-text-secondary-light dark:text-text-secondary-dark ml-2"><%= match.start_time&.strftime("%d %b, %H:%M") %></span>
+          </p>
+          <% if scenarios %>
+            <div class="space-y-1">
+              <% scenario_labels = { home_win: "#{match.home_team.name} win", draw: "Draw", away_win: "#{match.away_team.name} win" } %>
+              <% scenarios.each do |outcome, data| %>
+                <% next if data[:friend_deltas].empty? %>
+                <div class="flex flex-wrap gap-2 text-xs">
+                  <span class="text-text-secondary-light dark:text-text-secondary-dark"><%= scenario_labels[outcome] %>:</span>
+                  <% data[:friend_deltas].each do |delta| %>
+                    <span class="font-semibold text-accent-live"><%= delta[:friend] %> +<%= delta[:delta].to_i %></span>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </section>
+<% end %>

@@ -3,6 +3,11 @@ class LeaderboardController < ApplicationController
 
   def index
     @groups = Group.includes(:teams, :friend).all.sort_by { |group| -group_total_points(group) }
+    ctx = TournamentContextService.new
+    @pivotal_matches = ctx.pivotal_matches(count: 3)
+    @pivotal_scenarios = @pivotal_matches.each_with_object({}) do |match, h|
+      h[match.id] = ScenarioEngine.new(match).call
+    end
   end
 
   def show

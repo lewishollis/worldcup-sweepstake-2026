@@ -231,4 +231,27 @@ class TournamentSimulateTest < ActiveSupport::TestCase
     total_pts = home.reload.points + away.reload.points
     assert total_pts >= 2, "both teams should have at least 1 progression point each"
   end
+
+  test "simulate task creates 72 group stage matches and selects 16 qualifiers" do
+    build_simulation_data
+
+    stub_commentary = Minitest::Mock.new
+    stub_commentary.expect(:generate_insight, "Test commentary")
+
+    BenMotsonService.stub(:new, stub_commentary) do
+      STDIN.stub(:gets, "yes\n") do
+        capture_io { Rake::Task["tournament:simulate"].invoke }
+      end
+    end
+
+    assert_equal 88, Match.count, "Expected 88 total matches (72 group + 16 knockout)"
+    assert_equal 72, Match.where(stage: "Group Stage").count
+    assert_equal 8,  Match.where(stage: "Last 16").count
+    assert_equal 4,  Match.where(stage: "Quarter-finals").count
+    assert_equal 2,  Match.where(stage: "Semi-finals").count
+    assert_equal 1,  Match.where(stage: "3rd Place Final").count
+    assert_equal 1,  Match.where(stage: "Final").count
+
+    stub_commentary.verify
+  end
 end

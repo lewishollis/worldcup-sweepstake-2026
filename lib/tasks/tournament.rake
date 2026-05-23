@@ -162,6 +162,63 @@ namespace :tournament do
     Team.update_all(points: 0, progressed: false)
     AiInsightCache.destroy_all
     puts "✅ Reset complete\n"
+
+    match_counter = 0
+    stats = { group_stage: 0, last_16: 0, quarter_finals: 0, semi_finals: 0, third_place: 0, final: 0 }
+
+    # ── Group Stage ──────────────────────────────────────────────────────────
+    puts "⚽ Simulating Group Stage..."
+    group_match_data = {}  # group_id => { teams: [], matches: [] }
+
+    Group.includes(:teams).each do |group|
+      teams   = group.teams.to_a
+      matches = []
+
+      teams.combination(2).each do |home_team, away_team|
+        home_score = rand(0..3)
+        away_score = rand(0..3)
+        winner     = if home_score > away_score then "home" elsif away_score > home_score then "away" end
+
+        match = Match.create!(
+          home_team:   home_team,
+          away_team:   away_team,
+          home_score:  home_score,
+          away_score:  away_score,
+          winner:      winner,
+          status:      "PostEvent",
+          stage:       "Group Stage",
+          start_time:  Time.now - rand(1..21).days,
+          match_id:    "sim-gs-#{match_counter += 1}",
+          home_points: 0,
+          away_points: 0,
+          result:      winner == "home" ? "W" : (winner == "away" ? "L" : "D")
+        )
+        matches << match
+        stats[:group_stage] += 1
+      end
+
+      group_match_data[group.id] = { teams: teams, matches: matches }
+    end
+    puts "  ✅ #{stats[:group_stage]} matches\n"
+
+    # ── Qualifiers: top team per group + best 4 runners-up ───────────────────
+    puts "📊 Calculating group standings..."
+    group_winners = []
+    runners_up    = []
+
+    group_match_data.each do |_group_id, data|
+      sorted = TournamentSimulation.calculate_standings(data[:teams], data[:matches])
+      group_winners << sorted[0]
+      runners_up    << { team: sorted[1], stats: TournamentSimulation.standing_stats(sorted[1], data[:matches]) }
+    end
+
+    best_runners_up = runners_up
+      .sort_by { |r| [-r[:stats][:pts], -r[:stats][:gd], -r[:stats][:gf]] }
+      .first(4)
+      .map { |r| r[:team] }
+
+    qualifiers = (group_winners + best_runners_up).shuffle
+    puts "  ✅ #{qualifiers.size} teams qualify\n"
   end
 
   desc "Reset all tournament data"

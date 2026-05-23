@@ -1,162 +1,101 @@
 class BenMotsonService
+  BEN_MOTSON_PERSONA = <<~PROMPT.freeze
+    You are Ben Motson, an enthusiastic World Cup sweepstake commentator with a flair for drama.
+
+    CRITICAL RULES:
+    - You are given pre-computed facts. Report them faithfully. Do not speculate beyond what is provided.
+    - Never invent alternative outcomes, scores, or standings.
+    - Keep responses concise: 2-4 sentences maximum.
+    - Be specific: use names, numbers, and positions from the data.
+  PROMPT
+
   def initialize(context_type, context_data = {})
-    @context_type = context_type # :leaderboard or :matches
+    @context_type = context_type
     @context_data = context_data
   end
 
   def generate_insight
-    # AI disabled - using free fallback messages
-    # To enable AI: Set ANTHROPIC_API_KEY environment variable
-    fallback_insight
+    if @context_type == :leaderboard
+      version = leaderboard_cache_version
+      cached = AiInsightCache.fetch(key: "leaderboard_battleground", version: version) if defined?(AiInsightCache) && AiInsightCache.table_exists?
+      return cached if cached
+    end
+
+    system_prompt = build_system_prompt
+    user_message  = build_user_message
+    result = GroqClient.call(system_prompt: system_prompt, user_message: user_message, max_tokens: 250) || fallback_insight
+
+    if @context_type == :leaderboard && result && defined?(AiInsightCache) && AiInsightCache.table_exists?
+      AiInsightCache.store(key: "leaderboard_battleground", version: leaderboard_cache_version, content: result)
+    end
+
+    result
   end
 
   private
 
-  def build_comprehensive_prompt
+  def build_system_prompt
+    ctx = TournamentContextService.new
+    parts = [BEN_MOTSON_PERSONA, "", "CURRENT STANDINGS:", ctx.leaderboard_text]
+    news = ctx.news_items(limit: 5)
+    if news.any?
+      parts << ""
+      parts << "LATEST TOURNAMENT NEWS:"
+      news.each { |n| parts << "- #{n[:title]}: #{n[:summary]}" }
+    end
+    parts.join("\n")
+  end
+
+  def build_user_message
     case @context_type
-    when :leaderboard
-      build_leaderboard_prompt
-    when :matches
-      build_matches_prompt
+    when :leaderboard then build_leaderboard_message
+    when :matches     then build_matches_message
     end
   end
 
-  def build_leaderboard_prompt
-    groups = Group.includes(:teams, :friend).sort_by { |g| -g.total_points }
-    leader = groups.first
-    upcoming_knockout_matches = Match.where(status: 'PreEvent')
-                                     .where.not(stage: 'Group Stage')
-                                     .where('start_time > ?', Time.current)
-                                     .order(:start_time)
-                                     .limit(5)
-
-    prompt = []
-    prompt << "You are Ben Motson, an enthusiastic sports commentator analyzing a World Cup sweepstake competition."
-    prompt << ""
-    prompt << "SCORING SYSTEM:"
-    prompt << "- Progression from Group Stage: 1 point (one-time)"
-    prompt << "- Round of 16 win: 1 point"
-    prompt << "- Quarter Final win: 1 point"
-    prompt << "- Semi Final win: 1 point"
-    prompt << "- Final winner: 2 points, runner-up: 1 point"
-    prompt << "- Bronze Final win: 1 point"
-    prompt << "- Each friend has a multiplier (×2 to ×6) applied to their team's total points"
-    prompt << ""
-    prompt << "CURRENT STANDINGS:"
-    groups.first(5).each_with_index do |group, i|
-      prompt << "#{i+1}. #{group.friend.name}: #{group.total_points.to_i} points (×#{group.multiplier.to_i} multiplier)"
-      prompt << "   Teams: #{group.teams.map(&:name).join(', ')}"
-      progressed = group.teams.select(&:progressed?)
-      prompt << "   Progressed to knockouts: #{progressed.map(&:name).join(', ')}" if progressed.any?
-    end
-    prompt << ""
-
-    if upcoming_knockout_matches.any?
-      prompt << "UPCOMING KNOCKOUT MATCHES:"
-      upcoming_knockout_matches.each do |match|
-        home_friend = match.home_team.groups.first&.friend&.name || "No owner"
-        away_friend = match.away_team.groups.first&.friend&.name || "No owner"
-        prompt << "- #{match.stage}: #{match.home_team.name} (#{home_friend}) vs #{match.away_team.name} (#{away_friend})"
-      end
-      prompt << ""
-    end
-
-    prompt << "Generate 2-3 sentences of exciting commentary that:"
-    prompt << "1. Acknowledges the current leader and their position"
-    prompt << "2. Mentions a specific upcoming match and what's at stake"
-    prompt << "3. Creates excitement about who might win"
-    prompt << ""
-    prompt << "Be specific with names and scenarios. Make it feel like live sports commentary!"
-    prompt << "Keep it under 60 words."
-
-    prompt.join("\n")
-  end
-
-  def build_matches_prompt
-    matches = @context_data[:matches]
-    filter_type = @context_data[:filter_type]
-
-    prompt = []
-    prompt << "You are Ben Motson, an enthusiastic World Cup commentator."
-    prompt << ""
-
-    case filter_type
-    when 'MidEvent'
-      live_matches = matches.select { |m| m.status == 'MidEvent' }
-      prompt << "#{live_matches.count} match(es) are currently LIVE!"
-      prompt << ""
-      live_matches.first(3).each do |match|
-        prompt << "- #{match.home_team.name} #{match.home_score} - #{match.away_score} #{match.away_team.name} (#{match.stage})"
-      end
-      prompt << ""
-      prompt << "Generate 1-2 exciting sentences about the live action. Mention specific teams and scores!"
-
-    when 'PostEvent'
-      finished_matches = matches.select { |m| m.status == 'PostEvent' }
-      knockout_matches = finished_matches.reject { |m| m.stage == 'Group Stage' }
-
-      if knockout_matches.any?
-        prompt << "RECENT KNOCKOUT RESULTS:"
-        knockout_matches.first(3).each do |match|
-          winner = match.winner == 'home' ? match.home_team.name : match.away_team.name
-          prompt << "- #{match.stage}: #{match.home_team.name} #{match.home_score} - #{match.away_score} #{match.away_team.name} (#{winner} wins!)"
+  def build_leaderboard_message
+    ctx = TournamentContextService.new
+    pivotal = ctx.pivotal_matches(count: 3)
+    lines = ["Provide a leaderboard state-of-play commentary covering:", ""]
+    lines << "1. Who is leading and by how much"
+    lines << "2. The 2-3 most pivotal upcoming matches and their sweepstake implications"
+    lines << ""
+    if pivotal.any?
+      lines << "PIVOTAL UPCOMING MATCHES (pre-computed scenarios):"
+      pivotal.each do |match|
+        scenarios = ScenarioEngine.new(match).call
+        lines << ""
+        lines << "#{match.home_team.name} vs #{match.away_team.name} (#{match.stage}, #{match.start_time&.strftime("%d %b")}):"
+        scenario_labels = { home_win: "#{match.home_team.name} win", away_win: "#{match.away_team.name} win", draw: "Draw" }
+        scenarios.each do |outcome, data|
+          next if data[:friend_deltas].empty?
+          deltas = data[:friend_deltas].map { |d| "#{d[:friend]} +#{d[:delta].to_i}" }.join(", ")
+          lines << "  If #{scenario_labels[outcome]}: #{deltas} | Leader: #{data[:new_leader]}"
         end
-        prompt << ""
-        prompt << "Generate 1-2 sentences analyzing these knockout results. Be dramatic and specific!"
-      else
-        prompt << "#{finished_matches.count} matches completed."
-        prompt << ""
-        prompt << "Generate 1 sentence summing up the recent action."
       end
-
-    when 'PreEvent'
-      upcoming = matches.select { |m| m.status == 'PreEvent' }
-      prompt << "#{upcoming.count} upcoming match(es)!"
-      prompt << ""
-      upcoming.first(3).each do |match|
-        prompt << "- #{match.home_team.name} vs #{match.away_team.name} (#{match.stage}) at #{match.start_time.strftime('%H:%M')}"
-      end
-      prompt << ""
-      prompt << "Generate 1-2 sentences building excitement for these upcoming matches!"
     end
-
-    prompt << ""
-    prompt << "Keep it under 40 words. Make it punchy and exciting!"
-
-    prompt.join("\n")
+    lines << ""
+    lines << "Write 3-4 sentences of exciting leaderboard commentary in Ben Motson's voice."
+    lines.join("\n")
   end
 
-  def call_claude_api(prompt)
-    require 'net/http'
-    require 'json'
-
-    api_key = ENV['ANTHROPIC_API_KEY'] || Rails.application.credentials.dig(:anthropic, :api_key)
-
-    return nil unless api_key
-
-    uri = URI('https://api.anthropic.com/v1/messages')
-    http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl = true
-    http.read_timeout = 10
-
-    request = Net::HTTP::Post.new(uri.path)
-    request['x-api-key'] = api_key
-    request['anthropic-version'] = '2023-06-01'
-    request['content-type'] = 'application/json'
-
-    request.body = {
-      model: 'claude-3-5-haiku-20241022',
-      max_tokens: 150,
-      messages: [{ role: 'user', content: prompt }]
-    }.to_json
-
-    response = http.request(request)
-    result = JSON.parse(response.body)
-
-    result.dig('content', 0, 'text')
-  rescue => e
-    Rails.logger.error("Claude API call failed: #{e.message}")
-    nil
+  def build_matches_message
+    matches    = @context_data[:matches] || []
+    filter_type = @context_data[:filter_type]
+    lines = ["Provide commentary for #{filter_type} matches:", ""]
+    matches.first(3).each do |match|
+      if filter_type == "MidEvent"
+        lines << "LIVE: #{match.home_team.name} #{match.home_score}–#{match.away_score} #{match.away_team.name} (#{match.stage})"
+      elsif filter_type == "PostEvent"
+        winner = match.winner == "home" ? match.home_team.name : match.away_team.name
+        lines << "RESULT: #{match.home_team.name} #{match.home_score}–#{match.away_score} #{match.away_team.name} — #{winner} wins (#{match.stage})"
+      else
+        lines << "UPCOMING: #{match.home_team.name} vs #{match.away_team.name} at #{match.start_time&.strftime("%H:%M")} (#{match.stage})"
+      end
+    end
+    lines << ""
+    lines << "Write 1-2 punchy sentences of commentary. Be specific with team names."
+    lines.join("\n")
   end
 
   def fallback_insight
@@ -165,55 +104,36 @@ class BenMotsonService
       groups = Group.includes(:friend, :teams).sort_by { |g| -g.total_points }
       leader = groups.first
       second = groups[1]
-
-      upcoming_knockout = Match.where(status: 'PreEvent')
-                               .where.not(stage: 'Group Stage')
-                               .where('start_time > ?', Time.current)
-                               .order(:start_time)
-                               .first
-
-      if upcoming_knockout
-        home_friend = upcoming_knockout.home_team.groups.first&.friend&.name
-        away_friend = upcoming_knockout.away_team.groups.first&.friend&.name
-        "#{leader.friend.name} leads with #{leader.total_points.to_i} points! Next up: #{upcoming_knockout.home_team.name}#{home_friend ? " (#{home_friend})" : ''} faces #{upcoming_knockout.away_team.name}#{away_friend ? " (#{away_friend})" : ''} in the #{upcoming_knockout.stage}. Everything could change!"
+      upcoming = Match.where(status: "PreEvent").where.not(stage: "Group Stage").where("start_time > ?", Time.current).order(:start_time).first
+      if upcoming
+        home_friend = upcoming.home_team.groups.first&.friend&.name
+        away_friend = upcoming.away_team.groups.first&.friend&.name
+        "#{leader.friend&.name} leads with #{leader.total_points.to_i} points! Next up: #{upcoming.home_team.name}#{home_friend ? " (#{home_friend})" : ""} faces #{upcoming.away_team.name}#{away_friend ? " (#{away_friend})" : ""} in the #{upcoming.stage}. Everything could change!"
       elsif second
         gap = leader.total_points - second.total_points
-        "#{leader.friend.name} is dominating with #{leader.total_points.to_i} points, #{gap.to_i} points ahead of #{second.friend.name}. Can anyone catch them?"
+        "#{leader.friend&.name} is dominating with #{leader.total_points.to_i} points, #{gap.to_i} ahead of #{second.friend&.name}. Can anyone catch them?"
       else
-        "#{leader.friend.name} is leading with #{leader.total_points.to_i} points! The race is on!"
+        "#{leader.friend&.name} is leading with #{leader.total_points.to_i} points! The race is on!"
       end
-
     when :matches
       filter = @context_data[:filter_type]
       matches = @context_data[:matches] || []
-      count = matches.count
-
       case filter
-      when 'MidEvent'
-        live = matches.select { |m| m.status == 'MidEvent' }.first
-        if live
-          "#{live.home_team.name} #{live.home_score} - #{live.away_score} #{live.away_team.name} and #{count - 1} more #{'match'.pluralize(count - 1)} in progress! The tension is electric!"
-        else
-          "#{count} #{'match'.pluralize(count)} LIVE right now! Incredible action across the tournament!"
-        end
-
-      when 'PostEvent'
-        knockout = matches.reject { |m| m.stage == 'Group Stage' }.first
-        if knockout
-          winner = knockout.winner == 'home' ? knockout.home_team.name : knockout.away_team.name
-          "What a #{knockout.stage}! #{knockout.home_team.name} #{knockout.home_score} - #{knockout.away_score} #{knockout.away_team.name}. #{winner} marches on!"
-        else
-          "#{count} #{'match'.pluralize(count)} completed. Some thrilling results in there!"
-        end
-
-      when 'PreEvent'
+      when "MidEvent"
+        live = matches.select { |m| m.status == "MidEvent" }.first
+        live ? "#{live.home_team.name} #{live.home_score}–#{live.away_score} #{live.away_team.name} and more matches in progress!" : "#{matches.count} matches LIVE!"
+      when "PostEvent"
+        ko = matches.reject { |m| m.stage == "Group Stage" }.first
+        ko ? "#{ko.home_team.name} #{ko.home_score}–#{ko.away_score} #{ko.away_team.name}. #{ko.winner == "home" ? ko.home_team.name : ko.away_team.name} marches on!" : "#{matches.count} matches completed."
+      when "PreEvent"
         upcoming = matches.first
-        if upcoming
-          "#{upcoming.home_team.name} vs #{upcoming.away_team.name} kicks off soon! #{count} exciting #{'match'.pluralize(count)} on the horizon."
-        else
-          "#{count} #{'match'.pluralize(count)} coming up. Get ready for the action!"
-        end
+        upcoming ? "#{upcoming.home_team.name} vs #{upcoming.away_team.name} kicks off soon!" : "#{matches.count} matches coming up."
       end
     end
+  end
+
+  def leaderboard_cache_version
+    totals = Group.includes(:teams).order(:id).map { |g| "#{g.id}:#{g.total_points}" }.join("|")
+    Digest::SHA256.hexdigest(totals)[0, 16]
   end
 end

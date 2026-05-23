@@ -126,7 +126,12 @@ class MatchesController < ApplicationController
     @match = Match.includes(:home_team, :away_team).find(params[:id])
     if @match.status == "PreEvent"
       @scenarios = ScenarioEngine.new(@match).call
-      @match_insight = MatchInsightService.cached_call(@match) unless @match.stage == "Group Stage"
+      if @match.stage == "Group Stage"
+        result = UpcomingMatchesInsightService.call([@match])
+        @match_insight = result[:per_match][@match.match_id]
+      else
+        @match_insight = MatchInsightService.cached_call(@match)
+      end
     end
   end
 

@@ -53,8 +53,8 @@
       </div>
     <% end %>
 
-    <!-- Scenario Insight Panel (PreEvent only) -->
-    <% if @scenarios.present? %>
+    <!-- Scenario Insight Panel (PreEvent knockout only) -->
+    <% if @scenarios.present? && @scenarios.values.any? { |d| d[:friend_deltas].any? } %>
       <section>
         <h2 class="text-lg font-bold text-text-primary-light dark:text-text-primary-dark mb-3">What's at stake</h2>
         <div class="space-y-3">

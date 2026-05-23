@@ -3,7 +3,7 @@ services:
     name: worldcup-sweepstake-2026
     runtime: ruby
     buildCommand: "./bin/render-build.sh"
-    preDeployCommand: "bundle exec rails db:migrate"
+    preDeployCommand: "bundle exec rails db:prepare"
     startCommand: "bundle exec puma -C config/puma.rb"
     envVars:
       - key: DATABASE_URL

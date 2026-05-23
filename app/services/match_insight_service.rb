@@ -9,6 +9,19 @@ class MatchInsightService
     - Be specific: use names, numbers, and positions from the data.
   PROMPT
 
+  def self.cached_call(match)
+    service = new(match)
+    cache_key = service.send(:compute_cache_key)
+
+    if match.scenario_insight_cache_key == cache_key && match.scenario_insight.present?
+      return match.scenario_insight
+    end
+
+    insight = service.call
+    match.update_columns(scenario_insight: insight, scenario_insight_cache_key: cache_key) if insight
+    insight
+  end
+
   def initialize(match)
     @match    = match
     @scenarios = ScenarioEngine.new(match).call
@@ -84,5 +97,13 @@ class MatchInsightService
       "#{scenario_labels[outcome]}: #{deltas}"
     end
     parts.any? ? parts.join(" | ") : "#{@match.home_team.name} vs #{@match.away_team.name} — points up for grabs!"
+  end
+
+  def compute_cache_key
+    relevant_groups = Group.includes(:teams, :friend).select do |g|
+      g.teams.any? { |t| t.id == @match.home_team_id || t.id == @match.away_team_id }
+    end
+    state = relevant_groups.map { |g| "#{g.id}:#{g.total_points}" }.sort.join("|")
+    Digest::SHA256.hexdigest("#{@match.status}|#{state}")[0, 16]
   end
 end

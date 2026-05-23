@@ -141,6 +141,29 @@ namespace :tournament do
     end
   end
 
+  desc "Simulate a full World Cup tournament end-to-end (resets match data + team points)"
+  task simulate: :environment do
+    require Rails.root.join("lib", "tournament_simulation")
+
+    if Group.count < 12
+      puts "❌ Not enough groups (found #{Group.count}, need 12). Run db:seed first."
+      next
+    end
+
+    print "\n⚠️  This will reset all match data and team points. Continue? (yes/no): "
+    confirmation = STDIN.gets.chomp
+    unless confirmation.downcase == "yes"
+      puts "❌ Cancelled"
+      next
+    end
+
+    puts "\n🔄 Resetting data..."
+    Match.destroy_all
+    Team.update_all(points: 0, progressed: false)
+    AiInsightCache.destroy_all
+    puts "✅ Reset complete\n"
+  end
+
   desc "Reset all tournament data"
   task reset: :environment do
     print "⚠️  Are you sure you want to delete all tournament data? (yes/no): "

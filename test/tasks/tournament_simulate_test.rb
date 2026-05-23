@@ -187,6 +187,31 @@ class TournamentSimulateTest < ActiveSupport::TestCase
     assert_equal 4, away.reload.points  # was 3, +1
   end
 
+  # ── full integration ─────────────────────────────────────────────────────
+
+  def build_simulation_data
+    12.times do |g|
+      friend = Friend.create!(name: "SimFriend#{g}_#{SecureRandom.hex(4)}")
+      group  = Group.create!(name: "SimGroup#{g}", multiplier: 3, friend: friend)
+      4.times do |t|
+        team = Team.create!(name: "SimTeam#{g}_#{t}_#{SecureRandom.hex(4)}")
+        group.teams << team
+      end
+    end
+  end
+
+  test "simulate task aborts when user types 'no'" do
+    build_simulation_data
+
+    STDIN.stub(:gets, "no\n") do
+      assert_output(/Cancelled/) do
+        Rake::Task["tournament:simulate"].invoke
+      end
+    end
+
+    assert_equal 0, Match.count
+  end
+
   # ── simulate_knockout_match ──────────────────────────────────────────────
 
   test "simulate_knockout_match creates a PostEvent match with a winner and awards points" do

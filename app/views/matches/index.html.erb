@@ -87,8 +87,10 @@
     <% else %>
       <% # Group matches by date (most recent first) %>
       <% matches_by_date = @matches.group_by { |m| m.start_time.to_date } %>
-      <% matches_by_date.sort.reverse.each do |date, matches| %>
-        <% matches = matches.sort_by(&:start_time).reverse %>
+      <% upcoming = @filter_params['PreEvent'] == '1' %>
+      <% sorted_dates = upcoming ? matches_by_date.sort : matches_by_date.sort.reverse %>
+      <% sorted_dates.each do |date, matches| %>
+        <% matches = upcoming ? matches.sort_by(&:start_time) : matches.sort_by(&:start_time).reverse %>
         <% if date == Date.today %>
           <h2 class="text-lg md:text-xl font-bold leading-tight tracking-[-0.015em] text-text-primary-light dark:text-text-primary-dark pb-2 pt-6">TODAY</h2>
         <% elsif date == Date.tomorrow %>

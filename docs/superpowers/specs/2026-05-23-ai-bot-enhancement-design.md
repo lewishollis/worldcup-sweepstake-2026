@@ -38,35 +38,53 @@ A pure Ruby service. Takes an upcoming match, returns exact sweepstake consequen
 - The match (home team, away team, stage)
 - Current friend/group/team/points state from DB
 
+### Scoring model (canonical definition)
+
+Three distinct concepts, kept separate throughout:
+
+**1. Team tournament points** — points a team earns through the tournament:
+```
+Group Stage progression (entering knockout):  +1 pt
+Last 16 win:                                  +1 pt
+Quarter-final win:                            +1 pt
+Semi-final win:                               +1 pt
+Final winner:                                 +2 pts
+Final runner-up:                              +1 pt
+3rd Place Final win:                          +1 pt
+```
+
+**2. Friend score** — derived from team points, never stored independently:
+```
+friend.score = friend.groups.sum { |g| g.teams.sum(&:points) * g.multiplier }
+```
+Multipliers are per-group (2x–6x), set at sweepstake draw time.
+
+**3. Leaderboard rank** — friends ordered by `friend.score` descending. Ties broken by earliest points achieved (existing behaviour).
+
 ### Outputs
-For each scenario (home win / draw / away win; or home/away only for knockouts):
-- Which teams gain points and how many (per stage rules below)
-- Which friends own those teams and their multiplier
-- Resulting score delta per friend: `{ friend: "Lewis", delta: +3, new_total: 18 }`
-- New leaderboard order
-- Who moves up/down and by how many places
-- New leader and their total
 
-### Scoring rules encoded in the engine
-```
-Group Stage progression:    +1 point (on entering knockout stage)
-Last 16 win:                +1 point
-Quarter-final win:          +1 point
-Semi-final win:             +1 point
-Final winner:               +2 points
-Final runner-up:            +1 point
-3rd Place Final win:        +1 point
-Friend score = sum(team.points) × group.multiplier
-```
+For each scenario (home win / draw / away win; or home/away only for knockouts), the engine returns three distinct objects:
 
-### Output format
 ```ruby
 {
   home_win: {
-    point_changes: [{ friend: "Lewis", delta: 3, new_total: 18 }],
-    new_leader: "Lewis",
-    leaderboard: [["Lewis", 18], ["Sarah", 15], ...],
-    shifts: [{ friend: "Lewis", move: +1 }, { friend: "Sarah", move: -1 }]
+    # 1. Team tournament points awarded in this scenario
+    team_points: [
+      { team: "Brazil", points_awarded: 1, reason: "Last 16 win" }
+    ],
+
+    # 2. Friend score deltas (computed from team_points × multiplier)
+    friend_deltas: [
+      { friend: "Lewis", delta: 3, new_total: 18 }
+    ],
+
+    # 3. Leaderboard rank changes
+    rank_changes: [
+      { friend: "Lewis", old_rank: 2, new_rank: 1 },
+      { friend: "Sarah", old_rank: 1, new_rank: 2 }
+    ],
+
+    new_leader: "Lewis"
   },
   draw: { ... },
   away_win: { ... }
@@ -87,15 +105,22 @@ A single `GroqClient` service class wraps the Groq API. Replaces the existing An
 
 ### Prompt types
 
+**Prompt constraints (both types)**
+- The model must only paraphrase the structured facts it receives — it must never invent alternative outcomes, scores, or standings
+- Each scenario must be kept to 1-2 sharp sentences; no padding or waffle
+- The system prompt explicitly states: "You are given pre-computed facts. Report them faithfully in Ben Motson's voice. Do not speculate beyond what is provided."
+
 **Match-level insight prompt**
-- System context: Ben Motson persona, sweepstake scoring rules, current leaderboard, 5 latest news items
-- User message: ScenarioEngine output for this match (structured facts)
-- Output: 2-3 sentences per scenario in Ben Motson's voice
-- Example output: *"If Brazil pip France tonight, Lewis rockets to the top with 18 points — and with Argentina still to play, he could run away with this."*
+- System context: Ben Motson persona, sweepstake scoring rules summary, current leaderboard, **2-3 most recent football-relevant news items**
+- User message: ScenarioEngine output for this match (all three objects: team_points, friend_deltas, rank_changes)
+- Output: 1-2 sentences per scenario in Ben Motson's voice
+- Example: *"If Brazil pip France tonight, Lewis rockets to the top with 18 points — and with Argentina still to play, he could run away with this."*
+- Football relevance filter: news items included only if they mention either team in the match, or tournament-wide news (injuries, suspensions, group table implications)
 
 **Leaderboard-level insight prompt**
-- System context: Ben Motson persona, full standings, all upcoming matches this week with ScenarioEngine output for each, 5 latest news items
-- Output: Short "state of play" paragraph + 2-3 most pivotal upcoming matches with their sweepstake implications
+- System context: Ben Motson persona, full standings, all upcoming matches this week with ScenarioEngine output for each, **up to 5 football-relevant news items**
+- Output: Short "state of play" paragraph (3-4 sentences max) + 2-3 most pivotal matches (those with the largest possible rank changes)
+- Football relevance filter: prefer news about teams still active in the tournament
 
 ### Caching
 - **Match-level**: New `scenario_insight` (text) and `scenario_insight_cache_key` (string) columns on the `Match` table. Cache key is a SHA256 digest of `match.status` + the serialised points totals of all friends who own either team. Regenerated when key changes.
@@ -122,6 +147,24 @@ A single `GroqClient` service class wraps the Groq API. Replaces the existing An
 - No new pages — insights slot into existing layouts as panels
 - Tailwind styling follows existing patterns
 - Mobile-first (existing app is responsive)
+
+---
+
+## Phased Delivery
+
+Ship in four phases to keep debugging tractable:
+
+**Phase 1 — Deterministic engine + static templates**
+Build `ScenarioEngine`, `TournamentContextService` (standings only, no news), and wire the output into static insight panels on the match and leaderboard pages. Verify maths is correct end-to-end before any AI is involved.
+
+**Phase 2 — Groq commentary**
+Add `GroqClient`, update `BenMotsonService` and `AiLeaderboardInsightsService` to narrate ScenarioEngine output. No news context yet — just structured facts → natural language.
+
+**Phase 3 — News context enrichment**
+Add `NewsItem` table, BBC RSS rake task, cron schedule, and football relevance filtering. Inject news into existing prompts.
+
+**Phase 4 — Caching optimisations**
+Add `scenario_insight` columns to `Match`, add `AiInsightCache` model, implement cache key/invalidation logic. Until then, generate on every page load (acceptable for low traffic during tournament).
 
 ---
 

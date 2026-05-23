@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_05_22_101725) do
+ActiveRecord::Schema[7.1].define(version: 2026_05_23_111917) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -89,6 +89,16 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_22_101725) do
     t.index ["home_team_id"], name: "index_matches_on_home_team_id"
     t.index ["match_id"], name: "index_matches_on_match_id", unique: true
     t.index ["team_id"], name: "index_matches_on_team_id"
+  end
+
+  create_table "news_items", force: :cascade do |t|
+    t.string "title"
+    t.text "summary"
+    t.string "guid"
+    t.datetime "published_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["guid"], name: "index_news_items_on_guid", unique: true
   end
 
   create_table "sets", force: :cascade do |t|

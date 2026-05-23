@@ -1,0 +1,94 @@
+<div class="max-w-7xl mx-auto w-full">
+  <header class="page-header">
+    <div class="page-header-container">
+      <%= link_to matches_path, class: "page-header-button" do %>
+        <span class="material-symbols-outlined text-2xl">arrow_back</span>
+      <% end %>
+      <h1 class="page-title">Match Preview</h1>
+      <div class="w-12"></div>
+    </div>
+  </header>
+
+  <main class="px-4 md:px-6 lg:px-8 pb-24 md:pb-8 space-y-6 pt-6">
+
+    <!-- Match Header -->
+    <div class="bg-surface-light dark:bg-surface-dark rounded-2xl p-6 text-center">
+      <p class="text-xs text-text-secondary-light dark:text-text-secondary-dark uppercase tracking-widest mb-3"><%= @match.stage %></p>
+      <div class="flex items-center justify-center gap-6">
+        <div class="text-center flex-1">
+          <% if @match.home_team.flag_url.present? %>
+            <%= image_tag @match.home_team.flag_url, class: "w-12 h-12 rounded-full object-cover mx-auto mb-2" %>
+          <% end %>
+          <p class="font-bold text-text-primary-light dark:text-text-primary-dark"><%= @match.home_team.name %></p>
+          <% home_friend = @match.home_team.groups.first&.friend %>
+          <p class="text-xs text-text-secondary-light dark:text-text-secondary-dark"><%= home_friend&.name || "No owner" %></p>
+        </div>
+        <div class="text-center">
+          <% if @match.status == "PreEvent" %>
+            <p class="text-sm text-text-secondary-light dark:text-text-secondary-dark"><%= @match.start_time&.strftime("%d %b, %H:%M") %></p>
+            <p class="text-2xl font-bold text-text-primary-light dark:text-text-primary-dark">vs</p>
+          <% else %>
+            <p class="text-3xl font-bold text-text-primary-light dark:text-text-primary-dark"><%= @match.home_score %> – <%= @match.away_score %></p>
+            <p class="text-xs text-text-secondary-light dark:text-text-secondary-dark"><%= @match.status == "MidEvent" ? "LIVE" : "FT" %></p>
+          <% end %>
+        </div>
+        <div class="text-center flex-1">
+          <% if @match.away_team.flag_url.present? %>
+            <%= image_tag @match.away_team.flag_url, class: "w-12 h-12 rounded-full object-cover mx-auto mb-2" %>
+          <% end %>
+          <p class="font-bold text-text-primary-light dark:text-text-primary-dark"><%= @match.away_team.name %></p>
+          <% away_friend = @match.away_team.groups.first&.friend %>
+          <p class="text-xs text-text-secondary-light dark:text-text-secondary-dark"><%= away_friend&.name || "No owner" %></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scenario Insight Panel (PreEvent only) -->
+    <% if @scenarios.present? %>
+      <section>
+        <h2 class="text-lg font-bold text-text-primary-light dark:text-text-primary-dark mb-3">What's at stake</h2>
+        <div class="space-y-3">
+          <% scenario_labels = { home_win: "#{@match.home_team.name} win", draw: "Draw", away_win: "#{@match.away_team.name} win" } %>
+          <% @scenarios.each do |outcome, data| %>
+            <div class="bg-surface-light dark:bg-surface-dark rounded-2xl p-4">
+              <p class="text-xs font-semibold uppercase tracking-widest text-text-secondary-light dark:text-text-secondary-dark mb-3">
+                If <%= scenario_labels[outcome] %>
+              </p>
+              <% if data[:friend_deltas].any? %>
+                <div class="space-y-2 mb-3">
+                  <% data[:friend_deltas].each do |delta| %>
+                    <div class="flex items-center justify-between">
+                      <span class="text-sm text-text-primary-light dark:text-text-primary-dark"><%= delta[:friend] %></span>
+                      <span class="text-sm font-bold text-accent-live">+<%= delta[:delta].to_i %> pts → <%= delta[:new_total].to_i %> total</span>
+                    </div>
+                  <% end %>
+                </div>
+                <% if data[:rank_changes].any? %>
+                  <div class="text-xs text-text-secondary-light dark:text-text-secondary-dark">
+                    <% data[:rank_changes].each do |rc| %>
+                      <% if rc[:new_rank] < rc[:old_rank] %>
+                        <span class="text-accent-live">↑ <%= rc[:friend] %> moves to #<%= rc[:new_rank] %></span>
+                      <% else %>
+                        <span class="text-red-400">↓ <%= rc[:friend] %> drops to #<%= rc[:new_rank] %></span>
+                      <% end %>
+                    <% end %>
+                  </div>
+                <% end %>
+                <% if data[:new_leader] %>
+                  <p class="text-xs font-semibold text-text-secondary-light dark:text-text-secondary-dark mt-2">
+                    Leader: <%= data[:new_leader] %>
+                  </p>
+                <% end %>
+              <% else %>
+                <p class="text-sm text-text-secondary-light dark:text-text-secondary-dark">No sweepstake points at stake in this scenario.</p>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </section>
+    <% end %>
+
+  </main>
+</div>
+
+<%= render 'layouts/bottom_nav' %>

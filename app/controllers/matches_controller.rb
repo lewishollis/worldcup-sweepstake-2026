@@ -117,8 +117,10 @@ class MatchesController < ApplicationController
   end
 
   def show
-    @matches = Match.all.includes(:home_team, :away_team)
-    @friends = Friend.includes(teams: [:home_matches, :away_matches])
+    @match = Match.includes(:home_team, :away_team).find(params[:id])
+    if @match.status == "PreEvent"
+      @scenarios = ScenarioEngine.new(@match).call
+    end
   end
 
   private

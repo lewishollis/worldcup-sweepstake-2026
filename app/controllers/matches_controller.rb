@@ -1,6 +1,9 @@
 class MatchesController < ApplicationController
   def index
     @filter_params = filter_params
+    if @filter_params.blank?
+      redirect_to matches_path(filter: { PreEvent: '1' }) and return
+    end
     today_date = Time.now.strftime("%Y-%m-%d")
     url = URI("https://web-cdn.api.bbci.co.uk/wc-poll-data/container/sport-data-scores-fixtures?selectedEndDate=2026-07-19&selectedStartDate=2026-06-01&todayDate=#{today_date}&urn=urn%3Abbc%3Asportsdata%3Afootball%3Atournament%3Aworld-cup")
 

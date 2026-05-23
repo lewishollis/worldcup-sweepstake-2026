@@ -10,9 +10,19 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_05_23_112245) do
+ActiveRecord::Schema[7.1].define(version: 2026_05_23_112340) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "ai_insight_caches", force: :cascade do |t|
+    t.string "key"
+    t.text "content"
+    t.string "version"
+    t.datetime "generated_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["key"], name: "index_ai_insight_caches_on_key", unique: true
+  end
 
   create_table "friend_group_teams", force: :cascade do |t|
     t.bigint "friends_group_id"

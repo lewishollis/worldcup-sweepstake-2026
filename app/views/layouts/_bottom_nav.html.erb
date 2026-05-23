@@ -20,13 +20,13 @@
       <i class="fas fa-futbol bottom-nav-icon"></i>
       <span class="bottom-nav-label">Game</span>
     <% end %>
-
-    <button id="darkModeToggleMobile" class="bottom-nav-link">
-      <span class="material-symbols-outlined bottom-nav-icon darkModeIcon">dark_mode</span>
-      <span class="bottom-nav-label">Theme</span>
-    </button>
   </div>
 </nav>
+
+<!-- Floating theme toggle (mobile only) -->
+<button id="darkModeToggleMobile" class="md:hidden fixed top-4 right-4 z-50 flex items-center justify-center w-9 h-9 rounded-full bg-surface-light dark:bg-surface-dark text-text-secondary-light dark:text-text-secondary-dark shadow-md">
+  <span class="material-symbols-outlined darkModeIcon" style="font-size: 20px">dark_mode</span>
+</button>
 
 <!-- Desktop Top Nav -->
 <nav class="hidden md:block fixed top-0 left-0 right-0 bg-background-light dark:bg-background-dark border-b border-gray-200 dark:border-gray-800 z-50">
@@ -55,9 +55,8 @@
         <% end %>
       </div>
 
-      <button id="darkModeToggleDesktop" class="flex items-center gap-2 px-4 py-2 rounded-lg text-text-secondary-light dark:text-text-secondary-dark hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+      <button id="darkModeToggleDesktop" class="flex items-center justify-center w-9 h-9 rounded-full text-text-secondary-light dark:text-text-secondary-dark hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
         <span class="material-symbols-outlined darkModeIcon">dark_mode</span>
-        <span class="font-medium">Theme</span>
       </button>
     </div>
   </div>

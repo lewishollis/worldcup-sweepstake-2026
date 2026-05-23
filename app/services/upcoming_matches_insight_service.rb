@@ -7,8 +7,8 @@ class UpcomingMatchesInsightService
     - Never invent scores, points, or standings not in the data.
     - Be specific: use names, numbers, and positions from the data.
     - Keep the summary to 2-3 sentences.
-    - Keep each per-match line to 1 sentence.
-    - For group stage matches (no sweepstake points): comment on football favourites/form.
+    - Keep each per-match line to 2-3 sentences maximum.
+    - For group stage matches: mention that no sweepstake points are up for grabs, name the favourite, call out one player to watch, and give a sense of whether to expect goals or a tight affair.
     - For knockout matches: focus on sweepstake implications for the owners.
     - Respond ONLY with valid JSON. No markdown, no explanation, no code fences.
   PROMPT
@@ -52,7 +52,7 @@ class UpcomingMatchesInsightService
     system_prompt = [BEN_MOTSON_PERSONA, "", "CURRENT STANDINGS:", context.leaderboard_text].join("\n")
     user_message = build_user_message
 
-    raw = GroqClient.call(system_prompt: system_prompt, user_message: user_message, max_tokens: 800)
+    raw = GroqClient.call(system_prompt: system_prompt, user_message: user_message, max_tokens: 1200)
     return { summary: nil, per_match: {} } unless raw
 
     parsed = JSON.parse(raw, symbolize_names: true)

@@ -11,3 +11,11 @@ end
 every 15.minutes do
   rake "whatsapp:check_results"
 end
+
+every :day, at: "7:00 am" do
+  rake "news_feed:fetch"
+end
+
+every :day, at: "10:00 pm" do
+  rake "news_feed:fetch"
+end

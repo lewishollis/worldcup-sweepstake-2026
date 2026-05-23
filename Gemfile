@@ -29,6 +29,7 @@ gem 'rubygems-update', '3.1.2'
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
 gem "jbuilder"
 gem 'net-http'
+gem 'rss'
 gem "sass-embedded"
 gem 'dartsass-rails'
 gem "tailwindcss-rails"

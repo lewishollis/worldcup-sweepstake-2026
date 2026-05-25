@@ -91,7 +91,7 @@
 .game-keeper.dive-right  { transform: translateX(100%) rotate(65deg); }
 
 .game-ball {
-  @apply text-4xl text-center mt-2 select-none cursor-pointer border-none bg-transparent p-0 block w-full;
+  @apply text-7xl text-center mt-2 select-none cursor-pointer border-none bg-transparent p-0 block w-full;
   transition: transform 0.1s;
 }
 

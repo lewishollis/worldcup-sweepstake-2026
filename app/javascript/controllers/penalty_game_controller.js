@@ -92,6 +92,8 @@ export default class extends Controller {
     this._renderFriendGrid()
     this._renderLeaderboard(this.leaderboardValue)
 
+    this._showHowToPlayModal()
+
     // Restore session
     const saved = sessionStorage.getItem("penalty_game_friend")
     if (saved) {
@@ -218,6 +220,73 @@ export default class extends Controller {
 
     document.body.appendChild(overlay)
     playBtn.focus()
+  }
+
+  _showHowToPlayModal() {
+    const overlay = document.createElement("div")
+    overlay.style.cssText = "position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9999;background:rgba(0,0,0,0.65);backdrop-filter:blur(3px)"
+
+    const card = document.createElement("div")
+    card.style.cssText = "background:#1a1a2e;border:2px solid #4a9d6f;border-radius:16px;padding:28px 24px;width:88%;max-width:300px;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.7)"
+
+    const icon = document.createElement("div")
+    icon.style.cssText = "font-size:2rem;margin-bottom:4px"
+    icon.textContent = "⚽"
+
+    const heading = document.createElement("div")
+    heading.style.cssText = "color:#fff;font-size:1.1rem;font-weight:800;margin-bottom:2px"
+    heading.textContent = "How to Play"
+
+    const sub = document.createElement("div")
+    sub.style.cssText = "color:#7a7a9a;font-size:0.78rem;margin-bottom:20px"
+    sub.textContent = "Penalty Shootout"
+
+    const stepsList = document.createElement("div")
+    stepsList.style.cssText = "display:flex;flex-direction:column;gap:10px;margin-bottom:22px;text-align:left"
+
+    const steps = [
+      { title: "Aim",              desc: "Tap the ball to lock the direction bar" },
+      { title: "Shoot",            desc: "Tap again to lock your power" },
+      { title: "Score streaks 🔥", desc: "Avoid the red zones — that's a miss" },
+    ]
+
+    steps.forEach((s, i) => {
+      const row = document.createElement("div")
+      row.style.cssText = "display:flex;align-items:center;gap:12px;background:#0f0f1a;border-radius:10px;padding:10px 12px"
+
+      const num = document.createElement("div")
+      num.style.cssText = "background:#4a9d6f;color:#fff;font-weight:800;font-size:0.8rem;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0"
+      num.textContent = String(i + 1)
+
+      const textWrap = document.createElement("div")
+      const title = document.createElement("div")
+      title.style.cssText = "color:#fff;font-size:0.82rem;font-weight:600"
+      title.textContent = s.title
+      const desc = document.createElement("div")
+      desc.style.cssText = "color:#7a7a9a;font-size:0.74rem"
+      desc.textContent = s.desc
+      textWrap.appendChild(title)
+      textWrap.appendChild(desc)
+
+      row.appendChild(num)
+      row.appendChild(textWrap)
+      stepsList.appendChild(row)
+    })
+
+    const btn = document.createElement("button")
+    btn.style.cssText = "background:#4a9d6f;color:#fff;border:none;border-radius:10px;padding:12px 0;font-size:0.95rem;font-weight:700;cursor:pointer;width:100%"
+    btn.textContent = "Got it, let's play!"
+    btn.addEventListener("click", () => {
+      overlay.remove()
+    })
+
+    card.appendChild(icon)
+    card.appendChild(heading)
+    card.appendChild(sub)
+    card.appendChild(stepsList)
+    card.appendChild(btn)
+    overlay.appendChild(card)
+    document.body.appendChild(overlay)
   }
 
   _selectFriend(friend) {

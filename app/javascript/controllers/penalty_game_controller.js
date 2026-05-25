@@ -1,8 +1,8 @@
 // app/javascript/controllers/penalty_game_controller.js
 import { Controller } from "@hotwired/stimulus"
 
-const DIRECTION_SPEED     = 2.2  // % per frame
-const POWER_SPEED         = 2.0
+const DIRECTION_SPEED     = 180  // % per second
+const POWER_SPEED         = 160  // % per second
 const DIRECTION_MISS_EDGE = 8    // 0–8% or 92–100% = too wide (miss)
 const POWER_MISS_EDGE     = 92   // 92–100% = over the bar (miss)
 
@@ -334,16 +334,21 @@ export default class extends Controller {
     this.hintTextTarget.textContent = "Tap the ball to aim"
     this.keeperTarget.className = "game-keeper"
     this._startTapTimeout()
-    this._sweepDirection()
+    this.lastFrameTime = null
+    this.raf = requestAnimationFrame((ts) => this._sweepDirection(ts))
   }
 
-  _sweepDirection() {
+  _sweepDirection(ts) {
     if (this.dirLocked) return
-    this.dirPct += DIRECTION_SPEED * this.dirDir
-    if (this.dirPct >= 100) { this.dirPct = 100; this.dirDir = -1 }
-    if (this.dirPct <= 0)   { this.dirPct = 0;   this.dirDir =  1 }
-    this._updateDirectionUI()
-    this.raf = requestAnimationFrame(() => this._sweepDirection())
+    if (this.lastFrameTime !== null) {
+      const delta = (ts - this.lastFrameTime) / 1000
+      this.dirPct += DIRECTION_SPEED * delta * this.dirDir
+      if (this.dirPct >= 100) { this.dirPct = 100; this.dirDir = -1 }
+      if (this.dirPct <= 0)   { this.dirPct = 0;   this.dirDir =  1 }
+      this._updateDirectionUI()
+    }
+    this.lastFrameTime = ts
+    this.raf = requestAnimationFrame((ts) => this._sweepDirection(ts))
   }
 
   _updateDirectionUI() {
@@ -385,16 +390,21 @@ export default class extends Controller {
     this.powerWrapperTarget.classList.remove("hidden")
     this.hintTextTarget.textContent = "Tap the ball to shoot!"
     this._startTapTimeout()
-    this._sweepPower()
+    this.lastFrameTime = null
+    this.raf = requestAnimationFrame((ts) => this._sweepPower(ts))
   }
 
-  _sweepPower() {
-    this.pwrPct += POWER_SPEED * this.pwrDir
-    if (this.pwrPct >= 100) { this.pwrPct = 100; this.pwrDir = -1 }
-    if (this.pwrPct <= 0)   { this.pwrPct = 0;   this.pwrDir =  1 }
-    this.powerFillTarget.style.width  = `${this.pwrPct}%`
-    this.powerCursorTarget.style.left = `${this.pwrPct}%`
-    this.raf = requestAnimationFrame(() => this._sweepPower())
+  _sweepPower(ts) {
+    if (this.lastFrameTime !== null) {
+      const delta = (ts - this.lastFrameTime) / 1000
+      this.pwrPct += POWER_SPEED * delta * this.pwrDir
+      if (this.pwrPct >= 100) { this.pwrPct = 100; this.pwrDir = -1 }
+      if (this.pwrPct <= 0)   { this.pwrPct = 0;   this.pwrDir =  1 }
+      this.powerFillTarget.style.width  = `${this.pwrPct}%`
+      this.powerCursorTarget.style.left = `${this.pwrPct}%`
+    }
+    this.lastFrameTime = ts
+    this.raf = requestAnimationFrame((ts) => this._sweepPower(ts))
   }
 
   lockPower() {

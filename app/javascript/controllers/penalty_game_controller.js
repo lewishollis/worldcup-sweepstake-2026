@@ -357,6 +357,7 @@ export default class extends Controller {
     this.directionFillTarget.style.width  = `${pct}%`
     this.directionCursorTarget.style.left = `${pct}%`
     this.cursorTarget.style.left          = `${goalPct}%`
+    this.cursorTarget.style.top           = '85%'
   }
 
   tapBall() {

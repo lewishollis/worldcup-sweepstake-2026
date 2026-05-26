@@ -389,7 +389,7 @@ export default class extends Controller {
     this.pwrPct = 0
     this.pwrDir = 1
     this.powerWrapperTarget.classList.remove("hidden")
-    this.hintTextTarget.textContent = "Tap the ball to shoot!"
+    this.hintTextTarget.textContent = "Tap to shoot — stop it before it flies over the bar!"
     this._startTapTimeout()
     this.lastFrameTime = null
     this.raf = requestAnimationFrame((ts) => this._sweepPower(ts))

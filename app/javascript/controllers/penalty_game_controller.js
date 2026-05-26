@@ -245,8 +245,8 @@ export default class extends Controller {
     stepsList.style.cssText = "display:flex;flex-direction:column;gap:10px;margin-bottom:22px;text-align:left"
 
     const steps = [
-      { title: "Aim",              desc: "Tap the ball to lock the direction bar" },
-      { title: "Shoot",            desc: "Tap again to lock your power" },
+      { title: "Aim",              desc: "Tap to aim — stop the crosshair left, centre, or right." },
+      { title: "Shoot",            desc: "Tap to shoot — stop it before it flies over the bar." },
       { title: "Score streaks 🔥", desc: "Avoid the red zones — that's a miss" },
     ]
 

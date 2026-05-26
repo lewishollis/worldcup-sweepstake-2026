@@ -1,0 +1,4 @@
+{"type":"server-started","port":65147,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:65147","screen_dir":"/Users/lewishollis/Documents/worldcup-sweepstake-2026/worldcup-sweepstake-2026/.superpowers/brainstorm/87879-1779786918/content","state_dir":"/Users/lewishollis/Documents/worldcup-sweepstake-2026/worldcup-sweepstake-2026/.superpowers/brainstorm/87879-1779786918/state"}
+{"type":"screen-added","file":"/Users/lewishollis/Documents/worldcup-sweepstake-2026/worldcup-sweepstake-2026/.superpowers/brainstorm/87879-1779786918/content/approaches.html"}
+{"type":"screen-added","file":"/Users/lewishollis/Documents/worldcup-sweepstake-2026/worldcup-sweepstake-2026/.superpowers/brainstorm/87879-1779786918/content/waiting.html"}
+{"type":"server-stopped","reason":"idle timeout"}

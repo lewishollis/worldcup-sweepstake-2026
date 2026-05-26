@@ -1,0 +1,63 @@
+<h2>Modal mockup — does this feel right?</h2>
+<p class="subtitle">Appears on first visit, never again. Tap "Got it" to dismiss.</p>
+
+<div class="mockup">
+  <div class="mockup-header">/game — first visit</div>
+  <div class="mockup-body" style="background:#0d0d1a;padding:0;position:relative;min-height:420px;display:flex;align-items:center;justify-content:center;">
+
+    <!-- Blurred background suggestion -->
+    <div style="position:absolute;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(3px);border-radius:0 0 8px 8px;display:flex;align-items:center;justify-content:center;">
+
+      <div style="background:#1a1a2e;border:2px solid #4a9d6f;border-radius:16px;padding:28px 24px;width:88%;max-width:300px;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.7)">
+
+        <div style="font-size:2rem;margin-bottom:4px">⚽</div>
+        <div style="color:#fff;font-size:1.1rem;font-weight:800;margin-bottom:2px">How to Play</div>
+        <div style="color:#7a7a9a;font-size:0.78rem;margin-bottom:20px">Penalty Shootout</div>
+
+        <!-- Steps -->
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:22px;text-align:left">
+
+          <div style="display:flex;align-items:center;gap:12px;background:#0f0f1a;border-radius:10px;padding:10px 12px">
+            <div style="background:#4a9d6f;color:#fff;font-weight:800;font-size:0.8rem;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">1</div>
+            <div>
+              <div style="color:#fff;font-size:0.82rem;font-weight:600">Aim</div>
+              <div style="color:#7a7a9a;font-size:0.74rem">Tap the ball to lock the direction bar</div>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:12px;background:#0f0f1a;border-radius:10px;padding:10px 12px">
+            <div style="background:#4a9d6f;color:#fff;font-weight:800;font-size:0.8rem;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">2</div>
+            <div>
+              <div style="color:#fff;font-size:0.82rem;font-weight:600">Shoot</div>
+              <div style="color:#7a7a9a;font-size:0.74rem">Tap again to lock your power</div>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:12px;background:#0f0f1a;border-radius:10px;padding:10px 12px">
+            <div style="background:#4a9d6f;color:#fff;font-weight:800;font-size:0.8rem;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">3</div>
+            <div>
+              <div style="color:#fff;font-size:0.82rem;font-weight:600">Score streaks 🔥</div>
+              <div style="color:#7a7a9a;font-size:0.74rem">Avoid the red zones — that's a miss</div>
+            </div>
+          </div>
+
+        </div>
+
+        <button style="background:#4a9d6f;color:#fff;border:none;border-radius:10px;padding:12px 0;font-size:0.95rem;font-weight:700;cursor:pointer;width:100%">Got it, let's play!</button>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="options" style="margin-top:16px">
+  <div class="option" data-choice="good" onclick="toggleSelect(this)">
+    <div class="letter">✓</div>
+    <div class="content"><h3>Looks good — build it</h3><p>Happy with this design</p></div>
+  </div>
+  <div class="option" data-choice="tweak" onclick="toggleSelect(this)">
+    <div class="letter">~</div>
+    <div class="content"><h3>Needs tweaking</h3><p>Tell me what to change in the terminal</p></div>
+  </div>
+</div>

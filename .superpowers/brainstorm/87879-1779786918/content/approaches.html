@@ -1,0 +1,425 @@
+<h2>Penalty Game UI — 3 Redesign Approaches</h2>
+<p class="subtitle">The core problems: the yellow dot only shows left/right (no height), and the power bar is a horizontal bar labeled "POWER ↑" which doesn't communicate vertical placement. Click an approach to select it.</p>
+
+<style>
+  .approach-grid { display: flex; flex-direction: column; gap: 20px; margin-top: 16px; }
+  .approach-card {
+    background: #1a1a2e;
+    border: 2px solid #333;
+    border-radius: 14px;
+    padding: 16px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .approach-card:hover { border-color: #4a9d6f; }
+  .approach-card.selected { border-color: #4a9d6f; background: #1a2e22; }
+  .approach-title { color: #fff; font-weight: 800; font-size: 1rem; margin-bottom: 4px; }
+  .approach-label { display: inline-block; background: #4a9d6f; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+  .approach-desc { color: #a0a0c0; font-size: 0.82rem; margin-bottom: 12px; line-height: 1.5; }
+  .demo-area { display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+
+  /* Mini goal */
+  .mini-goal {
+    position: relative;
+    width: 160px;
+    height: 90px;
+    border: 3px solid white;
+    border-bottom: none;
+    background: rgba(0,0,0,0.4);
+    background-image:
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.06) 0, rgba(255,255,255,0.06) 1px, transparent 1px, transparent 20px),
+      repeating-linear-gradient(180deg, rgba(255,255,255,0.06) 0, rgba(255,255,255,0.06) 1px, transparent 1px, transparent 20px);
+    border-radius: 4px 4px 0 0;
+    flex-shrink: 0;
+  }
+  .mini-keeper {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 20px;
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  /* Option A: 2D crosshair */
+  .crosshair {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+  }
+  .crosshair::before, .crosshair::after {
+    content: '';
+    position: absolute;
+    background: rgba(255,255,0,0.9);
+  }
+  .crosshair::before { width: 2px; height: 100%; left: 50%; transform: translateX(-50%); }
+  .crosshair::after  { height: 2px; width: 100%; top: 50%; transform: translateY(-50%); }
+  .crosshair-ring {
+    position: absolute;
+    width: 18px; height: 18px;
+    border: 2px solid rgba(255,255,0,0.7);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    box-shadow: 0 0 6px rgba(255,255,0,0.4);
+  }
+
+  /* Option B: vertical bar */
+  .vertical-bar-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+  .vertical-bar-label { color: #a0a0c0; font-size: 9px; text-transform: uppercase; letter-spacing: 1px; }
+  .vertical-track {
+    width: 18px;
+    height: 90px;
+    background: #333;
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+  .vertical-fill {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #f59e0b;
+    border-radius: 4px;
+    transition: height 0.05s linear;
+  }
+  .vertical-cursor {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: white;
+    box-shadow: 0 0 4px #fff;
+    border-radius: 2px;
+  }
+  .vertical-zones {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 90px;
+    color: #555;
+    font-size: 8px;
+    margin-left: 4px;
+  }
+
+  /* Bars below goal */
+  .bar-section { flex: 1; min-width: 150px; }
+  .bar-label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .bar-lbl { color: #a0a0c0; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; }
+  .bar-track {
+    position: relative;
+    height: 10px;
+    background: #333;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 2px;
+  }
+  .bar-fill-green { position: absolute; left: 0; top: 0; bottom: 0; background: #4ade80; border-radius: 4px; }
+  .bar-fill-amber { position: absolute; left: 0; top: 0; bottom: 0; background: #f59e0b; border-radius: 4px; }
+  .bar-danger-l { position: absolute; left: 0; top: 0; bottom: 0; width: 8%; background: rgba(239,68,68,0.35); z-index: 2; }
+  .bar-danger-r { position: absolute; right: 0; top: 0; bottom: 0; width: 8%; background: rgba(239,68,68,0.35); z-index: 2; }
+  .bar-danger-r-only { position: absolute; right: 0; top: 0; bottom: 0; width: 8%; background: rgba(239,68,68,0.35); z-index: 2; }
+  .bar-cursor-line { position: absolute; top: 0; bottom: 0; width: 3px; background: white; box-shadow: 0 0 4px #fff; border-radius: 2px; transform: translateX(-50%); }
+  .bar-zones { display: flex; justify-content: space-between; color: #555; font-size: 8px; }
+
+  /* Option C: goal zones */
+  .zone-cell {
+    position: absolute;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 8px; color: rgba(255,255,255,0.3); font-weight: 700;
+    border: 1px solid rgba(255,255,255,0.08);
+    transition: background 0.2s;
+  }
+  .zone-cell.active { background: rgba(255,255,0,0.25) !important; border-color: rgba(255,255,0,0.6); }
+
+  .change-tag { color: #4ade80; font-size: 0.75rem; font-weight: 700; }
+  .same-tag { color: #666; font-size: 0.75rem; }
+  .change-list { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-direction: column; gap: 4px; }
+  .change-list li { font-size: 0.78rem; color: #c0c0d0; display: flex; gap: 6px; }
+  .change-list li .pill { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px; flex-shrink: 0; }
+  .pill.new { background: #4a9d6f; color: #fff; }
+  .pill.fix { background: #f59e0b; color: #000; }
+  .pill.keep { background: #444; color: #aaa; }
+</style>
+
+<div class="approach-grid">
+
+  <!-- OPTION A: 2D crosshair cursor -->
+  <div class="approach-card" data-choice="a" onclick="toggleSelect(this); startAnim('a')">
+    <div class="approach-label">Recommended</div>
+    <div class="approach-title">A — 2D Crosshair: cursor shows aim + height simultaneously</div>
+    <div class="approach-desc">
+      The cursor on the goal gains a <strong>vertical dimension</strong>. Phase 1 sweeps it left/right as before. Phase 2, instead of a separate power bar, the <strong>cursor also sweeps up/down</strong> — so the crosshair shows the exact landing spot. Label changes: "DIRECTION" → "AIM ←→", "POWER ↑" → "HEIGHT ↕". No conceptual gap between bar and goal.
+    </div>
+    <div class="demo-area">
+      <div>
+        <div class="mini-goal" id="goal-a">
+          <div class="crosshair-ring" id="ring-a" style="left:50%;top:50%"></div>
+          <div class="crosshair" id="cur-a" style="left:50%;top:50%"></div>
+          <div class="mini-keeper">🧤</div>
+        </div>
+        <div style="background:#111;padding:8px;border-radius:0 0 6px 6px;">
+          <div class="bar-lbl" id="phase-a-label">AIM ←→</div>
+          <div class="bar-track" style="margin-top:3px">
+            <div class="bar-danger-l"></div><div class="bar-danger-r"></div>
+            <div class="bar-fill-green" id="fill-a" style="width:50%"></div>
+            <div class="bar-cursor-line" id="bcur-a" style="left:50%"></div>
+          </div>
+          <div class="bar-zones" style="margin-top:2px"><span>LEFT</span><span>CENTER</span><span>RIGHT</span></div>
+          <div class="bar-lbl" id="phase-b-label" style="margin-top:6px;opacity:0.3">HEIGHT ↕</div>
+          <div class="bar-track" id="hbar-a" style="margin-top:3px;opacity:0.3">
+            <div class="bar-danger-r-only"></div>
+            <div class="bar-fill-amber" id="hfill-a" style="width:0%"></div>
+            <div class="bar-cursor-line" id="hcur-a" style="left:0%"></div>
+          </div>
+          <div class="bar-zones" style="margin-top:2px;opacity:0.3" id="hzones-a"><span>LOW</span><span>MID</span><span>HIGH</span></div>
+        </div>
+      </div>
+      <div>
+        <ul class="change-list">
+          <li><span class="pill new">NEW</span> Cursor moves in 2D — shows exact landing spot</li>
+          <li><span class="pill fix">FIX</span> Rename "POWER ↑" → "HEIGHT ↕"</li>
+          <li><span class="pill fix">FIX</span> Height bar highlights as cursor rises in goal</li>
+          <li><span class="pill keep">KEEP</span> Same 2-tap mechanic, same red danger zones</li>
+          <li><span class="pill keep">KEEP</span> Same keeper dive logic</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPTION B: vertical height bar -->
+  <div class="approach-card" data-choice="b" onclick="toggleSelect(this); startAnim('b')">
+    <div class="approach-title">B — Vertical Height Bar beside the goal</div>
+    <div class="approach-desc">
+      Keep the direction bar as-is. Replace the second horizontal "POWER" bar with a <strong>vertical bar on the right side of the goal</strong>, visually anchored to the goal height. The cursor on the goal also gains a y-position. The vertical bar makes "where in the goal" intuitively obvious.
+    </div>
+    <div class="demo-area">
+      <div style="display:flex;gap:4px;align-items:flex-end">
+        <div>
+          <div class="mini-goal" id="goal-b">
+            <div class="crosshair-ring" id="ring-b" style="left:50%;top:80%"></div>
+            <div class="crosshair" id="cur-b" style="left:50%;top:80%"></div>
+            <div class="mini-keeper">🧤</div>
+          </div>
+          <div style="background:#111;padding:8px;border-radius:0 0 6px 6px;">
+            <div class="bar-lbl">DIRECTION ←→</div>
+            <div class="bar-track" style="margin-top:3px">
+              <div class="bar-danger-l"></div><div class="bar-danger-r"></div>
+              <div class="bar-fill-green" id="fill-b" style="width:50%"></div>
+              <div class="bar-cursor-line" id="bcur-b" style="left:50%"></div>
+            </div>
+            <div class="bar-zones" style="margin-top:2px"><span>LEFT</span><span>CENTER</span><span>RIGHT</span></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2px;margin-bottom:0">
+          <div style="color:#a0a0c0;font-size:8px;text-transform:uppercase;letter-spacing:1px;writing-mode:vertical-rl;transform:rotate(180deg);margin-bottom:4px">HEIGHT</div>
+          <div class="vertical-track">
+            <div style="position:absolute;top:0;left:0;right:0;height:8%;background:rgba(239,68,68,0.35);z-index:2;border-radius:4px 4px 0 0;"></div>
+            <div class="vertical-fill" id="vfill-b" style="height:20%"></div>
+            <div class="vertical-cursor" id="vcur-b" style="bottom:20%;"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;justify-content:space-between;height:90px;color:#555;font-size:8px;text-align:center;line-height:1;padding:2px 0;">
+            <span>HIGH</span><span>MID</span><span>LOW</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <ul class="change-list">
+          <li><span class="pill new">NEW</span> Vertical bar next to goal = immediately spatial</li>
+          <li><span class="pill new">NEW</span> Cursor gains y-position from vertical bar</li>
+          <li><span class="pill fix">FIX</span> Red zone is at TOP of vertical bar (= over crossbar)</li>
+          <li><span class="pill keep">KEEP</span> Direction bar unchanged</li>
+          <li><span class="pill keep">KEEP</span> Same 2-tap mechanic</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPTION C: goal zone grid -->
+  <div class="approach-card" data-choice="c" onclick="toggleSelect(this); startAnim('c')">
+    <div class="approach-title">C — Visible Goal Zones: bars map to highlighted regions</div>
+    <div class="approach-desc">
+      Divide the goal into a 3×2 grid of named zones (low-left, low-center, low-right, high-left, etc.). The direction bar highlights a <strong>column</strong>, the height bar highlights a <strong>row</strong>. The active zone glows on the goal itself. Players see exactly which region they're targeting at all times.
+    </div>
+    <div class="demo-area">
+      <div>
+        <div class="mini-goal" id="goal-c" style="overflow:hidden">
+          <!-- 6 zone cells: 3 cols × 2 rows -->
+          <div class="zone-cell" style="left:0;top:0;width:33.3%;height:50%">↖</div>
+          <div class="zone-cell" style="left:33.3%;top:0;width:33.3%;height:50%">↑</div>
+          <div class="zone-cell" style="left:66.6%;top:0;width:33.3%;height:50%">↗</div>
+          <div class="zone-cell" style="left:0;top:50%;width:33.3%;height:50%" id="zc-0">←</div>
+          <div class="zone-cell" style="left:33.3%;top:50%;width:33.3%;height:50%" id="zc-1">·</div>
+          <div class="zone-cell" style="left:66.6%;top:50%;width:33.3%;height:50%" id="zc-2">→</div>
+          <div class="mini-keeper" style="z-index:10">🧤</div>
+        </div>
+        <div style="background:#111;padding:8px;border-radius:0 0 6px 6px;">
+          <div class="bar-lbl">DIRECTION ←→</div>
+          <div class="bar-track" style="margin-top:3px">
+            <div class="bar-danger-l"></div><div class="bar-danger-r"></div>
+            <div class="bar-fill-green" id="fill-c" style="width:50%"></div>
+            <div class="bar-cursor-line" id="bcur-c" style="left:50%"></div>
+          </div>
+          <div class="bar-zones" style="margin-top:2px"><span>LEFT</span><span>CENTER</span><span>RIGHT</span></div>
+          <div class="bar-lbl" style="margin-top:6px">HEIGHT ↕</div>
+          <div class="bar-track" style="margin-top:3px">
+            <div class="bar-danger-r-only"></div>
+            <div class="bar-fill-amber" id="hfill-c" style="width:30%"></div>
+            <div class="bar-cursor-line" id="hcur-c" style="left:30%"></div>
+          </div>
+          <div class="bar-zones" style="margin-top:2px"><span>LOW</span><span>MID</span><span>HIGH</span></div>
+        </div>
+      </div>
+      <div>
+        <ul class="change-list">
+          <li><span class="pill new">NEW</span> Goal shows active zone — no mental mapping needed</li>
+          <li><span class="pill fix">FIX</span> Rename "POWER" → "HEIGHT"</li>
+          <li><span class="pill fix">FIX</span> Two bars clearly mean direction column + height row</li>
+          <li><span class="pill keep">KEEP</span> Same 2-tap mechanic</li>
+          <li><span class="pill keep">KEEP</span> Same miss/save logic unchanged</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// Animation state
+let animTimers = {};
+
+function clearAnim(id) {
+  if (animTimers[id]) { clearInterval(animTimers[id]); delete animTimers[id]; }
+}
+
+function startAnim(which) {
+  // Don't restart if already running
+  if (animTimers[which]) return;
+
+  if (which === 'a') {
+    let dir = 1, pct = 10, phase = 1, phaseTimer = 0;
+    let hdir = 1, hpct = 0;
+    animTimers['a'] = setInterval(() => {
+      phaseTimer++;
+      if (phase === 1) {
+        pct += 1.5 * dir;
+        if (pct >= 95) { pct = 95; dir = -1; }
+        if (pct <= 5)  { pct = 5;  dir =  1; }
+        const goalX = 5 + (pct / 100) * 90;
+        document.getElementById('cur-a').style.left = goalX + '%';
+        document.getElementById('ring-a').style.left = goalX + '%';
+        document.getElementById('fill-a').style.width = pct + '%';
+        document.getElementById('bcur-a').style.left = pct + '%';
+        if (phaseTimer > 50) { phase = 2; phaseTimer = 0;
+          document.getElementById('phase-b-label').style.opacity = '1';
+          document.getElementById('hbar-a').style.opacity = '1';
+          document.getElementById('hzones-a').style.opacity = '1';
+        }
+      } else {
+        hpct += 1.2 * hdir;
+        if (hpct >= 95) { hpct = 95; hdir = -1; }
+        if (hpct <= 0)  { hpct = 0;  hdir =  1; }
+        // height: 0% power = bottom (top:85%), 100% power = top (top:5%)
+        const goalY = 85 - (hpct / 100) * 80;
+        document.getElementById('cur-a').style.top = goalY + '%';
+        document.getElementById('ring-a').style.top = goalY + '%';
+        document.getElementById('hfill-a').style.width = hpct + '%';
+        document.getElementById('hcur-a').style.left = hpct + '%';
+        if (phaseTimer > 80) { phase = 1; phaseTimer = 0;
+          document.getElementById('phase-b-label').style.opacity = '0.3';
+          document.getElementById('hbar-a').style.opacity = '0.3';
+          document.getElementById('hzones-a').style.opacity = '0.3';
+          hpct = 0; hdir = 1;
+          document.getElementById('cur-a').style.top = '50%';
+          document.getElementById('ring-a').style.top = '50%';
+        }
+      }
+    }, 30);
+  }
+
+  if (which === 'b') {
+    let dir = 1, pct = 10, phase = 1, phaseTimer = 0;
+    let hdir = 1, hpct = 20;
+    animTimers['b'] = setInterval(() => {
+      phaseTimer++;
+      if (phase === 1) {
+        pct += 1.5 * dir;
+        if (pct >= 95) { pct = 95; dir = -1; }
+        if (pct <= 5)  { pct = 5;  dir =  1; }
+        const goalX = 5 + (pct / 100) * 90;
+        document.getElementById('cur-b').style.left = goalX + '%';
+        document.getElementById('ring-b').style.left = goalX + '%';
+        document.getElementById('fill-b').style.width = pct + '%';
+        document.getElementById('bcur-b').style.left = pct + '%';
+        if (phaseTimer > 50) { phase = 2; phaseTimer = 0; }
+      } else {
+        hpct += 1 * hdir;
+        if (hpct >= 95) { hpct = 95; hdir = -1; }
+        if (hpct <= 0)  { hpct = 0;  hdir =  1; }
+        const goalY = 85 - (hpct / 100) * 80;
+        document.getElementById('cur-b').style.top = goalY + '%';
+        document.getElementById('ring-b').style.top = goalY + '%';
+        document.getElementById('vfill-b').style.height = hpct + '%';
+        document.getElementById('vcur-b').style.bottom = hpct + '%';
+        if (phaseTimer > 80) { phase = 1; phaseTimer = 0; hpct = 20; hdir = 1; }
+      }
+    }, 30);
+  }
+
+  if (which === 'c') {
+    const zoneCols = [document.getElementById('zc-0'), document.getElementById('zc-1'), document.getElementById('zc-2')];
+    // also top row
+    const zoneTopCells = document.getElementById('goal-c').querySelectorAll('.zone-cell');
+    let dir = 1, pct = 10, phase = 1, phaseTimer = 0;
+    let hdir = 1, hpct = 30;
+    let lockedCol = -1;
+    animTimers['c'] = setInterval(() => {
+      phaseTimer++;
+      if (phase === 1) {
+        pct += 1.5 * dir;
+        if (pct >= 95) { pct = 95; dir = -1; }
+        if (pct <= 5)  { pct = 5;  dir =  1; }
+        document.getElementById('fill-c').style.width = pct + '%';
+        document.getElementById('bcur-c').style.left = pct + '%';
+        // highlight active column
+        const col = pct < 33 ? 0 : pct < 67 ? 1 : 2;
+        zoneTopCells.forEach((z, i) => z.classList.toggle('active', i === col));
+        zoneCols.forEach((z, i) => z.classList.toggle('active', i === col));
+        if (phaseTimer > 50) { phase = 2; phaseTimer = 0; lockedCol = col; }
+      } else {
+        hpct += 1 * hdir;
+        if (hpct >= 95) { hpct = 95; hdir = -1; }
+        if (hpct <= 0)  { hpct = 0;  hdir =  1; }
+        document.getElementById('hfill-c').style.width = hpct + '%';
+        document.getElementById('hcur-c').style.left = hpct + '%';
+        const row = hpct < 50 ? 1 : 0; // 0=top half, 1=bottom half
+        zoneTopCells.forEach((z, i) => {
+          const isTopRow = i < 3;
+          const isBottomRow = i >= 3;
+          z.classList.remove('active');
+          if (isTopRow && row === 0 && i === lockedCol) z.classList.add('active');
+          if (isBottomRow && row === 1 && (i - 3) === lockedCol) z.classList.add('active');
+        });
+        if (phaseTimer > 80) {
+          phase = 1; phaseTimer = 0; hpct = 30; hdir = 1;
+          zoneTopCells.forEach(z => z.classList.remove('active'));
+        }
+      }
+    }, 30);
+  }
+}
+
+// Auto-start all animations after a short delay
+setTimeout(() => { startAnim('a'); }, 300);
+setTimeout(() => { startAnim('b'); }, 600);
+setTimeout(() => { startAnim('c'); }, 900);
+</script>

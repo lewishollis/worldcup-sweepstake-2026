@@ -1,0 +1,63 @@
+<h2>How should "How to Play" work?</h2>
+<p class="subtitle">Three approaches — click to select your preference</p>
+
+<div class="options">
+
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>One-time modal on first visit</h3>
+      <p>A full-screen overlay appears the very first time someone opens the game. Three steps shown visually. Tap "Got it" to dismiss — never shown again (stored in localStorage). Fast to get into the game on repeat visits.</p>
+      <div style="margin-top:10px;background:#0f0f1a;border-radius:10px;padding:12px;font-size:12px;color:#a0a0c0;border:1px solid #2a2a4a">
+        <div style="text-align:center;color:#4a9d6f;font-weight:700;margin-bottom:8px">HOW TO PLAY ⚽</div>
+        <div style="display:flex;gap:8px;justify-content:center;font-size:11px;">
+          <span style="background:#1a1a2e;padding:6px 10px;border-radius:8px">① Tap ball<br>to aim →</span>
+          <span style="background:#1a1a2e;padding:6px 10px;border-radius:8px">② Tap again<br>for power ↑</span>
+          <span style="background:#1a1a2e;padding:6px 10px;border-radius:8px">③ Score streaks<br>to rank up 🔥</span>
+        </div>
+        <div style="text-align:center;margin-top:10px"><span style="background:#4a9d6f;color:#fff;padding:5px 20px;border-radius:8px;font-size:11px">Got it!</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Collapsible card above friend picker</h3>
+      <p>A compact "How to play ▾" card sits permanently above the friend grid. Collapsed by default after first view. Users can re-open it anytime. Always accessible, never in the way.</p>
+      <div style="margin-top:10px;background:#0f0f1a;border-radius:10px;padding:12px;font-size:12px;color:#a0a0c0;border:1px solid #2a2a4a">
+        <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;color:#4a9d6f;font-weight:700">
+          <span>How to play ⚽</span><span>▾</span>
+        </div>
+        <div style="margin-top:8px;font-size:11px;display:flex;flex-direction:column;gap:4px">
+          <div>① Tap the ball to freeze the <strong style="color:#fff">direction bar</strong></div>
+          <div>② Tap again to freeze the <strong style="color:#fff">power bar</strong></div>
+          <div>③ Score goals in a row to build your <strong style="color:#fff">streak 🔥</strong></div>
+          <div>④ Avoid the red zones — that's a <strong style="color:#e74c3c">miss</strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Contextual hints on the bars themselves</h3>
+      <p>No separate instructions. Instead, the hint text already shown beneath each bar becomes more descriptive on the first round only — e.g. "Tap the ball to freeze the aim →" with a small animated arrow. After the first penalty, hints revert to the short versions.</p>
+      <div style="margin-top:10px;background:#0f0f1a;border-radius:10px;padding:12px;font-size:12px;color:#a0a0c0;border:1px solid #2a2a4a">
+        <div style="background:#1a1a2e;border-radius:8px;padding:8px;margin-bottom:6px">
+          <div style="font-size:10px;color:#666;text-transform:uppercase;letter-spacing:1px">DIRECTION ← →</div>
+          <div style="background:#333;height:8px;border-radius:4px;margin:6px 0;position:relative;overflow:hidden">
+            <div style="background:#4a9d6f;width:45%;height:100%;border-radius:4px"></div>
+          </div>
+          <div style="color:#4a9d6f;font-size:11px">👆 Tap the ball to lock your aim here →</div>
+        </div>
+        <div style="background:#1a1a2e;border-radius:8px;padding:8px;opacity:0.4">
+          <div style="font-size:10px;color:#666;text-transform:uppercase;letter-spacing:1px">POWER ↑</div>
+          <div style="font-size:11px;margin-top:4px;color:#555">(appears after aim locked)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

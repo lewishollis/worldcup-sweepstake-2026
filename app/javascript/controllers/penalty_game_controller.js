@@ -403,9 +403,20 @@ export default class extends Controller {
       if (this.pwrPct <= 0)   { this.pwrPct = 0;   this.pwrDir =  1 }
       this.powerFillTarget.style.width  = `${this.pwrPct}%`
       this.powerCursorTarget.style.left = `${this.pwrPct}%`
+      this._updateHeightUI(this.pwrPct)
     }
     this.lastFrameTime = ts
     this.raf = requestAnimationFrame((ts) => this._sweepPower(ts))
+  }
+
+  _updateHeightUI(pct) {
+    let topPct
+    if (pct <= 92) {
+      topPct = 85 - (pct / 92) * 85          // 0 → 85%, 92 → 0%
+    } else {
+      topPct = -((pct - 92) / 8) * 20        // 92 → 0%, 100 → -20%
+    }
+    this.cursorTarget.style.top = `${topPct}%`
   }
 
   lockPower() {

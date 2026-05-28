@@ -407,7 +407,7 @@ export default class extends Controller {
   _sweepPower(ts) {
     if (this.lastFrameTime !== null) {
       const delta = (ts - this.lastFrameTime) / 1000
-      this.pwrPct += POWER_SPEED * delta * this.pwrDir
+      this.pwrPct += speedForStreak(this.streak).pwr * delta * this.pwrDir
       if (this.pwrPct >= 100) { this.pwrPct = 100; this.pwrDir = -1 }
       if (this.pwrPct <= 0)   { this.pwrPct = 0;   this.pwrDir =  1 }
       this.powerFillTarget.style.width  = `${this.pwrPct}%`

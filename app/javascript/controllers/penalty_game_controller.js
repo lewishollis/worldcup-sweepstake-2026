@@ -42,7 +42,7 @@ function powerLevel(pct) {
 function saveChance(power) {
   if (power === "low")  return 1.0  // comfortable catch
   if (power === "mid")  return 0.8  // keeper strains
-  return 0.5                        // hard to hold
+  return 0.45                       // hard to hold
 }
 
 function isMissDirection(pct) {

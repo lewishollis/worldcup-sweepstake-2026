@@ -400,6 +400,12 @@ export default class extends Controller {
     this.pwrDir = 1
     this.powerWrapperTarget.classList.remove("hidden")
     this.hintTextTarget.textContent = "Tap to shoot — stop it before it flies over the bar!"
+    this._pickKeeperDiveZone()
+    const zones = ["left", "center", "right"]
+    const telegraphZone = Math.random() < bluffRate(this.streak)
+      ? zones.filter(z => z !== this.actualDiveZone)[Math.floor(Math.random() * 2)]
+      : this.actualDiveZone
+    this.keeperTarget.className = `game-keeper lean-${telegraphZone}`
     this._startTapTimeout()
     this.lastFrameTime = null
     this.raf = requestAnimationFrame((ts) => this._sweepPower(ts))

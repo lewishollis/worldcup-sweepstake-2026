@@ -256,7 +256,8 @@ export default class extends Controller {
     const steps = [
       { title: "Aim",              desc: "Tap to aim — stop the crosshair left, centre, or right." },
       { title: "Shoot",            desc: "Tap to shoot — stop it before it flies over the bar." },
-      { title: "Score streaks 🔥", desc: "Avoid the red zones — that's a miss" },
+      { title: "Score streaks 🔥", desc: "Avoid the red zones — that's a miss." },
+      { title: "Get harder 🔥",    desc: "The longer your streak, the faster the bars move." },
     ]
 
     steps.forEach((s, i) => {

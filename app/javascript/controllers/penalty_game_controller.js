@@ -1,8 +1,17 @@
 // app/javascript/controllers/penalty_game_controller.js
 import { Controller } from "@hotwired/stimulus"
 
-const DIRECTION_SPEED     = 180  // % per second
-const POWER_SPEED         = 160  // % per second
+const SPEED_LEVELS = [
+  { upTo: 3,        dir: 70,  pwr: 60  },
+  { upTo: 6,        dir: 110, pwr: 100 },
+  { upTo: 10,       dir: 160, pwr: 145 },
+  { upTo: Infinity, dir: 210, pwr: 190 },
+]
+
+function speedForStreak(streak) {
+  return SPEED_LEVELS.find(s => streak < s.upTo)
+}
+
 const DIRECTION_MISS_EDGE = 8    // 0–8% or 92–100% = too wide (miss)
 const POWER_MISS_EDGE     = 92   // 92–100% = over the bar (miss)
 

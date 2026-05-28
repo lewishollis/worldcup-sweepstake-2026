@@ -473,19 +473,18 @@ export default class extends Controller {
   _resolveShot(power, powerMiss) {
     const missed = this.directionMiss || powerMiss
 
-    this._pickKeeperDiveZone()
     this.keeperTarget.className = `game-keeper dive-${this.actualDiveZone}`
     this.cursorTarget.classList.add("hidden")
     this._placeBallMark()
 
     if (missed) {
-      setTimeout(() => this._showResult("missed"), 300)
+      setTimeout(() => this._showResult("missed"), 450)
       return
     }
 
     const sameZone = this.directionZone === this.actualDiveZone
     const saved    = sameZone && Math.random() < saveChance(power)
-    setTimeout(() => this._showResult(saved ? "saved" : "goal"), 300)
+    setTimeout(() => this._showResult(saved ? "saved" : "goal"), 450)
   }
 
   _showResult(result) {

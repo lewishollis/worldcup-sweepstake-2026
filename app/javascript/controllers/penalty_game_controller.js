@@ -351,7 +351,7 @@ export default class extends Controller {
     if (this.dirLocked) return
     if (this.lastFrameTime !== null) {
       const delta = (ts - this.lastFrameTime) / 1000
-      this.dirPct += DIRECTION_SPEED * delta * this.dirDir
+      this.dirPct += speedForStreak(this.streak).dir * delta * this.dirDir
       if (this.dirPct >= 100) { this.dirPct = 100; this.dirDir = -1 }
       if (this.dirPct <= 0)   { this.dirPct = 0;   this.dirDir =  1 }
       this._updateDirectionUI()

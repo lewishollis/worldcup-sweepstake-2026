@@ -446,28 +446,33 @@ export default class extends Controller {
   _placeBallMark() {
     const mark = this.ballMarkTarget
 
+    let finalLeft, finalTop
     if (this.directionMiss) {
       // Wide shot — outside the posts, scaled by power
       const wideLeft = this.dirPct < DIRECTION_MISS_EDGE
       const offset   = 5 + this.pwrPct * 0.25  // 5% (low power) → 30% (high power) outside post
-      const topPct   = Math.round(82 - this.pwrPct * 0.77)  // same height mapping as normal shots
-      mark.style.left = wideLeft ? `-${offset}%` : `${100 + offset}%`
-      mark.style.top  = `${topPct}%`
+      finalLeft = wideLeft ? `-${offset}%` : `${100 + offset}%`
+      finalTop  = `${Math.round(82 - this.pwrPct * 0.77)}%`
       mark.classList.add("miss")
     } else if (isMissPower(this.pwrPct)) {
       // Over the bar — above the crossbar
-      mark.style.left = `${this.dirPct}%`
-      mark.style.top  = "-25%"
+      finalLeft = `${this.dirPct}%`
+      finalTop  = "-25%"
       mark.classList.add("miss")
     } else {
       // Normal shot — inside goal
       // y: map power 0–100 → top 82%–5% (low = near ground, high = near crossbar)
-      mark.style.left = `${this.dirPct}%`
-      mark.style.top  = `${Math.round(82 - this.pwrPct * 0.77)}%`
+      finalLeft = `${this.dirPct}%`
+      finalTop  = `${Math.round(82 - this.pwrPct * 0.77)}%`
       mark.classList.remove("miss")
     }
 
+    mark.style.left = "50%"
+    mark.style.top  = "90%"
     mark.classList.remove("hidden")
+    void mark.offsetWidth  // force reflow so CSS transition fires from origin
+    mark.style.left = finalLeft
+    mark.style.top  = finalTop
   }
 
   _resolveShot(power, powerMiss) {

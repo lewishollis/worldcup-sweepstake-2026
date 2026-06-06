@@ -6,7 +6,8 @@ class LeaderboardSnapshotMessage
   end
 
   def call
-    groups = Group.includes(:teams, :friend).sort_by { |g| -g.total_points }
+    groups = Group.includes(:friend, teams: [:home_matches, :away_matches])
+              .sort_by { |g| -g.total_points }
 
     lines = ["📊 *Leaderboard*\n"]
     groups.each_with_index do |group, i|

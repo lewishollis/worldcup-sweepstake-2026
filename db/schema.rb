@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_05_23_112340) do
+ActiveRecord::Schema[7.1].define(version: 2026_06_06_180618) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -61,11 +61,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_23_112340) do
   create_table "groups", force: :cascade do |t|
     t.bigint "friend_id"
     t.string "name"
-    t.float "multiplier", default: 1.0
-    t.float "score", default: 0.0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.integer "total_points"
     t.index ["friend_id"], name: "index_groups_on_friend_id"
   end
 
@@ -85,8 +82,6 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_23_112340) do
     t.string "status"
     t.string "winner"
     t.string "accessible_event_summary"
-    t.integer "home_points", default: 0
-    t.integer "away_points", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "stage"
@@ -94,7 +89,6 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_23_112340) do
     t.string "home_friend_profile_picture_url"
     t.string "away_friend_profile_picture_url"
     t.bigint "team_id"
-    t.string "result"
     t.text "scenario_insight"
     t.string "scenario_insight_cache_key"
     t.index ["away_team_id"], name: "index_matches_on_away_team_id"
@@ -120,10 +114,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_23_112340) do
 
   create_table "teams", force: :cascade do |t|
     t.string "name"
-    t.integer "points", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.boolean "progressed"
     t.bigint "friends_id"
     t.string "flag_url"
     t.index ["friends_id"], name: "index_teams_on_friends_id"

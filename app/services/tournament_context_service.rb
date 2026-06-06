@@ -2,14 +2,14 @@ class TournamentContextService
   def leaderboard
     groups = Group.includes(:teams, :friend).all
     ranked = groups
-      .map { |g| { friend: g.friend&.name || "No owner", score: g.total_points.to_f, multiplier: g.multiplier.to_i } }
+      .map { |g| { friend: g.friend&.name || "No owner", score: g.total_points.to_f } }
       .sort_by { |entry| -entry[:score] }
     ranked.each_with_index { |entry, i| entry[:rank] = i + 1 }
     ranked
   end
 
   def leaderboard_text
-    leaderboard.map { |e| "#{e[:rank]}. #{e[:friend]}: #{e[:score].to_i} points (×#{e[:multiplier]})" }.join("\n")
+    leaderboard.map { |e| "#{e[:rank]}. #{e[:friend]}: #{e[:score].to_i} points" }.join("\n")
   end
 
   # Returns up to `limit` recent NewsItems. Returns [] when NewsItem table doesn't exist yet (Phase 1 safety).

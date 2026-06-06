@@ -44,43 +44,12 @@ module TournamentSimulation
     stats
   end
 
-  # Assigns sweepstake points to both teams for a simulated match. Modifies
-  # match.home_points / away_points in-place and persists updated team points.
-  # Also grants +1 progression point to any team appearing in a knockout match
-  # for the first time (mirrors MatchesController#assign_points logic).
+  # Saves a simulated match so that team progression_score is computed from
+  # actual match results (via Team#progression_score / Team#progressed?).
+  # No dead columns (home_points, away_points, points, progressed) are written.
   def self.assign_simulation_points(match)
-    stage = match.stage
-    knockout_stages = ["Last 16", "Quarter-finals", "Semi-finals", "Final", "3rd Place Final"]
-
-    if knockout_stages.include?(stage)
-      home_team = match.home_team
-      unless home_team.progressed?
-        home_team.update!(progressed: true, points: home_team.points + 1)
-      end
-
-      away_team = match.away_team
-      unless away_team.progressed?
-        away_team.update!(progressed: true, points: away_team.points + 1)
-      end
-    end
-
-    case stage
-    when "Group Stage"
-      match.home_points = 0
-      match.away_points = 0
-    when "Last 16", "Quarter-finals", "Semi-finals", "3rd Place Final"
-      match.home_points = match.winner == "home" ? 1 : 0
-      match.away_points = match.winner == "away" ? 1 : 0
-    when "Final"
-      match.home_points = match.winner == "home" ? 2 : 1
-      match.away_points = match.winner == "away" ? 2 : 1
-    else
-      match.home_points = 0
-      match.away_points = 0
-    end
-
-    match.home_team.reload.update!(points: match.home_team.points + match.home_points) if match.home_points > 0
-    match.away_team.reload.update!(points: match.away_team.points + match.away_points) if match.away_points > 0
+    # No-op: scoring is now derived from match results via Team#progression_score.
+    # This method is kept for API compatibility with simulate_knockout_match.
   end
 
   # Creates and persists a PostEvent knockout match. Randomly picks a winner
@@ -106,8 +75,7 @@ module TournamentSimulation
       status:     "PostEvent",
       stage:      stage,
       start_time: Time.now,
-      match_id:   "#{id_prefix}-#{idx}",
-      result:     winner == "home" ? "W" : "L"
+      match_id:   "#{id_prefix}-#{idx}"
     )
 
     assign_simulation_points(match)

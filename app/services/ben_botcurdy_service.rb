@@ -28,7 +28,8 @@ class BenBotcurdyService
     system_prompt = build_system_prompt
     user_message  = build_user_message
     result = GroqClient.call(system_prompt: system_prompt, user_message: user_message, max_tokens: 250) ||
-             _call_claude(system_prompt: system_prompt, user_message: user_message)
+             _call_claude(system_prompt: system_prompt, user_message: user_message) ||
+             _fallback_insight
 
     if @context_type == :leaderboard && result && defined?(AiInsightCache) && AiInsightCache.table_exists?
       AiInsightCache.store(key: "leaderboard_battleground", version: leaderboard_cache_version, content: result)
@@ -128,6 +129,10 @@ class BenBotcurdyService
   rescue => e
     Rails.logger.error("Claude API fallback failed: #{e.message}")
     nil
+  end
+
+  def _fallback_insight
+    "The sweepstake is heating up! Stay tuned for more commentary as the tournament unfolds."
   end
 
   def leaderboard_cache_version

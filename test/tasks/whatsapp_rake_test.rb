@@ -77,7 +77,6 @@ class WhatsappRakeTest < ActiveSupport::TestCase
     match = Match.create!(
       home_team: @brazil, away_team: @germany,
       home_score: 2, away_score: 1,
-      home_points: 1, away_points: 0,
       status: "PostEvent",
       start_time: 2.hours.ago,
       match_id: "rake-result-1"
@@ -98,7 +97,6 @@ class WhatsappRakeTest < ActiveSupport::TestCase
     match = Match.create!(
       home_team: @brazil, away_team: @germany,
       home_score: 2, away_score: 1,
-      home_points: 1, away_points: 0,
       status: "PostEvent",
       start_time: 2.hours.ago,
       match_id: "rake-result-2"

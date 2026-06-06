@@ -78,13 +78,12 @@ class ScenarioEngine
     end
   end
 
-  # Current friend scores: [{ friend_name:, group_id:, multiplier:, team_ids:, current_score: }]
+  # Current friend scores: [{ friend_name:, group_id:, team_ids:, current_score: }]
   def current_friend_scores
     @all_groups.map do |group|
       {
         friend_name:   group.friend&.name || "No owner",
         group_id:      group.id,
-        multiplier:    group.multiplier.to_f,
         team_ids:      group.teams.map(&:id),
         current_score: group.total_points.to_f
       }
@@ -94,7 +93,7 @@ class ScenarioEngine
   # Returns friend_scores with :projected_score added
   def projected_friend_scores(friend_scores, delta_map)
     friend_scores.map do |fs|
-      additional = fs[:team_ids].sum { |tid| (delta_map[tid] || 0) * fs[:multiplier] }
+      additional = fs[:team_ids].sum { |tid| (delta_map[tid] || 0).to_f }
       fs.merge(projected_score: fs[:current_score] + additional)
     end
   end

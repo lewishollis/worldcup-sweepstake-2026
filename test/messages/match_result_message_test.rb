@@ -25,8 +25,7 @@ class MatchResultMessageTest < ActiveSupport::TestCase
       away_team: @france,
       home_score: 2,
       away_score: 1,
-      home_points: 1,
-      away_points: 0,
+      winner: "home",
       status: "PostEvent",
       start_time: Time.current,
       match_id: "test-result-1"
@@ -41,15 +40,15 @@ class MatchResultMessageTest < ActiveSupport::TestCase
     assert_includes result, "Jamie"
   end
 
-  test "shows points awarded" do
+  test "shows points awarded for knockout match winner" do
     match = Match.create!(
       home_team: @england,
       away_team: @france,
       home_score: 2,
       away_score: 1,
-      home_points: 1,
-      away_points: 0,
+      winner: "home",
       status: "PostEvent",
+      stage: "Last 16",
       start_time: Time.current,
       match_id: "test-result-2"
     )
@@ -65,8 +64,6 @@ class MatchResultMessageTest < ActiveSupport::TestCase
       away_team: orphan,
       home_score: 0,
       away_score: 0,
-      home_points: 0,
-      away_points: 0,
       status: "PostEvent",
       start_time: Time.current,
       match_id: "test-result-3"

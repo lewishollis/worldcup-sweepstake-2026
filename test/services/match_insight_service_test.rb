@@ -3,9 +3,9 @@ require "test_helper"
 class MatchInsightServiceTest < ActiveSupport::TestCase
   def setup
     @lewis = Friend.create!(name: "Lewis")
-    @lewis_group = Group.create!(name: "Lewis Group", multiplier: 2.0, friend: @lewis)
-    brazil = Team.create!(name: "Brazil", flag_url: "https://x.com/b.svg", points: 2, progressed: true)
-    france = Team.create!(name: "France", flag_url: "https://x.com/f.svg", points: 1, progressed: true)
+    @lewis_group = Group.create!(name: "Lewis Group", friend: @lewis)
+    brazil = Team.create!(name: "Brazil", flag_url: "https://x.com/b.svg")
+    france = Team.create!(name: "France", flag_url: "https://x.com/f.svg")
     @lewis_group.teams << brazil
     @match = Match.create!(
       home_team: brazil, away_team: france,

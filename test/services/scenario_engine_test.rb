@@ -4,12 +4,24 @@ class ScenarioEngineTest < ActiveSupport::TestCase
   def setup
     @lewis  = Friend.create!(name: "Lewis")
     @sarah  = Friend.create!(name: "Sarah")
-    @lewis_group = Group.create!(name: "Lewis Group", multiplier: 2.0, friend: @lewis)
-    @sarah_group = Group.create!(name: "Sarah Group", multiplier: 3.0, friend: @sarah)
-    @brazil = Team.create!(name: "Brazil", flag_url: "https://x.com/b.svg", points: 2, progressed: true)
-    @france = Team.create!(name: "France", flag_url: "https://x.com/f.svg", points: 1, progressed: true)
+    @lewis_group = Group.create!(name: "Lewis Group", friend: @lewis)
+    @sarah_group = Group.create!(name: "Sarah Group", friend: @sarah)
+    @brazil = Team.create!(name: "Brazil", flag_url: "https://x.com/b.svg")
+    @france = Team.create!(name: "France", flag_url: "https://x.com/f.svg")
     @lewis_group.teams << @brazil
     @sarah_group.teams << @france
+
+    # Give Brazil 2 progression points via a won knockout match
+    dummy_opponent = Team.create!(name: "Dummy_#{SecureRandom.hex(4)}")
+    Match.create!(home_team: @brazil, away_team: dummy_opponent,
+                  home_score: 2, away_score: 0, winner: "home",
+                  status: "PostEvent", stage: "Last 16",
+                  start_time: 1.day.ago, match_id: "setup-brazil-1")
+    # Give France 1 progression point (qualified but lost)
+    Match.create!(home_team: @france, away_team: dummy_opponent,
+                  home_score: 0, away_score: 1, winner: "away",
+                  status: "PostEvent", stage: "Last 16",
+                  start_time: 1.day.ago, match_id: "setup-france-1")
   end
 
   test "knockout match returns home_win and away_win scenarios only" do
@@ -55,14 +67,13 @@ class ScenarioEngineTest < ActiveSupport::TestCase
     result = ScenarioEngine.new(match).call
     home_win = result[:home_win]
     lewis_delta = home_win[:friend_deltas].find { |d| d[:friend] == "Lewis" }
-    # Brazil earns +1 pt, Lewis has 2x multiplier → +2 friend score
-    assert_equal 2.0, lewis_delta[:delta]
-    assert_equal @lewis_group.total_points + 2.0, lewis_delta[:new_total]
+    # Brazil earns +1 pt, no multiplier → +1 to Lewis's group score
+    assert_equal 1.0, lewis_delta[:delta]
+    assert_equal @lewis_group.total_points + 1.0, lewis_delta[:new_total]
   end
 
   test "Last 16 home win updates rank changes correctly" do
-    # Sarah currently leads (france 1pt × 3x = 3, lewis brazil 2pt × 2x = 4)
-    # Lewis already leads. If Brazil wins, Lewis gap widens, no rank change.
+    # Lewis currently leads (Brazil 2pts vs France 1pt)
     match = Match.create!(
       home_team: @brazil, away_team: @france,
       stage: "Last 16", status: "PreEvent",
@@ -103,21 +114,28 @@ class ScenarioEngineTest < ActiveSupport::TestCase
   end
 
   test "rank changes detected when outcome flips leaderboard position" do
-    # Make Sarah lead by giving France more points
-    @france.update!(points: 5) # Sarah: 5 × 3 = 15; Lewis: 2 × 2 = 4
+    # Give France more wins so Sarah leads: create additional match wins for France
+    dummy2 = Team.create!(name: "Dummy2_#{SecureRandom.hex(4)}")
+    # France wins 4 more knockout matches to get score of 5
+    4.times do |i|
+      Match.create!(home_team: @france, away_team: dummy2,
+                    home_score: 1, away_score: 0, winner: "home",
+                    status: "PostEvent", stage: "Quarter-finals",
+                    start_time: 1.day.ago, match_id: "sarah-wins-#{i}-#{SecureRandom.hex(4)}")
+    end
+    # Now Sarah (France) has 5 progression points; Lewis (Brazil) has 2
     match = Match.create!(
       home_team: @brazil, away_team: @france,
       stage: "Semi-finals", status: "PreEvent",
       match_id: "test-8", home_score: 0, away_score: 0
     )
     result = ScenarioEngine.new(match).call
-    home_win = result[:home_win] # Brazil wins → Lewis gets +2
+    home_win = result[:home_win] # Brazil wins → Lewis gets +1
     lewis_rank = home_win[:rank_changes].find { |r| r[:friend] == "Lewis" }
-    # Lewis was rank 2, after +2 pts still behind Sarah (15 vs 6), no change
+    # Lewis was rank 2, after +1 still behind Sarah (5 vs 3), no rank change
     assert_nil lewis_rank
 
-    # Now make it a Semi-final win that flips: Lewis needs a big multiplier
-    # France wins: Sarah gets +3, Lewis unchanged at 4; Sarah at 18, Lewis at 4
+    # France wins: Sarah gets +1, stays leader
     away_win = result[:away_win]
     assert_equal "Sarah", away_win[:new_leader]
   end

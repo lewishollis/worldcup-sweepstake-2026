@@ -159,7 +159,6 @@ namespace :tournament do
 
     puts "\n🔄 Resetting data..."
     Match.destroy_all
-    Team.update_all(points: 0, progressed: false)
     AiInsightCache.destroy_all
     puts "✅ Reset complete\n"
 
@@ -180,18 +179,15 @@ namespace :tournament do
         winner     = if home_score > away_score then "home" elsif away_score > home_score then "away" end
 
         match = Match.create!(
-          home_team:   home_team,
-          away_team:   away_team,
-          home_score:  home_score,
-          away_score:  away_score,
-          winner:      winner,
-          status:      "PostEvent",
-          stage:       "Group Stage",
-          start_time:  Time.now - rand(1..21).days,
-          match_id:    "sim-gs-#{match_counter += 1}",
-          home_points: 0,
-          away_points: 0,
-          result:      winner == "home" ? "W" : (winner == "away" ? "L" : "D")
+          home_team:  home_team,
+          away_team:  away_team,
+          home_score: home_score,
+          away_score: away_score,
+          winner:     winner,
+          status:     "PostEvent",
+          stage:      "Group Stage",
+          start_time: Time.now - rand(1..21).days,
+          match_id:   "sim-gs-#{match_counter += 1}"
         )
         matches << match
         stats[:group_stage] += 1
@@ -280,9 +276,9 @@ namespace :tournament do
 
     puts "FINAL LEADERBOARD"
     puts "-" * 40
-    ranked = Group.includes(:friend, :teams).all.sort_by { |g| -g.total_points }
+    ranked = Group.includes(:friend, teams: [:home_matches, :away_matches]).all.sort_by { |g| -g.total_points }
     ranked.each_with_index do |group, i|
-      team_str = group.teams.map { |t| "#{t.name}(#{t.points})" }.join(", ")
+      team_str = group.teams.map { |t| "#{t.name}(#{t.progression_score.to_i})" }.join(", ")
       puts "#{i + 1}. #{group.friend&.name.to_s.ljust(12)} — #{group.total_points.to_i}pts  (#{team_str})"
     end
     puts ""
@@ -290,9 +286,8 @@ namespace :tournament do
     puts "POINTS BREAKDOWN"
     puts "-" * 40
     ranked.each do |group|
-      breakdown = group.teams.map { |t| "#{t.name}(#{t.points})" }.join(" + ")
-      raw = group.teams.sum(&:points)
-      puts "#{group.friend&.name}: #{breakdown} = #{raw} raw × #{group.multiplier.to_i} = #{group.total_points.to_i}pts"
+      breakdown = group.teams.map { |t| "#{t.name}(#{t.progression_score.to_i})" }.join(" + ")
+      puts "#{group.friend&.name}: #{breakdown} = #{group.total_points.to_i}pts"
     end
     puts ""
 
@@ -302,7 +297,7 @@ namespace :tournament do
     puts "BEN MOTSON SAYS:"
     begin
       context    = TournamentContextService.new
-      commentary = BenMotsonService.new(:leaderboard, { leaderboard: context.leaderboard, pivotal_matches: [] }).generate_insight
+      commentary = BenBotcurdyService.new(:leaderboard, { leaderboard: context.leaderboard, pivotal_matches: [] }).generate_insight
       puts commentary
     rescue => e
       puts "[Could not generate commentary: #{e.message}]"

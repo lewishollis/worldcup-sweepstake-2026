@@ -38,9 +38,9 @@ class Team < ApplicationRecord
   private
 
   def played_knockout_matches
-    @played_knockout_matches ||= begin
-      all_matches = home_matches.to_a + away_matches.to_a
-      all_matches.select { |m| m.status == 'PostEvent' && KNOCKOUT_STAGES.include?(m.stage) }
-    end
+    # Do not memoize: reload does not clear instance variables, so caching here
+    # would return stale results after a reload call.
+    all_matches = home_matches.to_a + away_matches.to_a
+    all_matches.select { |m| m.status == 'PostEvent' && KNOCKOUT_STAGES.include?(m.stage) }
   end
 end

@@ -129,6 +129,13 @@ class TeamTest < ActiveSupport::TestCase
     assert_equal 2.0, @team.reload.progression_score
   end
 
+  test "progression_score is 0.5 when team only plays and wins 3rd Place Final (no main bracket)" do
+    Match.create!(home_team: @team, away_team: @opponent, stage: "3rd Place Final",
+                  status: "PostEvent", winner: "home", match_id: "3rd-only",
+                  start_time: 1.day.ago)
+    assert_equal 0.5, @team.reload.progression_score
+  end
+
   test "progression_score ignores PreEvent and MidEvent knockout matches" do
     Match.create!(home_team: @team, away_team: @opponent, stage: "Last 32",
                   status: "PreEvent", winner: nil, match_id: "r32-pre",

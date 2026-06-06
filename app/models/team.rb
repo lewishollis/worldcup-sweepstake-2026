@@ -12,14 +12,12 @@ class Team < ApplicationRecord
   has_many :friends, through: :friend_groups
 
   def progression_score
-    all_matches = home_matches.to_a + away_matches.to_a
-    knockout_played = all_matches.select { |m| m.status == 'PostEvent' && KNOCKOUT_STAGES.include?(m.stage) }
-    return 0.0 if knockout_played.none?
+    return 0.0 if played_knockout_matches.none?
 
     # +1 for qualifying only if they appeared in the main bracket (not just the bronze final)
-    score = knockout_played.any? { |m| MAIN_KNOCKOUT_STAGES.include?(m.stage) } ? 1.0 : 0.0
+    score = played_knockout_matches.any? { |m| MAIN_KNOCKOUT_STAGES.include?(m.stage) } ? 1.0 : 0.0
 
-    knockout_played.each do |match|
+    played_knockout_matches.each do |match|
       won = (match.home_team_id == id && match.winner == 'home') ||
             (match.away_team_id == id && match.winner == 'away')
       score += match.stage == '3rd Place Final' ? 0.5 : 1.0 if won
@@ -28,11 +26,21 @@ class Team < ApplicationRecord
   end
 
   def progressed?
-    all_matches = home_matches.to_a + away_matches.to_a
-    all_matches.any? { |m| m.status == 'PostEvent' && KNOCKOUT_STAGES.include?(m.stage) }
+    played_knockout_matches.any?
   end
 
+  # Used in views to query matches for display. Callers should not use this
+  # for scoring — use progression_score instead.
   def matches
     Match.where("home_team_id = :team_id OR away_team_id = :team_id", team_id: id)
+  end
+
+  private
+
+  def played_knockout_matches
+    @played_knockout_matches ||= begin
+      all_matches = home_matches.to_a + away_matches.to_a
+      all_matches.select { |m| m.status == 'PostEvent' && KNOCKOUT_STAGES.include?(m.stage) }
+    end
   end
 end

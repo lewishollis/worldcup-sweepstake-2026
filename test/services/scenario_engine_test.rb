@@ -84,7 +84,7 @@ class ScenarioEngineTest < ActiveSupport::TestCase
     assert_equal "Lewis", home_win[:new_leader]
   end
 
-  test "Final home win awards 2 points to winner and 1 to runner-up" do
+  test "Final home win awards 1 point to winner only — runner-up gets nothing" do
     match = Match.create!(
       home_team: @brazil, away_team: @france,
       stage: "Final", status: "PreEvent",
@@ -94,10 +94,9 @@ class ScenarioEngineTest < ActiveSupport::TestCase
     home_win = result[:home_win]
     brazil_pts = home_win[:team_points].find { |t| t[:team_name] == "Brazil" }
     france_pts = home_win[:team_points].find { |t| t[:team_name] == "France" }
-    assert_equal 2, brazil_pts[:points_awarded]
-    assert_equal 1, france_pts[:points_awarded]
-    assert_equal "Final winner", brazil_pts[:reason]
-    assert_equal "Final runner-up", france_pts[:reason]
+    assert_equal 1, brazil_pts[:points_awarded]
+    assert_equal "Final win", brazil_pts[:reason]
+    assert_nil france_pts
   end
 
   test "Group Stage outcomes award zero points" do
@@ -111,6 +110,31 @@ class ScenarioEngineTest < ActiveSupport::TestCase
       assert_empty result[outcome][:team_points]
       assert_empty result[outcome][:friend_deltas]
     end
+  end
+
+  test "Last 16 awards qualify bonus plus win bonus when neither team has qualified yet" do
+    # These teams have NO existing PostEvent knockout matches
+    mex = Team.create!(name: "Mexico_#{SecureRandom.hex(4)}")
+    chi = Team.create!(name: "Chile_#{SecureRandom.hex(4)}")
+    mg  = Group.create!(name: "MG_#{SecureRandom.hex(4)}", friend: Friend.create!(name: "MxF_#{SecureRandom.hex(4)}"))
+    cg  = Group.create!(name: "CG_#{SecureRandom.hex(4)}", friend: Friend.create!(name: "ChF_#{SecureRandom.hex(4)}"))
+    mg.teams << mex
+    cg.teams << chi
+
+    match = Match.create!(
+      home_team: mex, away_team: chi,
+      stage: "Last 16", status: "PreEvent",
+      match_id: "q-#{SecureRandom.hex(4)}", home_score: 0, away_score: 0
+    )
+    result = ScenarioEngine.new(match).call
+    home_win = result[:home_win]
+
+    # Mexico (winner): qualify +1 + Last 16 win +1 = 2
+    # Chile  (loser):  qualify +1 = 1
+    mex_total = home_win[:team_points].select { |t| t[:team_id] == mex.id }.sum { |t| t[:points_awarded] }
+    chi_total  = home_win[:team_points].select { |t| t[:team_id] == chi.id }.sum { |t| t[:points_awarded] }
+    assert_equal 2, mex_total
+    assert_equal 1, chi_total
   end
 
   test "rank changes detected when outcome flips leaderboard position" do

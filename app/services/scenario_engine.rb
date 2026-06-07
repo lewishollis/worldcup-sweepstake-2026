@@ -2,6 +2,13 @@ class ScenarioEngine
   def initialize(match)
     @match = match
     @all_groups = Group.includes(:teams, :friend).all
+    # Preload whether each team has already played a PostEvent knockout match (earned qualify bonus)
+    @home_has_qualified = Match.where(status: "PostEvent", stage: Team::KNOCKOUT_STAGES)
+                               .where("home_team_id = ? OR away_team_id = ?", match.home_team_id, match.home_team_id)
+                               .exists?
+    @away_has_qualified = Match.where(status: "PostEvent", stage: Team::KNOCKOUT_STAGES)
+                               .where("home_team_id = ? OR away_team_id = ?", match.away_team_id, match.away_team_id)
+                               .exists?
   end
 
   def call
@@ -35,40 +42,39 @@ class ScenarioEngine
     stage = @match.stage
     return [] if stage == "Group Stage"
 
+    points = []
+
+    # Award +1 qualify bonus to any team appearing in their first PostEvent knockout match
+    [
+      { id: @match.home_team_id, name: @match.home_team.name, qualified: @home_has_qualified },
+      { id: @match.away_team_id, name: @match.away_team.name, qualified: @away_has_qualified }
+    ].each do |t|
+      next if t[:qualified]
+      points << { team_id: t[:id], team_name: t[:name], points_awarded: 1, reason: "Qualify from group stage" }
+    end
+
     case stage
-    when "Last 16", "Quarter-finals", "Semi-finals", "3rd Place Final"
+    when "Last 32", "Last 16", "Quarter-finals", "Semi-finals", "3rd Place Final"
       case outcome
       when :home_win
-        [{ team_id: @match.home_team_id, team_name: @match.home_team.name,
-           points_awarded: 1, reason: "#{stage} win" }]
+        points << { team_id: @match.home_team_id, team_name: @match.home_team.name,
+                    points_awarded: 1, reason: "#{stage} win" }
       when :away_win
-        [{ team_id: @match.away_team_id, team_name: @match.away_team.name,
-           points_awarded: 1, reason: "#{stage} win" }]
-      else
-        []
+        points << { team_id: @match.away_team_id, team_name: @match.away_team.name,
+                    points_awarded: 1, reason: "#{stage} win" }
       end
     when "Final"
       case outcome
       when :home_win
-        [
-          { team_id: @match.home_team_id, team_name: @match.home_team.name,
-            points_awarded: 2, reason: "Final winner" },
-          { team_id: @match.away_team_id, team_name: @match.away_team.name,
-            points_awarded: 1, reason: "Final runner-up" }
-        ]
+        points << { team_id: @match.home_team_id, team_name: @match.home_team.name,
+                    points_awarded: 1, reason: "Final win" }
       when :away_win
-        [
-          { team_id: @match.away_team_id, team_name: @match.away_team.name,
-            points_awarded: 2, reason: "Final winner" },
-          { team_id: @match.home_team_id, team_name: @match.home_team.name,
-            points_awarded: 1, reason: "Final runner-up" }
-        ]
-      else
-        []
+        points << { team_id: @match.away_team_id, team_name: @match.away_team.name,
+                    points_awarded: 1, reason: "Final win" }
       end
-    else
-      []
     end
+
+    points
   end
 
   # { team_id => additional_points } lookup

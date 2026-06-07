@@ -61,6 +61,19 @@ class BenBotcurdyService
 
   def build_leaderboard_message
     ctx = TournamentContextService.new
+
+    if ctx.tournament_status == :complete
+      c = ctx.champion
+      champion_str = c ? "#{c[:team]} (owned by #{c[:owner] || 'unknown'})" : "the champion"
+      lines = [
+        "The World Cup is over! #{champion_str} won the tournament.",
+        "",
+        "Write 3-4 sentences wrapping up the sweepstake in Ben Botcurdy's voice.",
+        "Cover: who won the sweepstake (top of the leaderboard), who won the World Cup, and any dramatic storylines."
+      ]
+      return lines.join("\n")
+    end
+
     pivotal = ctx.pivotal_matches(count: 3)
     lines = ["Provide a leaderboard state-of-play commentary covering:", ""]
     lines << "1. Who is leading and by how much"
@@ -71,7 +84,12 @@ class BenBotcurdyService
       pivotal.each do |match|
         scenarios = ScenarioEngine.new(match).call
         lines << ""
-        lines << "#{match.home_team.name} vs #{match.away_team.name} (#{match.stage}, #{match.start_time&.strftime("%d %b")}):"
+        home_owner = match.home_friend_name.presence || "No owner"
+        away_owner = match.away_friend_name.presence || "No owner"
+        lines << "#{match.home_team.name} (#{home_owner}) vs #{match.away_team.name} (#{away_owner}) — #{match.stage}, #{match.start_time&.strftime("%d %b")}:"
+        if home_owner != "No owner" && away_owner != "No owner" && home_owner != away_owner
+          lines << "  ⚡ DIRECT RIVALRY: #{home_owner} vs #{away_owner}"
+        end
         scenario_labels = { home_win: "#{match.home_team.name} win", away_win: "#{match.away_team.name} win", draw: "Draw" }
         scenarios.each do |outcome, data|
           next if data[:friend_deltas].empty?
@@ -86,21 +104,27 @@ class BenBotcurdyService
   end
 
   def build_matches_message
-    matches    = @context_data[:matches] || []
+    matches     = @context_data[:matches] || []
     filter_type = @context_data[:filter_type]
     lines = ["Provide commentary for #{filter_type} matches:", ""]
     matches.first(3).each do |match|
+      home_owner = match.home_friend_name.presence || "No owner"
+      away_owner = match.away_friend_name.presence || "No owner"
       if filter_type == "MidEvent"
-        lines << "LIVE: #{match.home_team.name} #{match.home_score}–#{match.away_score} #{match.away_team.name} (#{match.stage})"
+        lines << "LIVE: #{match.home_team.name} (#{home_owner}) #{match.home_score}–#{match.away_score} #{match.away_team.name} (#{away_owner}) — #{match.stage}"
       elsif filter_type == "PostEvent"
-        winner = match.winner == "home" ? match.home_team.name : match.away_team.name
-        lines << "RESULT: #{match.home_team.name} #{match.home_score}–#{match.away_score} #{match.away_team.name} — #{winner} wins (#{match.stage})"
+        winner_team  = match.winner == "home" ? match.home_team.name : match.away_team.name
+        winner_owner = match.winner == "home" ? home_owner : away_owner
+        lines << "RESULT: #{match.home_team.name} #{match.home_score}–#{match.away_score} #{match.away_team.name} — #{winner_team} (#{winner_owner}) wins — #{match.stage}"
       else
-        lines << "UPCOMING: #{match.home_team.name} vs #{match.away_team.name} at #{match.start_time&.strftime("%H:%M")} (#{match.stage})"
+        lines << "UPCOMING: #{match.home_team.name} (#{home_owner}) vs #{match.away_team.name} (#{away_owner}) at #{match.start_time&.strftime("%H:%M")} — #{match.stage}"
+      end
+      if home_owner != "No owner" && away_owner != "No owner" && home_owner != away_owner
+        lines << "  ⚡ DIRECT RIVALRY: #{home_owner} is playing #{away_owner} here!"
       end
     end
     lines << ""
-    lines << "Write 1-2 punchy sentences of commentary. Be specific with team names."
+    lines << "Write 1-2 punchy sentences of commentary. Be specific — use team names and their owners."
     lines.join("\n")
   end
 

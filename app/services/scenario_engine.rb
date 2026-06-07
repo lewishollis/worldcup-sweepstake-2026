@@ -3,10 +3,10 @@ class ScenarioEngine
     @match = match
     @all_groups = Group.includes(:teams, :friend).all
     # Preload whether each team has already played a PostEvent knockout match (earned qualify bonus)
-    @home_has_qualified = Match.where(status: "PostEvent", stage: Team::KNOCKOUT_STAGES)
+    @home_has_qualified = Match.where(status: "PostEvent", stage: Team::MAIN_KNOCKOUT_STAGES)
                                .where("home_team_id = ? OR away_team_id = ?", match.home_team_id, match.home_team_id)
                                .exists?
-    @away_has_qualified = Match.where(status: "PostEvent", stage: Team::KNOCKOUT_STAGES)
+    @away_has_qualified = Match.where(status: "PostEvent", stage: Team::MAIN_KNOCKOUT_STAGES)
                                .where("home_team_id = ? OR away_team_id = ?", match.away_team_id, match.away_team_id)
                                .exists?
   end
@@ -54,7 +54,7 @@ class ScenarioEngine
     end
 
     case stage
-    when "Last 32", "Last 16", "Quarter-finals", "Semi-finals", "3rd Place Final"
+    when "Last 32", "Last 16", "Quarter-finals", "Semi-finals"
       case outcome
       when :home_win
         points << { team_id: @match.home_team_id, team_name: @match.home_team.name,
@@ -62,6 +62,15 @@ class ScenarioEngine
       when :away_win
         points << { team_id: @match.away_team_id, team_name: @match.away_team.name,
                     points_awarded: 1, reason: "#{stage} win" }
+      end
+    when "3rd Place Final"
+      case outcome
+      when :home_win
+        points << { team_id: @match.home_team_id, team_name: @match.home_team.name,
+                    points_awarded: 0.5, reason: "3rd Place Final win" }
+      when :away_win
+        points << { team_id: @match.away_team_id, team_name: @match.away_team.name,
+                    points_awarded: 0.5, reason: "3rd Place Final win" }
       end
     when "Final"
       case outcome

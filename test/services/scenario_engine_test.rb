@@ -135,6 +135,13 @@ class ScenarioEngineTest < ActiveSupport::TestCase
     chi_total  = home_win[:team_points].select { |t| t[:team_id] == chi.id }.sum { |t| t[:points_awarded] }
     assert_equal 2, mex_total
     assert_equal 1, chi_total
+
+    # Also test away_win: Chile wins, Chile gets qualify+win=2, Mexico gets qualify=1
+    away_win = result[:away_win]
+    mex_away = away_win[:team_points].select { |t| t[:team_id] == mex.id }.sum { |t| t[:points_awarded] }
+    chi_away  = away_win[:team_points].select { |t| t[:team_id] == chi.id }.sum { |t| t[:points_awarded] }
+    assert_equal 1, mex_away  # qualify only
+    assert_equal 2, chi_away  # qualify + win
   end
 
   test "rank changes detected when outcome flips leaderboard position" do

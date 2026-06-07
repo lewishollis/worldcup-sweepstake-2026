@@ -1,18 +1,42 @@
 class TournamentContextService
   def leaderboard
-    groups = Group.includes(:teams, :friend).all
+    groups = Group.includes(:friend, teams: [:home_matches, :away_matches]).all
     ranked = groups
-      .map { |g| { friend: g.friend&.name || "No owner", score: g.total_points.to_f } }
+      .map { |g| { friend: g.friend&.name || "No owner", score: g.total_points.to_f, teams: g.teams.map(&:name) } }
       .sort_by { |entry| -entry[:score] }
     ranked.each_with_index { |entry, i| entry[:rank] = i + 1 }
     ranked
   end
 
   def leaderboard_text
-    leaderboard.map { |e| "#{e[:rank]}. #{e[:friend]}: #{e[:score].to_i} points" }.join("\n")
+    lines = ["TOURNAMENT STATUS: #{tournament_status.to_s.upcase.tr('_', ' ')}"]
+    if tournament_status == :complete && (c = champion)
+      lines << "CHAMPION: #{c[:team]}#{c[:owner] ? " (owned by #{c[:owner]})" : ''}"
+    end
+    lines << ""
+    leaderboard.each do |e|
+      team_str = e[:teams].any? ? " [#{e[:teams].join(', ')}]" : ""
+      lines << "#{e[:rank]}. #{e[:friend]}: #{e[:score].to_i} points#{team_str}"
+    end
+    lines.join("\n")
   end
 
-  # Returns up to `limit` recent NewsItems. Returns [] when NewsItem table doesn't exist yet (Phase 1 safety).
+  def tournament_status
+    return :complete      if Match.exists?(stage: "Final", status: "PostEvent")
+    return :knockout_stage if Match.where(stage: Team::KNOCKOUT_STAGES).exists?
+    return :group_stage    if Match.exists?(stage: "Group Stage")
+    :not_started
+  end
+
+  def champion
+    final = Match.includes(:home_team, :away_team).find_by(stage: "Final", status: "PostEvent")
+    return nil unless final
+    winning_team = final.winner == "home" ? final.home_team : final.away_team
+    owner_group = Group.includes(:friend).joins(:teams).find_by(teams: { id: winning_team.id })
+    { team: winning_team.name, owner: owner_group&.friend&.name }
+  end
+
+  # Returns up to `limit` recent NewsItems. Returns [] when NewsItem table doesn't exist yet.
   def news_items(limit: 5)
     return [] unless defined?(NewsItem) && NewsItem.table_exists?
     NewsItem.order(published_at: :desc).limit(limit).map do |item|

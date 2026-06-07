@@ -9,12 +9,14 @@ class TournamentContextService
   end
 
   def leaderboard_text
-    lines = ["TOURNAMENT STATUS: #{tournament_status.to_s.upcase.tr('_', ' ')}"]
-    if tournament_status == :complete && (c = champion)
+    status = tournament_status
+    lb     = leaderboard
+    lines  = ["TOURNAMENT STATUS: #{status.to_s.upcase.tr('_', ' ')}"]
+    if status == :complete && (c = champion)
       lines << "CHAMPION: #{c[:team]}#{c[:owner] ? " (owned by #{c[:owner]})" : ''}"
     end
     lines << ""
-    leaderboard.each do |e|
+    lb.each do |e|
       team_str = e[:teams].any? ? " [#{e[:teams].join(', ')}]" : ""
       lines << "#{e[:rank]}. #{e[:friend]}: #{e[:score].to_i} points#{team_str}"
     end
@@ -31,6 +33,7 @@ class TournamentContextService
   def champion
     final = Match.includes(:home_team, :away_team).find_by(stage: "Final", status: "PostEvent")
     return nil unless final
+    return nil unless final.winner.in?(%w[home away])
     winning_team = final.winner == "home" ? final.home_team : final.away_team
     owner_group = Group.includes(:friend).joins(:teams).find_by(teams: { id: winning_team.id })
     { team: winning_team.name, owner: owner_group&.friend&.name }

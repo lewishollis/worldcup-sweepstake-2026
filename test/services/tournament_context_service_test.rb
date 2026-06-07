@@ -106,6 +106,15 @@ class TournamentContextServiceTest < ActiveSupport::TestCase
     assert_equal "Lewis", champ[:owner]
   end
 
+  test "champion returns away team name and owner when away team wins Final" do
+    Match.create!(home_team: @brazil, away_team: @france, stage: "Final",
+                  status: "PostEvent", match_id: "final-away-win", home_score: 0, away_score: 1,
+                  winner: "away", start_time: Time.current)
+    champ = TournamentContextService.new.champion
+    assert_equal "France", champ[:team]
+    assert_equal "Sarah", champ[:owner]
+  end
+
   test "leaderboard_text includes champion when tournament complete" do
     Match.create!(home_team: @brazil, away_team: @france, stage: "Final",
                   status: "PostEvent", match_id: "final-text", home_score: 1, away_score: 0,

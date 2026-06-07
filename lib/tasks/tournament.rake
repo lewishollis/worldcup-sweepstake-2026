@@ -163,7 +163,7 @@ namespace :tournament do
     puts "✅ Reset complete\n"
 
     match_counter = 0
-    stats = { group_stage: 0, last_16: 0, quarter_finals: 0, semi_finals: 0, third_place: 0, final: 0 }
+    stats = { group_stage: 0, last_32: 0, last_16: 0, quarter_finals: 0, semi_finals: 0, third_place: 0, final: 0 }
 
     # ── Group Stage ──────────────────────────────────────────────────────────
     puts "⚽ Simulating Group Stage..."
@@ -197,28 +197,39 @@ namespace :tournament do
     end
     puts "  ✅ #{stats[:group_stage]} matches\n"
 
-    # ── Qualifiers: top team per group + best 4 runners-up ───────────────────
+    # ── Qualifiers: top 2 per group + 8 best 3rd-place = 32 teams (WC 2026 format) ─
     puts "📊 Calculating group standings..."
     group_winners = []
     runners_up    = []
+    third_place   = []
 
     group_match_data.each do |_group_id, data|
       sorted = TournamentSimulation.calculate_standings(data[:teams], data[:matches])
       group_winners << sorted[0]
-      runners_up    << { team: sorted[1], stats: TournamentSimulation.standing_stats(sorted[1], data[:matches]) }
+      runners_up    << sorted[1]
+      third_place   << { team: sorted[2], stats: TournamentSimulation.standing_stats(sorted[2], data[:matches]) } if sorted[2]
     end
 
-    best_runners_up = runners_up
+    best_third = third_place
       .sort_by { |r| [-r[:stats][:pts], -r[:stats][:gd], -r[:stats][:gf]] }
-      .first(4)
+      .first(8)
       .map { |r| r[:team] }
 
-    qualifiers = (group_winners + best_runners_up).shuffle
-    puts "  ✅ #{qualifiers.size} teams qualify\n"
+    qualifiers = (group_winners + runners_up + best_third).shuffle
+    puts "  ✅ #{qualifiers.size} teams qualify for Last 32\n"
+
+    # ── Last 32 ───────────────────────────────────────────────────────────────
+    puts "⚔️  Simulating Last 32..."
+    last_32_winners = qualifiers.each_slice(2).map do |home, away|
+      match = TournamentSimulation.simulate_knockout_match(home, away, "Last 32", match_counter += 1, "sim-l32")
+      stats[:last_32] += 1
+      match.winner == "home" ? home : away
+    end
+    puts "  ✅ #{stats[:last_32]} matches\n"
 
     # ── Last 16 ───────────────────────────────────────────────────────────────
     puts "⚔️  Simulating Last 16..."
-    last_16_winners = qualifiers.each_slice(2).map do |home, away|
+    last_16_winners = last_32_winners.each_slice(2).map do |home, away|
       match = TournamentSimulation.simulate_knockout_match(home, away, "Last 16", match_counter += 1, "sim-l16")
       stats[:last_16] += 1
       match.winner == "home" ? home : away
@@ -267,6 +278,7 @@ namespace :tournament do
     puts ""
     puts "Total matches simulated: #{stats.values.sum}"
     puts "  Group Stage:     #{stats[:group_stage]}"
+    puts "  Last 32:         #{stats[:last_32]}"
     puts "  Last 16:         #{stats[:last_16]}"
     puts "  Quarter-finals:  #{stats[:quarter_finals]}"
     puts "  Semi-finals:     #{stats[:semi_finals]}"
@@ -278,7 +290,7 @@ namespace :tournament do
     puts "-" * 40
     ranked = Group.includes(:friend, teams: [:home_matches, :away_matches]).all.sort_by { |g| -g.total_points }
     ranked.each_with_index do |group, i|
-      team_str = group.teams.map { |t| "#{t.name}(#{t.progression_score.to_i})" }.join(", ")
+      team_str = group.teams.map { |t| s = t.progression_score; "#{t.name}(#{s % 1 == 0 ? s.to_i : s})" }.join(", ")
       puts "#{i + 1}. #{group.friend&.name.to_s.ljust(12)} — #{group.total_points.to_i}pts  (#{team_str})"
     end
     puts ""
@@ -286,7 +298,7 @@ namespace :tournament do
     puts "POINTS BREAKDOWN"
     puts "-" * 40
     ranked.each do |group|
-      breakdown = group.teams.map { |t| "#{t.name}(#{t.progression_score.to_i})" }.join(" + ")
+      breakdown = group.teams.map { |t| s = t.progression_score; "#{t.name}(#{s % 1 == 0 ? s.to_i : s})" }.join(" + ")
       puts "#{group.friend&.name}: #{breakdown} = #{group.total_points.to_i}pts"
     end
     puts ""

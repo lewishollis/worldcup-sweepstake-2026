@@ -90,10 +90,12 @@ class MatchInsightService
 
   def scoring_rules_text
     <<~TEXT.strip
-      - Group Stage: 0 points
-      - Last 16/QF/SF/3rd Place win: +1 pt to winner
-      - Final: winner +2 pts, runner-up +1 pt
-      - Each friend's score = sum of their teams' points × their group multiplier (2x–6x)
+      - Group Stage: 0 sweepstake points (group stage results don't count)
+      - Qualifying from the group stage (appearing in any main knockout round): +1 per team
+      - Win Last 32 / Last 16 / Quarter-final / Semi-final / Final: +1 per team
+      - Win 3rd Place Final: +0.5 (bonus only — appearing here does NOT give the +1 qualification bonus)
+      - No multipliers. Each friend's total = sum of all their teams' progression scores.
+      - Max possible: 6.0 (champion), runner-up: 5.0, 3rd place winner: 4.5
     TEXT
   end
 

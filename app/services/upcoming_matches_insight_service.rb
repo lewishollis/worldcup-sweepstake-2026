@@ -92,6 +92,10 @@ class UpcomingMatchesInsightService
       lines << "match_id: #{match.match_id}"
       lines << "#{home} (#{home_owner}) vs #{away} (#{away_owner}) — #{match.stage} at #{match.start_time&.strftime('%H:%M')}"
 
+      if home_owner != "No owner" && away_owner != "No owner" && home_owner != away_owner
+        lines << "  ⚡ DIRECT SWEEPSTAKE RIVALRY: #{home_owner}'s #{home} vs #{away_owner}'s #{away}"
+      end
+
       if knockout_stages.include?(match.stage)
         begin
           scenarios = ScenarioEngine.new(match).call

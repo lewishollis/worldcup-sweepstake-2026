@@ -56,7 +56,17 @@ class MatchInsightService
   end
 
   def build_user_message
-    lines = ["Provide match preview commentary for: #{@match.home_team.name} vs #{@match.away_team.name} (#{@match.stage})", ""]
+    home_owner = @match.home_friend_name.presence
+    away_owner = @match.away_friend_name.presence
+
+    lines = []
+    if home_owner && away_owner && home_owner != away_owner
+      lines << "⚡ DIRECT SWEEPSTAKE RIVALRY: #{home_owner}'s #{@match.home_team.name} vs #{away_owner}'s #{@match.away_team.name}"
+      lines << ""
+    end
+
+    lines << "Provide match preview commentary for: #{@match.home_team.name} vs #{@match.away_team.name} (#{@match.stage})"
+    lines << ""
     lines << "PRE-COMPUTED SWEEPSTAKE SCENARIOS:"
     scenario_labels = { home_win: "#{@match.home_team.name} win", draw: "Draw", away_win: "#{@match.away_team.name} win" }
     @scenarios.each do |outcome, data|

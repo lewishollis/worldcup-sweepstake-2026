@@ -66,7 +66,7 @@ class UpcomingMatchesInsightService
   end
 
   def build_user_message
-    knockout_stages = ['Last 16', 'Quarter-finals', 'Semi-finals', '3rd Place Final', 'Final']
+    knockout_stages = Team::KNOCKOUT_STAGES
     today = Date.today
     first_match_date = @matches.map { |m| m.start_time.to_date }.min
     tournament_started = today >= first_match_date

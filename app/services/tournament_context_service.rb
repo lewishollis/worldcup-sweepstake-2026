@@ -18,7 +18,8 @@ class TournamentContextService
     lines << ""
     lb.each do |e|
       team_str = e[:teams].any? ? " [#{e[:teams].join(', ')}]" : ""
-      lines << "#{e[:rank]}. #{e[:friend]}: #{e[:score].to_i} points#{team_str}"
+      score_display = (e[:score] % 1).zero? ? e[:score].to_i : e[:score]
+      lines << "#{e[:rank]}. #{e[:friend]}: #{score_display} points#{team_str}"
     end
     lines.join("\n")
   end

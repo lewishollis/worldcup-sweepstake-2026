@@ -5,9 +5,11 @@ class ScenarioEngine
     # Preload whether each team has already played a PostEvent knockout match (earned qualify bonus)
     @home_has_qualified = Match.where(status: "PostEvent", stage: Team::MAIN_KNOCKOUT_STAGES)
                                .where("home_team_id = ? OR away_team_id = ?", match.home_team_id, match.home_team_id)
+                               .where.not(id: match.id)
                                .exists?
     @away_has_qualified = Match.where(status: "PostEvent", stage: Team::MAIN_KNOCKOUT_STAGES)
                                .where("home_team_id = ? OR away_team_id = ?", match.away_team_id, match.away_team_id)
+                               .where.not(id: match.id)
                                .exists?
   end
 

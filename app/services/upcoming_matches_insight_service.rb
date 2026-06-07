@@ -86,13 +86,13 @@ class UpcomingMatchesInsightService
     @matches.each do |match|
       home = match.home_team.name
       away = match.away_team.name
-      home_owner = match.home_friend_name.presence || "No owner"
-      away_owner = match.away_friend_name.presence || "No owner"
+      home_owner = match.home_friend_name.presence
+      away_owner = match.away_friend_name.presence
       lines << ""
       lines << "match_id: #{match.match_id}"
-      lines << "#{home} (#{home_owner}) vs #{away} (#{away_owner}) — #{match.stage} at #{match.start_time&.strftime('%H:%M')}"
+      lines << "#{home} (#{home_owner || 'No owner'}) vs #{away} (#{away_owner || 'No owner'}) — #{match.stage} at #{match.start_time&.strftime('%H:%M')}"
 
-      if home_owner != "No owner" && away_owner != "No owner" && home_owner != away_owner
+      if home_owner && away_owner && home_owner != away_owner
         lines << "  ⚡ DIRECT SWEEPSTAKE RIVALRY: #{home_owner}'s #{home} vs #{away_owner}'s #{away}"
       end
 

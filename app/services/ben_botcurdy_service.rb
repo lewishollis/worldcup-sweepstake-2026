@@ -82,6 +82,10 @@ class BenBotcurdyService
     if pivotal.any?
       lines << "PIVOTAL UPCOMING MATCHES (pre-computed scenarios):"
       pivotal.each do |match|
+        # home_friend_name/away_friend_name are attr_accessors not DB columns — hydrate from DB
+        match.home_friend_name = match.home_team.groups.first&.friend&.name
+        match.away_friend_name = match.away_team.groups.first&.friend&.name
+
         scenarios = ScenarioEngine.new(match).call
         lines << ""
         home_owner = match.home_friend_name.presence || "No owner"
@@ -113,9 +117,13 @@ class BenBotcurdyService
       if filter_type == "MidEvent"
         lines << "LIVE: #{match.home_team.name} (#{home_owner}) #{match.home_score}–#{match.away_score} #{match.away_team.name} (#{away_owner}) — #{match.stage}"
       elsif filter_type == "PostEvent"
-        winner_team  = match.winner == "home" ? match.home_team.name : match.away_team.name
-        winner_owner = match.winner == "home" ? home_owner : away_owner
-        lines << "RESULT: #{match.home_team.name} #{match.home_score}–#{match.away_score} #{match.away_team.name} — #{winner_team} (#{winner_owner}) wins — #{match.stage}"
+        if match.winner.in?(%w[home away])
+          winner_team  = match.winner == "home" ? match.home_team.name : match.away_team.name
+          winner_owner = match.winner == "home" ? home_owner : away_owner
+          lines << "RESULT: #{match.home_team.name} #{match.home_score}–#{match.away_score} #{match.away_team.name} — #{winner_team} (#{winner_owner}) wins — #{match.stage}"
+        else
+          lines << "RESULT: #{match.home_team.name} #{match.home_score}–#{match.away_score} #{match.away_team.name} — Draw — #{match.stage}"
+        end
       else
         lines << "UPCOMING: #{match.home_team.name} (#{home_owner}) vs #{match.away_team.name} (#{away_owner}) at #{match.start_time&.strftime("%H:%M")} — #{match.stage}"
       end
@@ -160,7 +168,8 @@ class BenBotcurdyService
   end
 
   def leaderboard_cache_version
-    totals = Group.includes(:teams).order(:id).map { |g| "#{g.id}:#{g.total_points}" }.join("|")
-    Digest::SHA256.hexdigest(totals)[0, 16]
+    totals = Group.includes(teams: [:home_matches, :away_matches]).order(:id).map { |g| "#{g.id}:#{g.total_points}" }.join("|")
+    status = TournamentContextService.new.tournament_status.to_s
+    Digest::SHA256.hexdigest("#{status}|#{totals}")[0, 16]
   end
 end

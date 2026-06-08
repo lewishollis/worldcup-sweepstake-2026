@@ -3,8 +3,11 @@ import { Controller } from "@hotwired/stimulus"
 
 const SPEED_LEVELS = [
   { upTo: 3,        dir: 70,  pwr: 60  },
-  { upTo: 6,        dir: 110, pwr: 100 },
-  { upTo: 10,       dir: 160, pwr: 145 },
+  { upTo: 5,        dir: 85,  pwr: 75  },
+  { upTo: 8,        dir: 105, pwr: 95  },
+  { upTo: 12,       dir: 130, pwr: 115 },
+  { upTo: 17,       dir: 155, pwr: 140 },
+  { upTo: 23,       dir: 180, pwr: 165 },
   { upTo: Infinity, dir: 210, pwr: 190 },
 ]
 

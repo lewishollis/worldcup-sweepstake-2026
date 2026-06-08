@@ -54,6 +54,20 @@ function isMissPower(pct) {
   return pct > POWER_MISS_EDGE
 }
 
+function dirGoalPct(pct) {
+  if (pct < DIRECTION_MISS_EDGE) {
+    // Left miss zone: extrapolate off the left edge
+    const edge = 5 + (DIRECTION_MISS_EDGE / 100) * 90   // = 12.2%
+    return edge + (pct - DIRECTION_MISS_EDGE) / DIRECTION_MISS_EDGE * 20
+  }
+  if (pct > 100 - DIRECTION_MISS_EDGE) {
+    // Right miss zone: extrapolate off the right edge
+    const edge = 5 + ((100 - DIRECTION_MISS_EDGE) / 100) * 90  // = 87.8%
+    return edge + (pct - (100 - DIRECTION_MISS_EDGE)) / DIRECTION_MISS_EDGE * 20
+  }
+  return 5 + (pct / 100) * 90  // normal zone: existing formula, unchanged
+}
+
 function timeAgo(isoString) {
   if (!isoString) return ""
   const diff = Math.floor((Date.now() - new Date(isoString)) / 1000)
@@ -349,7 +363,7 @@ export default class extends Controller {
 
   _updateDirectionUI() {
     const pct     = this.dirPct
-    const goalPct = 5 + (pct / 100) * 90   // clamp cursor 5–95% across goal width
+    const goalPct = dirGoalPct(pct)
     this.directionFillTarget.style.width  = `${pct}%`
     this.directionCursorTarget.style.left = `${pct}%`
     this.cursorTarget.style.left          = `${goalPct}%`
@@ -393,7 +407,7 @@ export default class extends Controller {
     this.pwrPct = 0
     this.pwrDir = 1
     // Lock ghost ball to the aim position for the power phase
-    const lockedGoalPct = 5 + (this.dirPct / 100) * 90
+    const lockedGoalPct = dirGoalPct(this.dirPct)
     this.ghostBallTarget.style.left = `${lockedGoalPct}%`
     this.ghostBallTarget.style.top  = "85%"
     this.powerWrapperTarget.classList.remove("hidden")
@@ -483,7 +497,7 @@ export default class extends Controller {
     this.ghostBallTarget.style.opacity = "0"
     const powerLabels = { low: "LOW", mid: "MID", high: "HIGH" }
     this.powerLabelTarget.textContent = powerLabels[power]
-    this.powerLabelTarget.style.left  = `${5 + (this.dirPct / 100) * 90}%`
+    this.powerLabelTarget.style.left  = `${dirGoalPct(this.dirPct)}%`
     this.powerLabelTarget.classList.add("visible")
     this._placeBallMark()
 

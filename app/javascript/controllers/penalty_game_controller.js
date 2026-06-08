@@ -14,6 +14,7 @@ function speedForStreak(streak) {
 
 const DIRECTION_MISS_EDGE = 8    // 0–8% or 92–100% = too wide (miss)
 const POWER_MISS_EDGE     = 92   // 92–100% = over the bar (miss)
+const KEEPER_ZONES        = ["left", "center", "right"]
 
 const BLUFF_RATES = [
   { upTo: 5,        rate: 0.00 },
@@ -62,11 +63,12 @@ function timeAgo(isoString) {
   return `${Math.floor(diff / 86400)}d ago`
 }
 
-// Escapes a string for safe insertion into the DOM as text
-function escapeHtml(str) {
-  const div = document.createElement("div")
-  div.appendChild(document.createTextNode(String(str)))
-  return div.innerHTML
+// Minimal element builder — reduces modal-building boilerplate
+function el(tag, cssText = "", text = "") {
+  const node = document.createElement(tag)
+  if (cssText) node.style.cssText = cssText
+  if (text)    node.textContent   = text
+  return node
 }
 
 export default class extends Controller {
@@ -74,7 +76,7 @@ export default class extends Controller {
     "setupSection", "playSection",
     "friendGrid", "startBtn",
     "playingAsLabel", "streakLabel", "pbLabel",
-    "goalPost", "cursor", "ballMark", "keeper", "resultOverlay", "resultText",
+    "goalPost", "cursor", "ghostBall", "ballMark", "keeper", "resultOverlay", "resultText",
     "directionWrapper", "directionFill", "directionCursor",
     "powerWrapper", "powerFill", "powerCursor",
     "hintText", "ballBtn", "playAgainBtn", "leaderboard", "emptyLeaderboard"
@@ -93,6 +95,7 @@ export default class extends Controller {
     this.pwrPct          = 0
     this.pwrDir          = 1
     this.dirLocked       = false
+    this.shotFired       = false
     this.directionZone   = null
     this.actualDiveZone  = null
     this.raf             = null
@@ -100,10 +103,8 @@ export default class extends Controller {
 
     this._renderFriendGrid()
     this._renderLeaderboard(this.leaderboardValue)
-
     this._showHowToPlayModal()
 
-    // Restore session
     const saved = sessionStorage.getItem("penalty_game_friend")
     if (saved) {
       const friend = JSON.parse(saved)
@@ -131,17 +132,17 @@ export default class extends Controller {
 
   _onTimeout() {
     cancelAnimationFrame(this.raf)
+    this.cursorTarget.classList.add("hidden")
     this.streak = 0
     this._updateStreakLabel()
     this.resultOverlayTarget.classList.remove("hidden")
     this.playAgainBtnTarget.classList.remove("hidden")
-    const text     = this.resultTextTarget
+    const text = this.resultTextTarget
     text.textContent = "TIMED OUT ⌛"
-    text.className   = "game-result-text saved"
-    // No score posted — timeout does not write to DB
+    text.className   = "game-result-text missed"
   }
 
-  // ── Friend picker ───────────────────────────────────────
+  // ── Friend picker ────────────────────────────────────────
 
   _renderFriendGrid() {
     this.friendGridTarget.replaceChildren()
@@ -185,73 +186,33 @@ export default class extends Controller {
   }
 
   _showPlayerConfirmPopup(friend) {
-    // Remove any existing popup
     const existing = document.getElementById("player-confirm-popup")
     if (existing) existing.remove()
 
-    const overlay = document.createElement("div")
-    overlay.id = "player-confirm-popup"
-    overlay.style.cssText = "position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9999;background:rgba(0,0,0,0.55);backdrop-filter:blur(2px)"
+    const overlay = el("div", "position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9999;background:rgba(0,0,0,0.55);backdrop-filter:blur(2px)")
+    overlay.id    = "player-confirm-popup"
+    const card    = el("div", "background:#1a1a2e;border:2px solid #4a9d6f;border-radius:16px;padding:28px 32px;text-align:center;max-width:280px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,0.6)")
+    const emoji   = el("div", "font-size:2.5rem;margin-bottom:8px", "⚽")
+    const nameEl  = el("div", "color:#fff;font-size:1.15rem;font-weight:700;margin-bottom:4px", friend.name)
+    const sub     = el("div", "color:#a0a0c0;font-size:0.85rem;margin-bottom:20px", "Ready to take penalties?")
+    const playBtn = el("button", "background:#4a9d6f;color:#fff;border:none;border-radius:10px;padding:12px 32px;font-size:1rem;font-weight:700;cursor:pointer;width:100%", "Play ⚽")
 
-    const card = document.createElement("div")
-    card.style.cssText = "background:#1a1a2e;border:2px solid #4a9d6f;border-radius:16px;padding:28px 32px;text-align:center;max-width:280px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,0.6)"
+    playBtn.addEventListener("click", () => { overlay.remove(); this.startGame() })
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove() })
 
-    const emoji = document.createElement("div")
-    emoji.style.cssText = "font-size:2.5rem;margin-bottom:8px"
-    emoji.textContent = "⚽"
-
-    const name = document.createElement("div")
-    name.style.cssText = "color:#fff;font-size:1.15rem;font-weight:700;margin-bottom:4px"
-    name.textContent = friend.name
-
-    const sub = document.createElement("div")
-    sub.style.cssText = "color:#a0a0c0;font-size:0.85rem;margin-bottom:20px"
-    sub.textContent = "Ready to take penalties?"
-
-    const playBtn = document.createElement("button")
-    playBtn.style.cssText = "background:#4a9d6f;color:#fff;border:none;border-radius:10px;padding:12px 32px;font-size:1rem;font-weight:700;cursor:pointer;width:100%"
-    playBtn.textContent = "Play ⚽"
-    playBtn.addEventListener("click", () => {
-      overlay.remove()
-      this.startGame()
-    })
-
-    card.appendChild(emoji)
-    card.appendChild(name)
-    card.appendChild(sub)
-    card.appendChild(playBtn)
+    card.append(emoji, nameEl, sub, playBtn)
     overlay.appendChild(card)
-
-    // Tap outside to dismiss
-    overlay.addEventListener("click", (e) => {
-      if (e.target === overlay) overlay.remove()
-    })
-
     document.body.appendChild(overlay)
     playBtn.focus()
   }
 
   _showHowToPlayModal() {
-    const overlay = document.createElement("div")
-    overlay.style.cssText = "position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9999;background:rgba(0,0,0,0.65);backdrop-filter:blur(3px)"
-
-    const card = document.createElement("div")
-    card.style.cssText = "background:#1a1a2e;border:2px solid #4a9d6f;border-radius:16px;padding:28px 24px;width:88%;max-width:300px;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.7)"
-
-    const icon = document.createElement("div")
-    icon.style.cssText = "font-size:2rem;margin-bottom:4px"
-    icon.textContent = "⚽"
-
-    const heading = document.createElement("div")
-    heading.style.cssText = "color:#fff;font-size:1.1rem;font-weight:800;margin-bottom:2px"
-    heading.textContent = "How to Play"
-
-    const sub = document.createElement("div")
-    sub.style.cssText = "color:#7a7a9a;font-size:0.78rem;margin-bottom:20px"
-    sub.textContent = "Penalty Shootout"
-
-    const stepsList = document.createElement("div")
-    stepsList.style.cssText = "display:flex;flex-direction:column;gap:10px;margin-bottom:22px;text-align:left"
+    const overlay   = el("div", "position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9999;background:rgba(0,0,0,0.65);backdrop-filter:blur(3px)")
+    const card      = el("div", "background:#1a1a2e;border:2px solid #4a9d6f;border-radius:16px;padding:28px 24px;width:88%;max-width:300px;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.7)")
+    const icon      = el("div", "font-size:2rem;margin-bottom:4px", "⚽")
+    const heading   = el("div", "color:#fff;font-size:1.1rem;font-weight:800;margin-bottom:2px", "How to Play")
+    const sub       = el("div", "color:#7a7a9a;font-size:0.78rem;margin-bottom:20px", "Penalty Shootout")
+    const stepsList = el("div", "display:flex;flex-direction:column;gap:10px;margin-bottom:22px;text-align:left")
 
     const steps = [
       { title: "Aim",              desc: "Tap the ball to aim — stop the cursor left, centre, or right." },
@@ -261,40 +222,20 @@ export default class extends Controller {
     ]
 
     steps.forEach((s, i) => {
-      const row = document.createElement("div")
-      row.style.cssText = "display:flex;align-items:center;gap:12px;background:#0f0f1a;border-radius:10px;padding:10px 12px"
-
-      const num = document.createElement("div")
-      num.style.cssText = "background:#4a9d6f;color:#fff;font-weight:800;font-size:0.8rem;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0"
-      num.textContent = String(i + 1)
-
-      const textWrap = document.createElement("div")
-      const title = document.createElement("div")
-      title.style.cssText = "color:#fff;font-size:0.82rem;font-weight:600"
-      title.textContent = s.title
-      const desc = document.createElement("div")
-      desc.style.cssText = "color:#7a7a9a;font-size:0.74rem"
-      desc.textContent = s.desc
-      textWrap.appendChild(title)
-      textWrap.appendChild(desc)
-
-      row.appendChild(num)
-      row.appendChild(textWrap)
+      const row   = el("div", "display:flex;align-items:center;gap:12px;background:#0f0f1a;border-radius:10px;padding:10px 12px")
+      const num   = el("div", "background:#4a9d6f;color:#fff;font-weight:800;font-size:0.8rem;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0", String(i + 1))
+      const wrap  = el("div")
+      const title = el("div", "color:#fff;font-size:0.82rem;font-weight:600", s.title)
+      const desc  = el("div", "color:#7a7a9a;font-size:0.74rem", s.desc)
+      wrap.append(title, desc)
+      row.append(num, wrap)
       stepsList.appendChild(row)
     })
 
-    const btn = document.createElement("button")
-    btn.style.cssText = "background:#4a9d6f;color:#fff;border:none;border-radius:10px;padding:12px 0;font-size:0.95rem;font-weight:700;cursor:pointer;width:100%"
-    btn.textContent = "Got it, let's play!"
-    btn.addEventListener("click", () => {
-      overlay.remove()
-    })
+    const btn = el("button", "background:#4a9d6f;color:#fff;border:none;border-radius:10px;padding:12px 0;font-size:0.95rem;font-weight:700;cursor:pointer;width:100%", "Got it, let's play!")
+    btn.addEventListener("click", () => overlay.remove())
 
-    card.appendChild(icon)
-    card.appendChild(heading)
-    card.appendChild(sub)
-    card.appendChild(stepsList)
-    card.appendChild(btn)
+    card.append(icon, heading, sub, stepsList, btn)
     overlay.appendChild(card)
     document.body.appendChild(overlay)
   }
@@ -320,6 +261,7 @@ export default class extends Controller {
 
   switchPlayer() {
     cancelAnimationFrame(this.raf)
+    this._clearTapTimeout()
     sessionStorage.removeItem("penalty_game_friend")
     this.selectedFriend = null
     this.streak         = 0
@@ -330,12 +272,17 @@ export default class extends Controller {
     this._resetBars()
   }
 
-  // ── Direction bar ───────────────────────────────────────
+  // ── Direction bar ────────────────────────────────────────
 
   _startDirectionBar() {
     this.dirLocked = false
+    this.shotFired = false
     this.dirPct    = 0
     this.dirDir    = 1
+    this.cursorTarget.style.top = "85%"
+    this.ghostBallTarget.style.opacity  = "1"
+    this.ghostBallTarget.style.left     = "50%"
+    this.ghostBallTarget.style.top      = "85%"
     this.cursorTarget.classList.remove("hidden")
     this.directionWrapperTarget.classList.remove("hidden")
     this.powerWrapperTarget.classList.add("hidden")
@@ -367,7 +314,9 @@ export default class extends Controller {
     this.directionFillTarget.style.width  = `${pct}%`
     this.directionCursorTarget.style.left = `${pct}%`
     this.cursorTarget.style.left          = `${goalPct}%`
-    this.cursorTarget.style.top           = '85%'
+    this.cursorTarget.style.top           = "85%"
+    this.ghostBallTarget.style.left       = `${goalPct}%`
+    this.ghostBallTarget.style.top        = "85%"
   }
 
   tapBall() {
@@ -389,21 +338,23 @@ export default class extends Controller {
   }
 
   _pickKeeperDiveZone() {
-    const zones = ["left", "center", "right"]
-    this.actualDiveZone = zones[Math.floor(Math.random() * zones.length)]
+    this.actualDiveZone = KEEPER_ZONES[Math.floor(Math.random() * KEEPER_ZONES.length)]
   }
 
-  // ── Power bar ───────────────────────────────────────────
+  // ── Power bar ────────────────────────────────────────────
 
   _startPowerBar() {
     this.pwrPct = 0
     this.pwrDir = 1
+    // Lock ghost ball to the aim position for the power phase
+    const lockedGoalPct = 5 + (this.dirPct / 100) * 90
+    this.ghostBallTarget.style.left = `${lockedGoalPct}%`
+    this.ghostBallTarget.style.top  = "85%"
     this.powerWrapperTarget.classList.remove("hidden")
     this.hintTextTarget.textContent = "Tap to shoot — stop it before it flies over the bar!"
     this._pickKeeperDiveZone()
-    const zones = ["left", "center", "right"]
     const telegraphZone = Math.random() < bluffRate(this.streak)
-      ? zones.filter(z => z !== this.actualDiveZone)[Math.floor(Math.random() * 2)]
+      ? KEEPER_ZONES.filter(z => z !== this.actualDiveZone)[Math.floor(Math.random() * 2)]
       : this.actualDiveZone
     this.keeperTarget.className = `game-keeper lean-${telegraphZone}`
     this._startTapTimeout()
@@ -426,22 +377,23 @@ export default class extends Controller {
   }
 
   _updateHeightUI(pct) {
-    let topPct
-    if (pct <= 92) {
-      topPct = 85 - (pct / 92) * 85          // 0 → 85%, 92 → 0%
-    } else {
-      topPct = -((pct - 92) / 8) * 20        // 92 → 0%, 100 → -20%
-    }
-    this.cursorTarget.style.top = `${topPct}%`
+    // 0 → 85% (ground), POWER_MISS_EDGE → 0% (crossbar), 100 → -20% (above bar)
+    const topPct = pct <= POWER_MISS_EDGE
+      ? 85 - (pct / POWER_MISS_EDGE) * 85
+      : -((pct - POWER_MISS_EDGE) / (100 - POWER_MISS_EDGE)) * 20
+    this.cursorTarget.style.top    = `${topPct}%`
+    this.ghostBallTarget.style.top = `${topPct}%`
   }
 
   lockPower() {
+    if (this.shotFired) return
+    this.shotFired = true
     this._clearTapTimeout()
     cancelAnimationFrame(this.raf)
     this._resolveShot(powerLevel(this.pwrPct), isMissPower(this.pwrPct))
   }
 
-  // ── Shot resolution ─────────────────────────────────────
+  // ── Shot resolution ──────────────────────────────────────
 
   _placeBallMark() {
     const mark = this.ballMarkTarget
@@ -460,8 +412,7 @@ export default class extends Controller {
       finalTop  = "-25%"
       mark.classList.add("miss")
     } else {
-      // Normal shot — inside goal
-      // y: map power 0–100 → top 82%–5% (low = near ground, high = near crossbar)
+      // Normal shot — y: low power = near ground, high power = near crossbar
       finalLeft = `${this.dirPct}%`
       finalTop  = `${Math.round(82 - this.pwrPct * 0.77)}%`
       mark.classList.remove("miss")
@@ -480,6 +431,7 @@ export default class extends Controller {
 
     this.keeperTarget.className = `game-keeper dive-${this.actualDiveZone}`
     this.cursorTarget.classList.add("hidden")
+    this.ghostBallTarget.style.opacity = "0"   // hide ghost ball on shot
     this._placeBallMark()
 
     if (missed) {
@@ -495,25 +447,22 @@ export default class extends Controller {
   _showResult(result) {
     this.resultOverlayTarget.classList.remove("hidden")
     const text = this.resultTextTarget
+
     if (result === "goal") {
       this.streak++
+      this._updateStreakLabel()
       text.textContent = "GOAL ⚽"
       text.className   = "game-result-text goal"
       this.playAgainBtnTarget.classList.add("hidden")
-      this._updateStreakLabel()
+      this.hintTextTarget.textContent = this.streak >= 3 ? `${this.streak} in a row! 🔥` : "Next up…"
       setTimeout(() => this._startDirectionBar(), 1200)
       return
-    } else if (result === "missed") {
-      text.textContent = "MISSED ↗"
-      text.className   = "game-result-text missed"
-      this.playAgainBtnTarget.classList.remove("hidden")
-      this._saveScore()
-    } else {
-      text.textContent = "SAVED 🧤"
-      text.className   = "game-result-text saved"
-      this.playAgainBtnTarget.classList.remove("hidden")
-      this._saveScore()
     }
+
+    text.textContent = result === "missed" ? "MISSED ↗" : "SAVED 🧤"
+    text.className   = `game-result-text ${result}`
+    this.playAgainBtnTarget.classList.remove("hidden")
+    this._saveScore()
   }
 
   playAgain() {
@@ -522,7 +471,7 @@ export default class extends Controller {
     this._startDirectionBar()
   }
 
-  // ── Score persistence ───────────────────────────────────
+  // ── Score persistence ────────────────────────────────────
 
   _saveScore() {
     const streakToSave = this.streak
@@ -550,7 +499,7 @@ export default class extends Controller {
     .catch(() => {}) // Silent fail — game still works offline
   }
 
-  // ── Leaderboard rendering ───────────────────────────────
+  // ── Leaderboard rendering ────────────────────────────────
 
   _renderLeaderboard(data) {
     if (!data || data.length === 0) {
@@ -568,13 +517,11 @@ export default class extends Controller {
       row.className = "game-leaderboard-row"
       row.dataset.friendId = entry.friend_id
 
-      // Rank
       const rank = document.createElement("span")
       rank.className = `game-leaderboard-rank ${rankClasses[i] || ""}`
       rank.textContent = i + 1
       row.appendChild(rank)
 
-      // Avatar
       if (entry.friend_picture_url) {
         const img = document.createElement("img")
         img.src = entry.friend_picture_url
@@ -588,19 +535,16 @@ export default class extends Controller {
         row.appendChild(placeholder)
       }
 
-      // Name
       const name = document.createElement("span")
       name.className = "game-leaderboard-name"
       name.textContent = entry.friend_name
       row.appendChild(name)
 
-      // Streak
       const streak = document.createElement("span")
       streak.className = "game-leaderboard-streak"
       streak.textContent = `${entry.best_streak} 🔥`
       row.appendChild(streak)
 
-      // Time
       const time = document.createElement("span")
       time.className = "game-leaderboard-time"
       time.textContent = timeAgo(entry.first_achieved)
@@ -639,5 +583,6 @@ export default class extends Controller {
     this.directionCursorTarget.style.left = "0%"
     this.powerFillTarget.style.width      = "0%"
     this.powerCursorTarget.style.left     = "0%"
+    this.cursorTarget.style.top           = "85%"
   }
 }

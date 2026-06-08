@@ -56,6 +56,30 @@
   transform: translate(-50%, -50%);
 }
 
+.game-ghost-ball {
+  @apply absolute pointer-events-none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(255, 255, 0, 0.12);
+  border: 2px dashed rgba(255, 255, 0, 0.45);
+  transform: translate(-50%, -50%);
+  z-index: 14;
+  left: 50%;
+  top: 85%;
+}
+
+.game-miss-zone {
+  @apply absolute top-0 bottom-0 pointer-events-none;
+  /* 8% of goal bar = miss edge; goalPct mapping: 5 + (8/100)*90 = 12.2% */
+  width: 12.2%;
+  background: rgba(239, 68, 68, 0.10);
+  z-index: 5;
+}
+
+.game-miss-zone.left  { left: 0; }
+.game-miss-zone.right { right: 0; }
+
 .game-ball-mark {
   @apply absolute pointer-events-none z-20;
   font-size: 18px;

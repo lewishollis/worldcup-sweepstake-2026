@@ -133,6 +133,7 @@ export default class extends Controller {
   _onTimeout() {
     cancelAnimationFrame(this.raf)
     this.cursorTarget.classList.add("hidden")
+    this.ghostBallTarget.style.opacity = "0"
     this.streak = 0
     this._updateStreakLabel()
     this.resultOverlayTarget.classList.remove("hidden")
@@ -265,6 +266,7 @@ export default class extends Controller {
     sessionStorage.removeItem("penalty_game_friend")
     this.selectedFriend = null
     this.streak         = 0
+    this.ghostBallTarget.style.opacity = "0"
     this.playSectionTarget.classList.add("hidden")
     this.setupSectionTarget.classList.remove("hidden")
     this.startBtnTarget.disabled = true

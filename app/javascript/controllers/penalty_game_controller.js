@@ -124,6 +124,7 @@ export default class extends Controller {
   disconnect() {
     cancelAnimationFrame(this.raf)
     clearTimeout(this.tapTimeout)
+    clearTimeout(this.aimZoneTimeout)
   }
 
   // ── Timeout (30s idle = streak lost, no score written) ──
@@ -299,6 +300,7 @@ export default class extends Controller {
     clearTimeout(this.barPopTimeout)
     this.directionWrapperTarget.classList.remove("locked-flash")
     this.powerWrapperTarget.classList.remove("bar-pop")
+    this.powerLabelTarget.classList.remove("visible")
     this.dirPct    = 0
     this.dirDir    = 1
     this.cursorTarget.style.top = "85%"
@@ -474,7 +476,7 @@ export default class extends Controller {
     this.ghostBallTarget.style.opacity = "0"
     const powerLabels = { low: "LOW", mid: "MID", high: "HIGH" }
     this.powerLabelTarget.textContent = powerLabels[power]
-    this.powerLabelTarget.style.left  = `${this.dirPct}%`
+    this.powerLabelTarget.style.left  = `${5 + (this.dirPct / 100) * 90}%`
     this.powerLabelTarget.classList.add("visible")
     this._placeBallMark()
 

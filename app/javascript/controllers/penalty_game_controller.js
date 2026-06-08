@@ -104,6 +104,8 @@ export default class extends Controller {
     this.actualDiveZone  = null
     this.raf             = null
     this.tapTimeout      = null
+    this.lockFlashTimeout  = null
+    this.barPopTimeout     = null
 
     this._renderFriendGrid()
     this._renderLeaderboard(this.leaderboardValue)
@@ -267,6 +269,10 @@ export default class extends Controller {
   switchPlayer() {
     cancelAnimationFrame(this.raf)
     this._clearTapTimeout()
+    clearTimeout(this.lockFlashTimeout)
+    clearTimeout(this.barPopTimeout)
+    this.directionWrapperTarget.classList.remove("locked-flash")
+    this.powerWrapperTarget.classList.remove("bar-pop")
     sessionStorage.removeItem("penalty_game_friend")
     this.selectedFriend = null
     this.streak         = 0
@@ -283,6 +289,10 @@ export default class extends Controller {
   _startDirectionBar() {
     this.dirLocked = false
     this.shotFired = false
+    clearTimeout(this.lockFlashTimeout)
+    clearTimeout(this.barPopTimeout)
+    this.directionWrapperTarget.classList.remove("locked-flash")
+    this.powerWrapperTarget.classList.remove("bar-pop")
     this.dirPct    = 0
     this.dirDir    = 1
     this.cursorTarget.style.top = "85%"
@@ -343,7 +353,8 @@ export default class extends Controller {
     this.directionMiss = isMissDirection(this.dirPct)
     // Flash the direction bar to confirm aim was locked
     this.directionWrapperTarget.classList.add("locked-flash")
-    setTimeout(() => this.directionWrapperTarget.classList.remove("locked-flash"), 250)
+    clearTimeout(this.lockFlashTimeout)
+    this.lockFlashTimeout = setTimeout(() => this.directionWrapperTarget.classList.remove("locked-flash"), 250)
     this._startPowerBar()
   }
 
@@ -361,8 +372,9 @@ export default class extends Controller {
     this.ghostBallTarget.style.left = `${lockedGoalPct}%`
     this.ghostBallTarget.style.top  = "85%"
     this.powerWrapperTarget.classList.remove("hidden")
+    clearTimeout(this.barPopTimeout)
     this.powerWrapperTarget.classList.add("bar-pop")
-    setTimeout(() => this.powerWrapperTarget.classList.remove("bar-pop"), 180)
+    this.barPopTimeout = setTimeout(() => this.powerWrapperTarget.classList.remove("bar-pop"), 180)
     this.hintTextTarget.textContent = "Tap to shoot — stop it before it flies over the bar!"
     this._pickKeeperDiveZone()
     const telegraphZone = Math.random() < bluffRate(this.streak)

@@ -125,6 +125,8 @@ export default class extends Controller {
     cancelAnimationFrame(this.raf)
     clearTimeout(this.tapTimeout)
     clearTimeout(this.aimZoneTimeout)
+    clearTimeout(this.lockFlashTimeout)
+    clearTimeout(this.barPopTimeout)
   }
 
   // ── Timeout (30s idle = streak lost, no score written) ──
@@ -142,6 +144,11 @@ export default class extends Controller {
   _onTimeout() {
     cancelAnimationFrame(this.raf)
     clearTimeout(this.aimZoneTimeout)
+    clearTimeout(this.lockFlashTimeout)
+    clearTimeout(this.barPopTimeout)
+    this.directionWrapperTarget.classList.remove("locked-flash")
+    this.powerWrapperTarget.classList.remove("bar-pop")
+    this.hintTextTarget.classList.remove("hint-milestone")
     this.aimZonesTarget.classList.remove("visible")
     this.cursorTarget.classList.add("hidden")
     this.ghostBallTarget.style.opacity = "0"

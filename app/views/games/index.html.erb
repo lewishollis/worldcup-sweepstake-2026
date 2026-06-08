@@ -3,6 +3,8 @@
      data-penalty-game-friends-value="<%= @friends.to_json(only: [:id, :name, :profile_picture_url]) %>"
      data-penalty-game-leaderboard-value="<%= @leaderboard.to_json %>">
 
+  <div class="game-screen-flash" data-penalty-game-target="screenFlash"></div>
+
   <header class="page-header">
     <div class="page-header-container">
       <div class="flex w-12 shrink-0 items-center justify-start md:hidden"></div>
@@ -44,6 +46,7 @@
             <div class="game-ghost-ball" data-penalty-game-target="ghostBall"></div>
             <div class="game-miss-zone left"></div>
             <div class="game-miss-zone right"></div>
+            <div class="game-net-ripple" data-penalty-game-target="netRipple"></div>
             <div class="game-ball-mark hidden" data-penalty-game-target="ballMark"></div>
             <div class="game-keeper" data-penalty-game-target="keeper">🧤</div>
 

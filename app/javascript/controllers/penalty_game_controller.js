@@ -81,6 +81,7 @@ export default class extends Controller {
     "friendGrid", "startBtn",
     "playingAsLabel", "streakLabel", "pbLabel",
     "goalPost", "cursor", "ghostBall", "ballMark", "keeper", "resultOverlay", "resultText",
+    "screenFlash", "netRipple",
     "directionWrapper", "directionFill", "directionCursor",
     "powerWrapper", "powerFill", "powerCursor",
     "hintText", "ballBtn", "playAgainBtn", "leaderboard", "emptyLeaderboard"
@@ -304,7 +305,9 @@ export default class extends Controller {
     this.powerWrapperTarget.classList.add("hidden")
     this.resultOverlayTarget.classList.add("hidden")
     this.ballMarkTarget.classList.add("hidden")
+    this.hintTextTarget.classList.remove("hint-milestone")
     this.hintTextTarget.textContent = "Tap the ball to aim"
+    this.resultTextTarget.classList.remove("milestone")
     this.keeperTarget.className = "game-keeper"
     this._startTapTimeout()
     this.lastFrameTime = null
@@ -455,8 +458,14 @@ export default class extends Controller {
 
     this.keeperTarget.className = `game-keeper dive-${this.actualDiveZone}`
     this.cursorTarget.classList.add("hidden")
-    this.ghostBallTarget.style.opacity = "0"   // hide ghost ball on shot
+    this.ghostBallTarget.style.opacity = "0"
     this._placeBallMark()
+
+    if (!missed) {
+      const finalLeft = `${this.dirPct}%`
+      const finalTop  = `${Math.round(82 - this.pwrPct * 0.77)}%`
+      setTimeout(() => this._triggerNetRipple(finalLeft, finalTop), 350)
+    }
 
     if (missed) {
       setTimeout(() => this._showResult("missed"), 450)
@@ -469,6 +478,8 @@ export default class extends Controller {
   }
 
   _showResult(result) {
+    this.powerLabelTarget?.classList.remove("visible")
+    this._flashScreen(result)
     this.resultOverlayTarget.classList.remove("hidden")
     const text = this.resultTextTarget
 
@@ -479,7 +490,25 @@ export default class extends Controller {
       text.textContent = "GOAL ⚽"
       text.className   = "game-result-text goal"
       this.playAgainBtnTarget.classList.add("hidden")
-      this.hintTextTarget.textContent = this.streak >= 3 ? `${this.streak} in a row! 🔥` : "Next up…"
+
+      if (this.streak >= 10) {
+        this.hintTextTarget.textContent = "Unstoppable! 🔥🔥🔥"
+        this.hintTextTarget.classList.add("hint-milestone")
+        text.classList.add("milestone")
+      } else if (this.streak >= 5) {
+        this.hintTextTarget.textContent = "On fire! 🔥🔥"
+        this.hintTextTarget.classList.add("hint-milestone")
+        text.classList.remove("milestone")
+      } else if (this.streak >= 3) {
+        this.hintTextTarget.textContent = `${this.streak} in a row! 🔥`
+        this.hintTextTarget.classList.remove("hint-milestone")
+        text.classList.remove("milestone")
+      } else {
+        this.hintTextTarget.textContent = "Next up…"
+        this.hintTextTarget.classList.remove("hint-milestone")
+        text.classList.remove("milestone")
+      }
+
       setTimeout(() => this._startDirectionBar(), 1200)
       return
     }
@@ -489,6 +518,22 @@ export default class extends Controller {
     vibrate(150)
     this.playAgainBtnTarget.classList.remove("hidden")
     this._saveScore()
+  }
+
+  _flashScreen(type) {
+    const flash = this.screenFlashTarget
+    flash.classList.remove("flash-goal", "flash-missed", "flash-saved")
+    void flash.offsetWidth  // reflow to restart animation
+    flash.classList.add(`flash-${type}`)
+  }
+
+  _triggerNetRipple(left, top) {
+    const ripple = this.netRippleTarget
+    ripple.style.left = left
+    ripple.style.top  = top
+    ripple.classList.remove("rippling")
+    void ripple.offsetWidth  // reflow to restart animation
+    ripple.classList.add("rippling")
   }
 
   playAgain() {

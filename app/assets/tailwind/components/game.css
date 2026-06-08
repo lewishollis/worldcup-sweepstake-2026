@@ -222,11 +222,59 @@
   @apply text-center text-xs text-text-secondary-light dark:text-text-secondary-dark mt-2;
 }
 
+/* Screen flash overlay */
+.game-screen-flash {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  opacity: 0;
+}
+
+.game-screen-flash.flash-goal {
+  animation: flash-white 0.15s ease-out forwards;
+}
+
+.game-screen-flash.flash-missed {
+  animation: flash-red 0.12s ease-out forwards;
+}
+
+.game-screen-flash.flash-saved {
+  animation: flash-dark 0.12s ease-out forwards;
+}
+
+@keyframes flash-white { 0% { background: rgba(255,255,255,0.4); opacity:1; } 100% { opacity:0; } }
+@keyframes flash-red   { 0% { background: rgba(239,68,68,0.3);   opacity:1; } 100% { opacity:0; } }
+@keyframes flash-dark  { 0% { background: rgba(30,30,80,0.25);   opacity:1; } 100% { opacity:0; } }
+
+/* Net ripple on goal */
+.game-net-ripple {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+  z-index: 25;
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 0;
+}
+
+.game-net-ripple.rippling {
+  animation: net-ripple 0.4s ease-out forwards;
+}
+
+@keyframes net-ripple {
+  0%   { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
+  100% { transform: translate(-50%, -50%) scale(7); opacity: 0;   }
+}
+
 /* ── Result Overlay ────────────────────────────────── */
 .game-result-overlay {
   @apply absolute inset-0 flex-col items-center justify-center rounded-xl z-10;
   display: flex;
   background: rgba(0, 0, 0, 0.75);
+  animation: result-slide-up 0.2s ease-out;
 }
 
 .game-result-overlay.hidden {
@@ -286,4 +334,25 @@
 
 .game-leaderboard-time {
   @apply text-xs text-text-secondary-light dark:text-text-secondary-dark;
+}
+
+@keyframes result-slide-up {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* Milestone hint pulse */
+.game-hint.hint-milestone {
+  color: #f59e0b;
+  animation: hint-pulse 0.7s ease-in-out infinite alternate;
+}
+
+@keyframes hint-pulse {
+  from { opacity: 0.7; transform: scale(1);    }
+  to   { opacity: 1;   transform: scale(1.06); }
+}
+
+/* Milestone result text — larger at streak 10+ */
+.game-result-text.milestone {
+  font-size: 3.5rem;
 }

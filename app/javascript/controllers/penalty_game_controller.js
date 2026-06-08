@@ -461,12 +461,6 @@ export default class extends Controller {
     this.ghostBallTarget.style.opacity = "0"
     this._placeBallMark()
 
-    if (!missed) {
-      const finalLeft = `${this.dirPct}%`
-      const finalTop  = `${Math.round(82 - this.pwrPct * 0.77)}%`
-      setTimeout(() => this._triggerNetRipple(finalLeft, finalTop), 350)
-    }
-
     if (missed) {
       setTimeout(() => this._showResult("missed"), 450)
       return
@@ -480,10 +474,13 @@ export default class extends Controller {
   _showResult(result) {
     this.powerLabelTarget?.classList.remove("visible")
     this._flashScreen(result)
+    // ensure animation replays each time
+    void this.resultOverlayTarget.offsetWidth
     this.resultOverlayTarget.classList.remove("hidden")
     const text = this.resultTextTarget
 
     if (result === "goal") {
+      this._triggerNetRipple(`${this.dirPct}%`, `${Math.round(82 - this.pwrPct * 0.77)}%`)
       vibrate([50, 50, 50])
       this.streak++
       this._updateStreakLabel()

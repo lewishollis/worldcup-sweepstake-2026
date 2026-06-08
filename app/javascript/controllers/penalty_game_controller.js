@@ -81,7 +81,7 @@ export default class extends Controller {
     "friendGrid", "startBtn",
     "playingAsLabel", "streakLabel", "pbLabel",
     "goalPost", "cursor", "ghostBall", "ballMark", "keeper", "resultOverlay", "resultText",
-    "screenFlash", "netRipple",
+    "screenFlash", "netRipple", "aimZones", "powerLabel",
     "directionWrapper", "directionFill", "directionCursor",
     "powerWrapper", "powerFill", "powerCursor",
     "hintText", "ballBtn", "playAgainBtn", "leaderboard", "emptyLeaderboard"
@@ -107,6 +107,7 @@ export default class extends Controller {
     this.tapTimeout      = null
     this.lockFlashTimeout  = null
     this.barPopTimeout     = null
+    this.aimZoneTimeout    = null
 
     this._renderFriendGrid()
     this._renderLeaderboard(this.leaderboardValue)
@@ -139,6 +140,8 @@ export default class extends Controller {
 
   _onTimeout() {
     cancelAnimationFrame(this.raf)
+    clearTimeout(this.aimZoneTimeout)
+    this.aimZonesTarget.classList.remove("visible")
     this.cursorTarget.classList.add("hidden")
     this.ghostBallTarget.style.opacity = "0"
     this.streak = 0
@@ -272,6 +275,8 @@ export default class extends Controller {
     this._clearTapTimeout()
     clearTimeout(this.lockFlashTimeout)
     clearTimeout(this.barPopTimeout)
+    clearTimeout(this.aimZoneTimeout)
+    this.aimZonesTarget.classList.remove("visible")
     this.directionWrapperTarget.classList.remove("locked-flash")
     this.powerWrapperTarget.classList.remove("bar-pop")
     sessionStorage.removeItem("penalty_game_friend")
@@ -309,6 +314,12 @@ export default class extends Controller {
     this.hintTextTarget.textContent = "Tap the ball to aim"
     this.resultTextTarget.classList.remove("milestone")
     this.keeperTarget.className = "game-keeper"
+    // Show aim zone labels after 200ms
+    clearTimeout(this.aimZoneTimeout)
+    this.aimZonesTarget.classList.remove("visible")
+    this.aimZoneTimeout = setTimeout(() => {
+      this.aimZonesTarget.classList.add("visible")
+    }, 200)
     this._startTapTimeout()
     this.lastFrameTime = null
     this.raf = requestAnimationFrame((ts) => this._sweepDirection(ts))
@@ -349,6 +360,8 @@ export default class extends Controller {
 
   lockDirection() {
     if (this.dirLocked) return
+    clearTimeout(this.aimZoneTimeout)
+    this.aimZonesTarget.classList.remove("visible")
     this._clearTapTimeout()
     cancelAnimationFrame(this.raf)
     this.dirLocked     = true
@@ -459,6 +472,10 @@ export default class extends Controller {
     this.keeperTarget.className = `game-keeper dive-${this.actualDiveZone}`
     this.cursorTarget.classList.add("hidden")
     this.ghostBallTarget.style.opacity = "0"
+    const powerLabels = { low: "LOW", mid: "MID", high: "HIGH" }
+    this.powerLabelTarget.textContent = powerLabels[power]
+    this.powerLabelTarget.style.left  = `${this.dirPct}%`
+    this.powerLabelTarget.classList.add("visible")
     this._placeBallMark()
 
     if (missed) {

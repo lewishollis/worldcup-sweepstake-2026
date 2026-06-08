@@ -102,7 +102,7 @@
 .game-keeper {
   @apply absolute bottom-0 left-1/2 text-5xl leading-none select-none;
   transform: translateX(-50%);
-  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* Telegraph: keeper loads into a direction */
@@ -184,6 +184,27 @@
 
 .game-bar-danger.left  { left: 0; }
 .game-bar-danger.right { right: 0; }
+
+/* Direction bar lock flash */
+.game-bar-wrapper.locked-flash .game-bar-track {
+  animation: lock-flash 0.25s ease-out forwards;
+}
+
+@keyframes lock-flash {
+  0%   { background-color: rgba(74, 157, 111, 0.55); }
+  100% { background-color: #374151; }
+}
+
+/* Power bar entrance pop */
+.game-bar-wrapper.bar-pop {
+  transform-origin: top;
+  animation: bar-pop 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes bar-pop {
+  0%   { transform: scaleY(0); opacity: 0; }
+  100% { transform: scaleY(1); opacity: 1; }
+}
 
 /* ── Shoot Button ──────────────────────────────────── */
 .game-shoot-btn {

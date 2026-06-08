@@ -63,6 +63,10 @@ function timeAgo(isoString) {
   return `${Math.floor(diff / 86400)}d ago`
 }
 
+function vibrate(pattern) {
+  if ("vibrate" in navigator) navigator.vibrate(pattern)
+}
+
 // Minimal element builder — reduces modal-building boilerplate
 function el(tag, cssText = "", text = "") {
   const node = document.createElement(tag)
@@ -322,6 +326,7 @@ export default class extends Controller {
   }
 
   tapBall() {
+    vibrate(30)
     if (!this.dirLocked) {
       this.lockDirection()
     } else {
@@ -336,6 +341,9 @@ export default class extends Controller {
     this.dirLocked     = true
     this.directionZone = zone(this.dirPct)
     this.directionMiss = isMissDirection(this.dirPct)
+    // Flash the direction bar to confirm aim was locked
+    this.directionWrapperTarget.classList.add("locked-flash")
+    setTimeout(() => this.directionWrapperTarget.classList.remove("locked-flash"), 250)
     this._startPowerBar()
   }
 
@@ -353,6 +361,8 @@ export default class extends Controller {
     this.ghostBallTarget.style.left = `${lockedGoalPct}%`
     this.ghostBallTarget.style.top  = "85%"
     this.powerWrapperTarget.classList.remove("hidden")
+    this.powerWrapperTarget.classList.add("bar-pop")
+    setTimeout(() => this.powerWrapperTarget.classList.remove("bar-pop"), 180)
     this.hintTextTarget.textContent = "Tap to shoot — stop it before it flies over the bar!"
     this._pickKeeperDiveZone()
     const telegraphZone = Math.random() < bluffRate(this.streak)
@@ -451,6 +461,7 @@ export default class extends Controller {
     const text = this.resultTextTarget
 
     if (result === "goal") {
+      vibrate([50, 50, 50])
       this.streak++
       this._updateStreakLabel()
       text.textContent = "GOAL ⚽"
@@ -463,6 +474,7 @@ export default class extends Controller {
 
     text.textContent = result === "missed" ? "MISSED ↗" : "SAVED 🧤"
     text.className   = `game-result-text ${result}`
+    vibrate(150)
     this.playAgainBtnTarget.classList.remove("hidden")
     this._saveScore()
   }

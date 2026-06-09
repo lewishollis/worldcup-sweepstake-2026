@@ -1,4 +1,16 @@
 namespace :matches do
+  # Maps BBC Sport API team names to the canonical names used in seeds/groups
+  TEAM_NAME_ALIASES = {
+    "Iran"               => "IR Iran",
+    "Bosnia-Herzegovina" => "Bosnia And Herz.",
+    "Cape Verde"         => "Cabo Verde",
+    "Ivory Coast"        => "Côte d'Ivoire",
+    "Turkey"             => "Türkiye",
+    "United States"      => "USA",
+    "South Korea"        => "Korea Republic",
+    "Czech Republic"     => "Czechia"
+  }.freeze
+
   desc "Fetch latest match data from BBC Sport API and upsert into DB"
   task sync: :environment do
     require "net/http"
@@ -31,13 +43,28 @@ namespace :matches do
 
     updated = 0
     created = 0
+    skipped = 0
 
     data["eventGroups"].each do |event_group|
+      next unless event_group["secondaryGroups"].is_a?(Array)
+
       event_group["secondaryGroups"].each do |secondary_group|
+        next unless secondary_group["events"].is_a?(Array)
+
         secondary_group["events"].each do |event|
-          home_team = Team.find_or_create_by(name: event["home"]["fullName"])
-          away_team = Team.find_or_create_by(name: event["away"]["fullName"])
-          stage     = event["stage"] || { "name" => "Unknown Stage" }
+          home_name = TEAM_NAME_ALIASES.fetch(event.dig("home", "fullName"), event.dig("home", "fullName"))
+          away_name = TEAM_NAME_ALIASES.fetch(event.dig("away", "fullName"), event.dig("away", "fullName"))
+          stage_name = event.dig("stage", "name") || "Unknown Stage"
+          start_time = event.dig("date", "iso")
+
+          unless home_name && away_name && start_time
+            Rails.logger.warn("[matches:sync] Skipping event #{event["id"].inspect} — missing required fields")
+            skipped += 1
+            next
+          end
+
+          home_team = Team.find_or_create_by(name: home_name)
+          away_team = Team.find_or_create_by(name: away_name)
           winner    = event["status"] == "MidEvent" ? nil : event["winner"]
 
           match = Match.find_or_initialize_by(match_id: event["id"])
@@ -46,10 +73,10 @@ namespace :matches do
           match.assign_attributes(
             home_team:                home_team,
             away_team:                away_team,
-            start_time:               event["date"]["iso"],
-            stage:                    stage["name"],
-            home_score:               event["home"]["score"].to_i,
-            away_score:               event["away"]["score"].to_i,
+            start_time:               start_time,
+            stage:                    stage_name,
+            home_score:               event.dig("home", "score").to_i,
+            away_score:               event.dig("away", "score").to_i,
             status:                   event["status"],
             winner:                   winner,
             accessible_event_summary: event["accessibleEventSummary"]
@@ -63,6 +90,6 @@ namespace :matches do
       end
     end
 
-    Rails.logger.info("[matches:sync] Done — #{created} created, #{updated} updated")
+    Rails.logger.info("[matches:sync] Done — #{created} created, #{updated} updated, #{skipped} skipped")
   end
 end

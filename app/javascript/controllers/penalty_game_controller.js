@@ -44,9 +44,9 @@ function powerLevel(pct) {
 }
 
 function saveChance(power) {
-  if (power === "low")  return 1.0  // comfortable catch
-  if (power === "mid")  return 0.8  // keeper strains
-  return 0.45                       // hard to hold
+  if (power === "low")  return 0.6   // catchable but not guaranteed
+  if (power === "mid")  return 0.8   // keeper strains
+  return 0.45                        // hard to hold
 }
 
 function isMissDirection(pct) {
@@ -373,6 +373,7 @@ export default class extends Controller {
     this.cursorTarget.style.top           = "85%"
     this.ghostBallTarget.style.left       = `${goalPct}%`
     this.ghostBallTarget.style.top        = "85%"
+    this.directionWrapperTarget.classList.toggle("in-danger", isMissDirection(pct))
   }
 
   tapBall() {
@@ -437,6 +438,7 @@ export default class extends Controller {
       this.powerFillTarget.style.width  = `${this.pwrPct}%`
       this.powerCursorTarget.style.left = `${this.pwrPct}%`
       this._updateHeightUI(this.pwrPct)
+      this.powerWrapperTarget.classList.toggle("in-danger", isMissPower(this.pwrPct))
     }
     this.lastFrameTime = ts
     this.raf = requestAnimationFrame((ts) => this._sweepPower(ts))
@@ -695,5 +697,7 @@ export default class extends Controller {
     this.powerFillTarget.style.width      = "0%"
     this.powerCursorTarget.style.left     = "0%"
     this.cursorTarget.style.top           = "85%"
+    this.directionWrapperTarget.classList.remove("in-danger")
+    this.powerWrapperTarget.classList.remove("in-danger")
   }
 }

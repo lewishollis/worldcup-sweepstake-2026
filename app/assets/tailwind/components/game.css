@@ -73,8 +73,8 @@
   @apply absolute top-0 bottom-0 pointer-events-none;
   /* 8% of goal bar = miss edge; goalPct mapping: 5 + (8/100)*90 = 12.2% */
   width: 12.2%;
-  background: rgba(239, 68, 68, 0.10);
-  z-index: 5;
+  background: rgba(239, 68, 68, 0.18);
+  z-index: 15;  /* above ghost ball (14) so strips always overlay */
 }
 
 .game-miss-zone.left  { left: 0; }
@@ -177,10 +177,15 @@
 }
 
 .game-bar-danger {
-  @apply absolute top-0 bottom-0 z-10 pointer-events-none;
+  @apply absolute top-0 bottom-0 pointer-events-none;
   width: 8%;
-  background: rgba(239, 68, 68, 0.30);
+  background: rgba(239, 68, 68, 0.45);
+  z-index: 20;  /* above bar fill so strips always show on top */
 }
+
+/* Bar fill turns red when cursor enters miss zone */
+.game-bar-wrapper.in-danger .game-bar-fill.direction { @apply bg-red-400; }
+.game-bar-wrapper.in-danger .game-bar-fill.power     { @apply bg-red-400; }
 
 .game-bar-danger.left  { left: 0; }
 .game-bar-danger.right { right: 0; }

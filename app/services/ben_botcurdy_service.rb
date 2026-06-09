@@ -19,6 +19,8 @@ class BenBotcurdyService
   end
 
   def generate_insight
+    return nil if @context_type == :leaderboard && TournamentContextService.new.tournament_status == :not_started
+
     if @context_type == :leaderboard
       version = leaderboard_cache_version
       cached = AiInsightCache.fetch(key: "leaderboard_battleground", version: version) if defined?(AiInsightCache) && AiInsightCache.table_exists?

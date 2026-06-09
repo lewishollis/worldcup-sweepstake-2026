@@ -58,17 +58,20 @@ function isMissPower(pct) {
 }
 
 function dirGoalPct(pct) {
+  const inner = 100 - 2 * DIRECTION_MISS_EDGE  // valid range width = 84
   if (pct < DIRECTION_MISS_EDGE) {
-    // Left miss zone: extrapolate off the left edge
-    const edge = 5 + (DIRECTION_MISS_EDGE / 100) * 90   // = 12.2%
-    return edge + (pct - DIRECTION_MISS_EDGE) / DIRECTION_MISS_EDGE * 20
+    // Left miss zone: extrapolate left from the post (0%)
+    // pct=8 → 0% (post edge), pct=0 → -20% (off goal)
+    return (pct - DIRECTION_MISS_EDGE) / DIRECTION_MISS_EDGE * 20
   }
   if (pct > 100 - DIRECTION_MISS_EDGE) {
-    // Right miss zone: extrapolate off the right edge
-    const edge = 5 + ((100 - DIRECTION_MISS_EDGE) / 100) * 90  // = 87.8%
-    return edge + (pct - (100 - DIRECTION_MISS_EDGE)) / DIRECTION_MISS_EDGE * 20
+    // Right miss zone: extrapolate right from the post (100%)
+    // pct=92 → 100% (post edge), pct=100 → 120% (off goal)
+    return 100 + (pct - (100 - DIRECTION_MISS_EDGE)) / DIRECTION_MISS_EDGE * 20
   }
-  return 5 + (pct / 100) * 90  // normal zone: existing formula, unchanged
+  // Normal zone: miss thresholds map exactly to goal posts (0–100%)
+  // pct=8 → 0%, pct=50 → 50%, pct=92 → 100%
+  return (pct - DIRECTION_MISS_EDGE) / inner * 100
 }
 
 function timeAgo(isoString) {

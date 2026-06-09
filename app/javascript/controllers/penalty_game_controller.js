@@ -43,10 +43,11 @@ function powerLevel(pct) {
   return "high"
 }
 
-function saveChance(power) {
-  if (power === "low")  return 0.6   // catchable but not guaranteed
-  if (power === "mid")  return 0.8   // keeper strains
-  return 0.45                        // hard to hold
+function saveChance(power, dirZone) {
+  const base = power === "low" ? 0.60   // catchable but not guaranteed
+             : power === "mid" ? 0.50   // genuine middle ground
+             : 0.45                     // hard to hold
+  return dirZone === "center" ? base : base * 0.8  // corners harder to reach
 }
 
 function isMissDirection(pct) {
@@ -515,7 +516,7 @@ export default class extends Controller {
     }
 
     const sameZone = this.directionZone === this.actualDiveZone
-    const saved    = sameZone && Math.random() < saveChance(power)
+    const saved    = sameZone && Math.random() < saveChance(power, this.directionZone)
     setTimeout(() => this._showResult(saved ? "saved" : "goal"), 450)
   }
 

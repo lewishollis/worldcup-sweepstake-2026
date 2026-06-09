@@ -38,32 +38,47 @@
   </nav>
 
   <main class="flex-1 px-4 md:px-6 lg:px-8 pb-24 md:pb-8">
-    <!-- Ben Botcurdy Commentary (live/finished) -->
-    <% if @matches.present? && @ben_botcurdy_commentary.present? %>
+    <!-- Sweepstake Stakes (upcoming matches) -->
+    <% if @upcoming_summary.present? %>
       <div class="py-6">
         <div class="commentary-box md:max-w-2xl">
           <div class="commentary-header">
-            <i class="fas fa-microphone commentary-icon"></i>
-            <h3 class="commentary-title">Ben Botcurdy's Commentary</h3>
+            <i class="fas fa-chart-line commentary-icon"></i>
+            <h3 class="commentary-title">Today's Stakes</h3>
           </div>
           <p class="commentary-text">
-            <%= @ben_botcurdy_commentary %>
+            <%= @upcoming_summary %>
           </p>
         </div>
       </div>
     <% end %>
 
-    <!-- Ben Botcurdy Upcoming Summary -->
-    <% if @matches.present? && @upcoming_summary.present? %>
+    <!-- Leaderboard (finished matches) -->
+    <% if @leaderboard_standings.present? %>
       <div class="py-6">
         <div class="commentary-box md:max-w-2xl">
           <div class="commentary-header">
-            <i class="fas fa-microphone commentary-icon"></i>
-            <h3 class="commentary-title">Ben Botcurdy's Preview</h3>
+            <i class="fas fa-trophy commentary-icon"></i>
+            <h3 class="commentary-title">Standings</h3>
           </div>
-          <p class="commentary-text">
-            <%= @upcoming_summary %>
-          </p>
+          <div class="space-y-2 mt-2">
+            <% @leaderboard_standings.each_with_index do |group, i| %>
+              <div class="flex items-center justify-between py-1">
+                <div class="flex items-center gap-3">
+                  <span class="text-sm font-bold text-text-secondary-light dark:text-text-secondary-dark w-5"><%= i + 1 %></span>
+                  <% if group.friend&.profile_picture_url.present? %>
+                    <%= image_tag group.friend.profile_picture_url, class: "w-7 h-7 rounded-full object-cover" %>
+                  <% else %>
+                    <div class="w-7 h-7 rounded-full bg-secondary/30 flex items-center justify-center">
+                      <span class="text-xs font-bold text-secondary"><%= group.friend&.name&.first || "?" %></span>
+                    </div>
+                  <% end %>
+                  <span class="text-sm font-semibold text-text-primary-light dark:text-text-primary-dark"><%= group.friend&.name || "No owner" %></span>
+                </div>
+                <span class="text-sm font-bold text-text-primary-light dark:text-text-primary-dark"><%= group.total_points %> pts</span>
+              </div>
+            <% end %>
+          </div>
         </div>
       </div>
     <% end %>
@@ -168,11 +183,6 @@
                 </div>
               <% end %>
 
-              <% if match.status == 'PreEvent' && @match_insights&.dig(match.match_id).present? %>
-                <div class="match-summary text-xs italic text-text-secondary-light dark:text-text-secondary-dark pt-1">
-                  <%= @match_insights[match.match_id] %>
-                </div>
-              <% end %>
             </div>
             <% end %>
           <% end %>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_06_06_180618) do
+ActiveRecord::Schema[7.1].define(version: 2026_06_09_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -121,17 +121,6 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_06_180618) do
     t.index ["friends_id"], name: "index_teams_on_friends_id"
   end
 
-  create_table "whatsapp_notifications", force: :cascade do |t|
-    t.integer "match_id"
-    t.string "notification_type", null: false
-    t.string "dedupe_key", null: false
-    t.datetime "sent_at", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["dedupe_key"], name: "index_whatsapp_notifications_on_dedupe_key", unique: true
-    t.index ["match_id"], name: "index_whatsapp_notifications_on_match_id"
-  end
-
   add_foreign_key "friend_group_teams", "friends_groups"
   add_foreign_key "friend_group_teams", "teams"
   add_foreign_key "friends", "groups"
@@ -142,5 +131,4 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_06_180618) do
   add_foreign_key "matches", "teams", column: "away_team_id"
   add_foreign_key "matches", "teams", column: "home_team_id"
   add_foreign_key "teams", "friends", column: "friends_id"
-  add_foreign_key "whatsapp_notifications", "matches"
 end

@@ -4,12 +4,8 @@
 
 set :output, Rails.root.join("log/cron.log")
 
-every :day, at: "8:00 am" do
-  rake "whatsapp:morning_digest"
-end
-
-every 15.minutes do
-  rake "whatsapp:check_results"
+every 10.minutes do
+  rake "matches:sync"
 end
 
 every :day, at: "7:00 am" do

@@ -82,15 +82,13 @@ class MatchesController < ApplicationController
       if @matches.any? && @filter_params.present?
         filter_type = @filter_params.find { |k, v| v == '1' }&.first
         if filter_type == 'PreEvent'
-          result = UpcomingMatchesInsightService.call(@matches)
-          @upcoming_summary = result[:summary]
-          @match_insights = result[:per_match]
-        else
-          @ben_botcurdy_commentary = BenBotcurdyService.new(:matches, {
-            matches: @matches,
-            filter_type: filter_type
-          }).generate_insight
+          @upcoming_summary = UpcomingMatchesInsightService.call(@matches)
+        elsif filter_type == 'PostEvent'
+          @leaderboard_standings = Group.includes(:friend, teams: [:home_matches, :away_matches])
+                                        .all
+                                        .sort_by { |g| -g.total_points }
         end
+        # MidEvent: no AI commentary
       end
     else
       @error_message = "Failed to fetch match data: #{response.code} - #{response.message}"
@@ -101,12 +99,7 @@ class MatchesController < ApplicationController
     @match = Match.includes(:home_team, :away_team).find(params[:id])
     if @match.status == "PreEvent"
       @scenarios = ScenarioEngine.new(@match).call
-      if @match.stage == "Group Stage"
-        result = UpcomingMatchesInsightService.call([@match])
-        @match_insight = result[:per_match][@match.match_id]
-      else
-        @match_insight = MatchInsightService.cached_call(@match)
-      end
+      @match_insight = MatchInsightService.cached_call(@match) unless @match.stage == "Group Stage"
     end
   end
 

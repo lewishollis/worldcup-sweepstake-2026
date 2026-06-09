@@ -25,9 +25,10 @@ class TournamentContextService
   end
 
   def tournament_status
-    return :complete      if Match.exists?(stage: "Final", status: "PostEvent")
-    return :knockout_stage if Match.where(stage: Team::KNOCKOUT_STAGES).exists?
-    return :group_stage    if Match.exists?(stage: "Group Stage")
+    played = %w[PostEvent MidEvent]
+    return :complete       if Match.exists?(stage: "Final", status: "PostEvent")
+    return :knockout_stage if Match.exists?(stage: Team::KNOCKOUT_STAGES, status: played)
+    return :group_stage    if Match.exists?(stage: "Group Stage", status: played)
     :not_started
   end
 

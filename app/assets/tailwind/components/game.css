@@ -71,14 +71,15 @@
 
 .game-miss-zone {
   @apply absolute top-0 bottom-0 pointer-events-none;
-  /* 8% of goal bar = miss edge; goalPct mapping: 5 + (8/100)*90 = 12.2% */
-  width: 12.2%;
-  background: rgba(239, 68, 68, 0.18);
-  z-index: 15;  /* above ghost ball (14) so strips always overlay */
+  /* Straddle the goal post — 10px inside goal, 10px outside */
+  width: 20px;
+  background: rgba(239, 68, 68, 0.30);
+  z-index: 15;
 }
 
-.game-miss-zone.left  { left: 0; }
-.game-miss-zone.right { right: 0; }
+/* Centred on the post (border-4 = 4px), so offset by half the strip width */
+.game-miss-zone.left  { left: -10px; }
+.game-miss-zone.right { right: -10px; }
 
 .game-ball-mark {
   @apply absolute pointer-events-none z-20;

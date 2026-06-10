@@ -6,13 +6,17 @@ namespace :ben_botcurdy do
     AiInsightCache.delete_all
     puts "Cache cleared."
 
-    leaderboard_insight = BenBotcurdyService.new(:leaderboard).generate_insight
-    puts leaderboard_insight ? "Leaderboard insight generated." : "Leaderboard insight failed."
+    if TournamentContextService.new.tournament_status == :not_started
+      puts "Leaderboard insight skipped (tournament not started)."
+    else
+      leaderboard_insight = BenBotcurdyService.new(:leaderboard).generate_insight
+      puts leaderboard_insight ? "Leaderboard insight generated." : "Leaderboard insight failed."
+    end
 
     upcoming = Match.where(status: 'PreEvent').order(:start_time)
     if upcoming.any?
       result = UpcomingMatchesInsightService.call(upcoming)
-      puts result[:summary] ? "Upcoming matches insight generated." : "Upcoming matches insight failed."
+      puts result ? "Upcoming matches insight generated." : "Upcoming matches insight failed."
     else
       puts "No upcoming matches."
     end

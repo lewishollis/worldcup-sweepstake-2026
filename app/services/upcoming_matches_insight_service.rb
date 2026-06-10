@@ -1,15 +1,18 @@
 class UpcomingMatchesInsightService
   CACHE_KEY = "upcoming_matches_insight".freeze
+  TIME_ZONE = "Europe/London".freeze
 
   def self.call(matches)
     new(matches).call
   end
 
   def initialize(matches)
-    @matches = matches
+    @matches = next_match_day_matches(matches)
   end
 
   def call
+    return nil if @matches.empty?
+
     version = cache_version
     if AiInsightCache.table_exists?
       cached = AiInsightCache.fetch(key: CACHE_KEY, version: version)
@@ -17,8 +20,13 @@ class UpcomingMatchesInsightService
     end
 
     result = generate
-    AiInsightCache.store(key: CACHE_KEY, version: version, content: result) if result && AiInsightCache.table_exists?
-    result
+    if result
+      AiInsightCache.store(key: CACHE_KEY, version: version, content: result) if AiInsightCache.table_exists?
+      result
+    else
+      # Fallback is deliberately not cached so a real insight can replace it next request
+      "Check the standings for today's sweepstake picture."
+    end
   rescue => e
     Rails.logger.error("UpcomingMatchesInsightService failed: #{e.message}")
     nil
@@ -26,25 +34,43 @@ class UpcomingMatchesInsightService
 
   private
 
+  # The insight covers a single match day: the next UK date (today or later) with a fixture
+  def next_match_day_matches(matches)
+    dated = matches.select { |m| m.start_time.present? }
+    today = Time.current.in_time_zone(TIME_ZONE).to_date
+    next_day = dated.map { |m| m.start_time.in_time_zone(TIME_ZONE).to_date }
+                    .select { |d| d >= today }
+                    .min
+    return [] unless next_day
+
+    dated.select { |m| m.start_time.in_time_zone(TIME_ZONE).to_date == next_day }
+         .sort_by(&:start_time)
+  end
+
+  def match_day
+    @matches.first.start_time.in_time_zone(TIME_ZONE).to_date
+  end
+
   def generate
     context = TournamentContextService.new
     system_prompt = build_system_prompt(context)
     user_message  = build_user_message
 
-    GroqClient.call(system_prompt: system_prompt, user_message: user_message, max_tokens: 600) ||
-      "Check the standings for today's sweepstake picture."
+    GroqClient.call(system_prompt: system_prompt, user_message: user_message, max_tokens: 600)
   end
 
   def build_system_prompt(context)
     [
-      "You are a sweepstake analyst writing a casual message to friends about today's World Cup matches.",
+      "You are a sweepstake analyst writing a casual message to friends about upcoming World Cup matches.",
       "",
       "RULES:",
       "- Write like you're texting a group chat. Casual, warm, a bit of banter.",
       "- Be specific: use exact names and points from the data provided.",
       "- Accuracy above all: never invent scores, points, or positions not in the data.",
+      "- ONLY discuss the matches listed in the message. Never mention any other fixture or matchup.",
+      "- Every match comes with its exact date and kick-off time. Never state or imply a different date or day.",
       "- No bullet points, no markdown, no lists. Just flowing paragraphs.",
-      "- Start with something casual like 'Soooo, today...' or similar.",
+      "- Start with something casual like 'Soooo...' or similar.",
       "- Keep it to 3-5 paragraphs.",
       "",
       "CURRENT STANDINGS:",
@@ -53,25 +79,29 @@ class UpcomingMatchesInsightService
   end
 
   def build_user_message
-    today = Date.today
-    first_match_date = @matches.map { |m| m.start_time.to_date }.min
-    tournament_started = today >= first_match_date
+    today = Time.current.in_time_zone(TIME_ZONE).to_date
+    day   = match_day
+    day_label = day == today ? "today (#{day.strftime('%A %d %B %Y')})" : day.strftime("%A %d %B %Y")
+    tournament_started = TournamentContextService.new.tournament_status != :not_started
 
     context_line = if tournament_started
       "Today is #{today.strftime('%A, %d %B %Y')}. The tournament is underway."
     else
-      "Today is #{today.strftime('%A, %d %B %Y')}. The tournament hasn't started yet — first match is #{first_match_date.strftime('%d %B %Y')}. Don't say the action continues today."
+      "Today is #{today.strftime('%A, %d %B %Y')}. The tournament hasn't started yet — no matches have been played. Don't describe any action as already happening."
     end
 
-    lines = [context_line, "", "TODAY'S MATCHES:"]
+    lines = [context_line, "", "MATCHES ON #{day.strftime('%A %d %B %Y').upcase}#{day == today ? ' (TODAY)' : ''}:"]
 
     @matches.each do |match|
-      home      = match.home_team.name
-      away      = match.away_team.name
-      home_owner = match.home_friend_name.presence
-      away_owner = match.away_friend_name.presence
+      home       = match.home_team.name
+      away       = match.away_team.name
+      # Derive ownership live — the denormalised friend-name columns on Match go
+      # stale when group assignments change between API syncs
+      home_owner = owner_name(match.home_team)
+      away_owner = owner_name(match.away_team)
+      kickoff    = match.start_time.in_time_zone(TIME_ZONE)
       lines << ""
-      lines << "#{home} (#{home_owner || 'unowned'}) vs #{away} (#{away_owner || 'unowned'}) — #{match.stage} at #{match.start_time&.strftime('%H:%M')}"
+      lines << "#{home} (#{home_owner || 'unowned'}) vs #{away} (#{away_owner || 'unowned'}) — #{match.stage} — #{kickoff.strftime('%A %d %B %Y, %H:%M')} UK time"
 
       if Team::KNOCKOUT_STAGES.include?(match.stage)
         begin
@@ -86,19 +116,24 @@ class UpcomingMatchesInsightService
           Rails.logger.warn("ScenarioEngine failed for match #{match.id}: #{e.message}")
         end
       else
-        lines << "  (Group stage — no sweepstake points awarded today)"
+        lines << "  (Group stage — no sweepstake points awarded for this match)"
       end
     end
 
     lines << ""
-    lines << "Write a casual group-chat-style message explaining what each person needs from today's matches and why. Focus on the sweepstake stakes. Be specific with names and numbers."
+    lines << "Write a casual group-chat-style message about the matches on #{day_label}, explaining what they mean for each person in the sweepstake. Only mention the matches listed above. Be specific with names, dates, and numbers."
     lines.join("\n")
   end
 
+  def owner_name(team)
+    team.groups.first&.friend&.name
+  end
+
   def cache_version
-    match_ids  = @matches.map(&:match_id).sort.join(",")
+    match_ids   = @matches.map(&:match_id).sort.join(",")
     leaderboard = Group.includes(teams: [:home_matches, :away_matches]).order(:id).map { |g| "#{g.id}:#{g.total_points}" }.join("|")
-    status     = TournamentContextService.new.tournament_status.to_s
-    Digest::SHA256.hexdigest("#{match_ids}|#{leaderboard}|#{status}")[0, 16]
+    status      = TournamentContextService.new.tournament_status.to_s
+    today       = Time.current.in_time_zone(TIME_ZONE).to_date.iso8601
+    Digest::SHA256.hexdigest("#{today}|#{match_ids}|#{leaderboard}|#{status}")[0, 16]
   end
 end

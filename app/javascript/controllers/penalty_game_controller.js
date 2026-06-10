@@ -344,6 +344,7 @@ export default class extends Controller {
     this.hintTextTarget.textContent = "Tap the ball to aim"
     this.resultTextTarget.classList.remove("milestone")
     this.keeperTarget.className = "game-keeper"
+    this.keeperTarget.style.transform = ""  // clear any inline save-dive
     // Show aim zone labels after 200ms
     clearTimeout(this.aimZoneTimeout)
     this.aimZonesTarget.classList.remove("visible")
@@ -497,20 +498,23 @@ export default class extends Controller {
     mark.style.left = finalLeft
     mark.style.top  = finalTop
 
-    // On a save the ball must end up in the glove, not at the aim point —
-    // the keeper only dives along the goal line, so a top-corner "save"
-    // would otherwise leave the ball nowhere near the glove. Redirect the
-    // ball mid-flight once the dive transition (0.2s) has landed.
-    if (saved) {
-      setTimeout(() => {
-        const box   = this.goalPostTarget.getBoundingClientRect()
-        const glove = this.keeperTarget.getBoundingClientRect()
-        const leftPct = ((glove.left + glove.width  / 2 - box.left) / box.width)  * 100
-        const topPct  = ((glove.top  + glove.height / 2 - box.top)  / box.height) * 100
-        mark.style.left = `${leftPct}%`
-        mark.style.top  = `${topPct}%`
-      }, 220)
-    }
+    // On a save the glove must reach the ball — the fixed dive transforms
+    // only travel along the goal line, so a top-corner save would leave
+    // the glove nowhere near the ball. Override the dive with an inline
+    // transform that carries the keeper to the ball's landing spot.
+    if (saved) this._diveKeeperTo(parseFloat(finalLeft), parseFloat(finalTop))
+  }
+
+  _diveKeeperTo(ballLeftPct, ballTopPct) {
+    const box    = this.goalPostTarget.getBoundingClientRect()
+    const keeper = this.keeperTarget
+    // Untransformed keeper: left edge at 50% of the goal box, bottom-anchored
+    const baseCenterX = box.width / 2 + keeper.offsetWidth / 2
+    const baseCenterY = box.height   - keeper.offsetHeight / 2
+    const dx = (ballLeftPct / 100) * box.width  - baseCenterX
+    const dy = (ballTopPct  / 100) * box.height - baseCenterY
+    const rot = this.actualDiveZone === "left" ? -65 : this.actualDiveZone === "right" ? 65 : 0
+    keeper.style.transform = `translate(${dx}px, ${dy}px) rotate(${rot}deg)`
   }
 
   _resolveShot(power, powerMiss) {

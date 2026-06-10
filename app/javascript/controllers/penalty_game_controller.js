@@ -467,7 +467,7 @@ export default class extends Controller {
 
   // ── Shot resolution ──────────────────────────────────────
 
-  _placeBallMark() {
+  _placeBallMark(saved = false) {
     const mark = this.ballMarkTarget
 
     let finalLeft, finalTop
@@ -496,6 +496,21 @@ export default class extends Controller {
     void mark.offsetWidth  // force reflow so CSS transition fires from origin
     mark.style.left = finalLeft
     mark.style.top  = finalTop
+
+    // On a save the ball must end up in the glove, not at the aim point —
+    // the keeper only dives along the goal line, so a top-corner "save"
+    // would otherwise leave the ball nowhere near the glove. Redirect the
+    // ball mid-flight once the dive transition (0.2s) has landed.
+    if (saved) {
+      setTimeout(() => {
+        const box   = this.goalPostTarget.getBoundingClientRect()
+        const glove = this.keeperTarget.getBoundingClientRect()
+        const leftPct = ((glove.left + glove.width  / 2 - box.left) / box.width)  * 100
+        const topPct  = ((glove.top  + glove.height / 2 - box.top)  / box.height) * 100
+        mark.style.left = `${leftPct}%`
+        mark.style.top  = `${topPct}%`
+      }, 220)
+    }
   }
 
   _resolveShot(power, powerMiss) {
@@ -508,15 +523,16 @@ export default class extends Controller {
     this.powerLabelTarget.textContent = powerLabels[power]
     this.powerLabelTarget.style.left  = `${dirGoalPct(this.dirPct)}%`
     this.powerLabelTarget.classList.add("visible")
-    this._placeBallMark()
+
+    const sameZone = this.directionZone === this.actualDiveZone
+    const saved    = !missed && sameZone && Math.random() < saveChance(power, this.directionZone)
+    this._placeBallMark(saved)
 
     if (missed) {
       setTimeout(() => this._showResult("missed"), 450)
       return
     }
 
-    const sameZone = this.directionZone === this.actualDiveZone
-    const saved    = sameZone && Math.random() < saveChance(power, this.directionZone)
     setTimeout(() => this._showResult(saved ? "saved" : "goal"), 450)
   }
 

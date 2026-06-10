@@ -80,30 +80,30 @@ team_data = [
 
 teams = team_data.map { |data| Team.create!(data) }
 
-# Groups from the actual draw — friend assignments to be added after the sweepstake draw
+# Groups from the actual draw, with friend assignments from the sweepstake draw
 groups_data = {
-  "Group 1"  => ["Spain", "Australia", "Tunisia", "Haiti"],
-  "Group 2"  => ["France", "IR Iran", "South Africa", "Curaçao"],
-  "Group 3"  => ["England", "Congo DR", "Qatar", "Jordan"],
-  "Group 4"  => ["Brazil", "Senegal", "Algeria", "Saudi Arabia"],
-  "Group 5"  => ["Argentina", "Türkiye", "Bosnia And Herz.", "New Zealand"],
-  "Group 6"  => ["Portugal", "Ecuador", "Canada", "Panama"],
-  "Group 7"  => ["Germany", "Croatia", "Paraguay", "Iraq"],
-  "Group 8"  => ["Netherlands", "Mexico", "Scotland", "Cabo Verde"],
-  "Group 9"  => ["Belgium", "Switzerland", "Côte d'Ivoire", "Uzbekistan"],
-  "Group 10" => ["Norway", "Uruguay", "Czechia", "Ghana"],
-  "Group 11" => ["Colombia", "USA", "Austria", "Korea Republic"],
-  "Group 12" => ["Japan", "Morocco", "Sweden", "Egypt"]
+  "Group 1"  => { friend: "Ella",    teams: ["Spain", "Australia", "Tunisia", "Haiti"] },
+  "Group 2"  => { friend: "Jamie",   teams: ["France", "IR Iran", "South Africa", "Curaçao"] },
+  "Group 3"  => { friend: "Ben",     teams: ["England", "Congo DR", "Qatar", "Jordan"] },
+  "Group 4"  => { friend: "Aimee",   teams: ["Brazil", "Senegal", "Algeria", "Saudi Arabia"] },
+  "Group 5"  => { friend: "Claire",  teams: ["Argentina", "Türkiye", "Bosnia And Herz.", "New Zealand"] },
+  "Group 6"  => { friend: "Lewis",   teams: ["Portugal", "Ecuador", "Canada", "Panama"] },
+  "Group 7"  => { friend: "Emma",    teams: ["Germany", "Croatia", "Paraguay", "Iraq"] },
+  "Group 8"  => { friend: "Richard", teams: ["Netherlands", "Mexico", "Scotland", "Cabo Verde"] },
+  "Group 9"  => { friend: "Nhien",   teams: ["Belgium", "Switzerland", "Côte d'Ivoire", "Uzbekistan"] },
+  "Group 10" => { friend: "Matt",    teams: ["Norway", "Uruguay", "Czechia", "Ghana"] },
+  "Group 11" => { friend: "Sam",     teams: ["Colombia", "USA", "Austria", "Korea Republic"] },
+  "Group 12" => { friend: "Bea",     teams: ["Japan", "Morocco", "Sweden", "Egypt"] }
 }
 
-groups_data.each do |group_name, team_names|
-  group = Group.create!(name: group_name)
+groups_data.each do |group_name, data|
+  friend = friends.find { |f| f.name == data[:friend] }
+  group = Group.create!(name: group_name, friend: friend)
 
-  team_names.each do |team_name|
+  data[:teams].each do |team_name|
     team = teams.find { |t| t.name == team_name }
     group.teams << team if team
   end
 end
 
-puts "Seed data created. Groups 1-12 are set up with correct teams."
-puts "Next step: assign each friend to their group after the sweepstake draw."
+puts "Seed data created. Groups 1-12 are set up with correct teams and friend assignments."

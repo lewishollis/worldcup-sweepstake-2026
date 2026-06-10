@@ -26,6 +26,10 @@
         <div class="text-center">
           <% if @match.status == "PreEvent" %>
             <p class="text-sm text-text-secondary-light dark:text-text-secondary-dark"><%= @match.start_time&.strftime("%d %b, %H:%M") %></p>
+            <% if @match.start_time.present? %>
+              <p class="text-xs text-text-secondary-light dark:text-text-secondary-dark">🇻🇳 <%= vietnam_kickoff(@match.start_time) %></p>
+            <% end %>
+
             <p class="text-2xl font-bold text-text-primary-light dark:text-text-primary-dark">vs</p>
           <% else %>
             <p class="text-3xl font-bold text-text-primary-light dark:text-text-primary-dark"><%= @match.home_score %> – <%= @match.away_score %></p>

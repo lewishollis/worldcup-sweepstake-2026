@@ -130,6 +130,7 @@
               <% else %>
                 <div class="flex flex-col items-end">
                   <span class="font-bold text-text-primary-light dark:text-text-primary-dark"><%= match.start_time.strftime('%H:%M') %></span>
+                  <span class="text-xs text-text-secondary-light dark:text-text-secondary-dark">🇻🇳 <%= vietnam_kickoff(match.start_time) %></span>
                 </div>
               <% end %>
             </div>

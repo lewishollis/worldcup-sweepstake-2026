@@ -29,8 +29,8 @@ class MatchesController < ApplicationController
       data['eventGroups'].each do |event_group|
         event_group['secondaryGroups'].each do |secondary_group|
           secondary_group['events'].each do |event|
-            home_team = Team.find_or_create_by(name: event['home']['fullName'])
-            away_team = Team.find_or_create_by(name: event['away']['fullName'])
+            home_team = Team.find_or_create_by(name: Team.canonical_name(event['home']['fullName']))
+            away_team = Team.find_or_create_by(name: Team.canonical_name(event['away']['fullName']))
 
             home_friend = home_team.groups.first&.friend
             away_friend = away_team.groups.first&.friend

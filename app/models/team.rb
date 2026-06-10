@@ -4,6 +4,22 @@ class Team < ApplicationRecord
   # All knockout stages including the bronze final (used for progressed? check)
   KNOCKOUT_STAGES = (MAIN_KNOCKOUT_STAGES + ['3rd Place Final']).freeze
 
+  # Maps BBC Sport API team names to the canonical names used in seeds/groups
+  BBC_NAME_ALIASES = {
+    "Iran"               => "IR Iran",
+    "Bosnia-Herzegovina" => "Bosnia And Herz.",
+    "Cape Verde"         => "Cabo Verde",
+    "Ivory Coast"        => "Côte d'Ivoire",
+    "Turkey"             => "Türkiye",
+    "United States"      => "USA",
+    "South Korea"        => "Korea Republic",
+    "Czech Republic"     => "Czechia"
+  }.freeze
+
+  def self.canonical_name(name)
+    BBC_NAME_ALIASES.fetch(name, name)
+  end
+
   has_many :home_matches, class_name: 'Match', foreign_key: 'home_team_id'
   has_many :away_matches, class_name: 'Match', foreign_key: 'away_team_id'
   has_and_belongs_to_many :groups

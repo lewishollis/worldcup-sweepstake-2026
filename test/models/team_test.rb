@@ -162,4 +162,22 @@ class TeamTest < ActiveSupport::TestCase
                   start_time: 1.day.ago)
     assert @team.reload.progressed?
   end
+
+  # --- canonical_name ---
+
+  test "canonical_name maps BBC API names to seed names" do
+    assert_equal "Korea Republic", Team.canonical_name("South Korea")
+    assert_equal "Czechia", Team.canonical_name("Czech Republic")
+    assert_equal "Bosnia And Herz.", Team.canonical_name("Bosnia-Herzegovina")
+    assert_equal "USA", Team.canonical_name("United States")
+    assert_equal "Türkiye", Team.canonical_name("Turkey")
+    assert_equal "IR Iran", Team.canonical_name("Iran")
+    assert_equal "Cabo Verde", Team.canonical_name("Cape Verde")
+    assert_equal "Côte d'Ivoire", Team.canonical_name("Ivory Coast")
+  end
+
+  test "canonical_name passes through names that already match seeds" do
+    assert_equal "Brazil", Team.canonical_name("Brazil")
+    assert_nil Team.canonical_name(nil)
+  end
 end

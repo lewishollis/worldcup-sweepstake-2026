@@ -1,16 +1,4 @@
 namespace :matches do
-  # Maps BBC Sport API team names to the canonical names used in seeds/groups
-  TEAM_NAME_ALIASES = {
-    "Iran"               => "IR Iran",
-    "Bosnia-Herzegovina" => "Bosnia And Herz.",
-    "Cape Verde"         => "Cabo Verde",
-    "Ivory Coast"        => "Côte d'Ivoire",
-    "Turkey"             => "Türkiye",
-    "United States"      => "USA",
-    "South Korea"        => "Korea Republic",
-    "Czech Republic"     => "Czechia"
-  }.freeze
-
   desc "Fetch latest match data from BBC Sport API and upsert into DB"
   task sync: :environment do
     require "net/http"
@@ -52,8 +40,8 @@ namespace :matches do
         next unless secondary_group["events"].is_a?(Array)
 
         secondary_group["events"].each do |event|
-          home_name = TEAM_NAME_ALIASES.fetch(event.dig("home", "fullName"), event.dig("home", "fullName"))
-          away_name = TEAM_NAME_ALIASES.fetch(event.dig("away", "fullName"), event.dig("away", "fullName"))
+          home_name = Team.canonical_name(event.dig("home", "fullName"))
+          away_name = Team.canonical_name(event.dig("away", "fullName"))
           stage_name = event.dig("stage", "name") || "Unknown Stage"
           start_time = event.dig("date", "iso")
 

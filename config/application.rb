@@ -16,7 +16,8 @@ module EuroChampionship2024
     # These settings can be overridden in specific environments using the files
     # in config/environments, which are processed later.
     #
-    # config.time_zone = "Central Time (US & Canada)"
+    # Kick-off times come from the BBC API in UTC; display everything in UK time
+    config.time_zone = "London"
     # config.eager_load_paths << Rails.root.join("extras")
   end
 end

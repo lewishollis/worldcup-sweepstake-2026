@@ -9,7 +9,7 @@ friend_data = [
   { name: "Matt", profile_picture_url: ActionController::Base.helpers.asset_path('images-ben/Matt.jpeg') },
   { name: "Richard", profile_picture_url: ActionController::Base.helpers.asset_path('images-ben/Richard.jpeg') },
   { name: "Sam", profile_picture_url: ActionController::Base.helpers.asset_path('images-ben/Sam.jpeg') },
-  { name: "Bea", profile_picture_url: "https://ui-avatars.com/api/?name=Bea&size=150&background=random" },
+  { name: "Bea", profile_picture_url: ActionController::Base.helpers.asset_path('images-ben/Bea.jpeg') },
   { name: "Nhien", profile_picture_url: ActionController::Base.helpers.asset_path('images-ben/Nhien.jpeg') }
 ]
 

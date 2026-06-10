@@ -15,8 +15,10 @@ class LeaderboardController < ApplicationController
       @group = Group.includes(teams: [:home_matches, :away_matches]).find(params[:id])
       render :group_detail
     else
+      # Best penalty streak per friend — the official tie-breaker on points
+      @best_streaks = GameScore.best_per_friend.to_h { |e| [e[:friend_id], e[:best_streak]] }
       @leaderboard = Group.includes(:friend, teams: [:home_matches, :away_matches])
-                          .sort_by { |group| -group.total_points }
+                          .sort_by { |group| [-group.total_points, -(@best_streaks[group.friend_id] || 0)] }
       @ben_botcurdy_insight = BenBotcurdyService.new(:leaderboard).generate_insight
     end
   end

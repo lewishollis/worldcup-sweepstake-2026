@@ -59,7 +59,10 @@
             <!-- Name and Points -->
             <div class="leaderboard-info">
               <p class="leaderboard-name"><%= group.friend.name %></p>
-              <p class="leaderboard-points"><%= group.total_points.to_i %> pts</p>
+              <p class="leaderboard-points">
+                <%= group.total_points.to_i %> pts
+                <span class="text-xs text-text-secondary-light dark:text-text-secondary-dark ml-1" title="Best penalty shootout streak — breaks points ties">🧤 <%= @best_streaks[group.friend_id] || 0 %></span>
+              </p>
 
               <!-- Team Flags -->
               <div class="leaderboard-flags">
@@ -82,6 +85,10 @@
               <% end %>
         <% end %>
       </div>
+      <p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-3">
+        🧤 best penalty streak — breaks points ties.
+        <%= link_to "Beat yours in the game →", "/game", class: "underline" %>
+      </p>
     </section>
       </main>
     </div>

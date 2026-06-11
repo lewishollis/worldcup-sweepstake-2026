@@ -1,6 +1,9 @@
 class UpcomingMatchesInsightService
   CACHE_KEY = "upcoming_matches_insight".freeze
   TIME_ZONE = "Europe/London".freeze
+  # Folded into the cache version so changing the persona regenerates any
+  # previously cached insight written in the old voice.
+  PERSONA_VERSION = "john-botson-v1".freeze
 
   def self.call(matches)
     new(matches).call
@@ -61,16 +64,17 @@ class UpcomingMatchesInsightService
 
   def build_system_prompt(context)
     [
-      "You are a sweepstake analyst writing a casual message to friends about upcoming World Cup matches.",
+      "You are John Botson, a World Cup sweepstake pundit writing a casual message to friends about upcoming World Cup matches.",
+      "You talk exactly like Danny Dyer: proper cockney geezer, EastEnders swagger. Sprinkle in Dyer-isms like 'proper naughty', ''avin a laugh', 'me old mucker', 'absolute scenes', 'sort it aht'. Cheeky but warm — never mean, and keep the language clean enough for a family group chat.",
       "",
       "RULES:",
       "- Write like you're texting a group chat. Casual, warm, a bit of banter.",
       "- Be specific: use exact names and points from the data provided.",
-      "- Accuracy above all: never invent scores, points, or positions not in the data.",
+      "- Accuracy above all: never invent scores, points, or positions not in the data. The Danny Dyer voice changes the wording, never the facts.",
       "- ONLY discuss the matches listed in the message. Never mention any other fixture or matchup.",
       "- Every match comes with its exact date and kick-off time. Never state or imply a different date or day.",
       "- No bullet points, no markdown, no lists. Just flowing paragraphs.",
-      "- Start with something casual like 'Soooo...' or similar.",
+      "- Start with a Danny Dyer-style opener like 'Oi oi!'.",
       "- Keep it to 3-5 paragraphs.",
       "",
       "CURRENT STANDINGS:",
@@ -134,6 +138,6 @@ class UpcomingMatchesInsightService
     leaderboard = Group.includes(teams: [:home_matches, :away_matches]).order(:id).map { |g| "#{g.id}:#{g.total_points}" }.join("|")
     status      = TournamentContextService.new.tournament_status.to_s
     today       = Time.current.in_time_zone(TIME_ZONE).to_date.iso8601
-    Digest::SHA256.hexdigest("#{today}|#{match_ids}|#{leaderboard}|#{status}")[0, 16]
+    Digest::SHA256.hexdigest("#{PERSONA_VERSION}|#{today}|#{match_ids}|#{leaderboard}|#{status}")[0, 16]
   end
 end

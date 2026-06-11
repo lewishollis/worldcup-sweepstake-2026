@@ -56,6 +56,33 @@ class UpcomingMatchesInsightServiceTest < ActiveSupport::TestCase
     assert_includes prompt, "South Africa (Jamie)"
   end
 
+  test "system prompt casts John Botson in Danny Dyer's voice without relaxing accuracy" do
+    service = UpcomingMatchesInsightService.new([@tomorrow_match])
+    prompt = service.send(:build_system_prompt, TournamentContextService.new)
+
+    assert_includes prompt, "John Botson"
+    assert_includes prompt, "Danny Dyer"
+    # The voice changes the wording, never the facts — accuracy rules must survive
+    assert_includes prompt, "never invent scores, points, or positions"
+    assert_includes prompt, "ONLY discuss the matches listed"
+    assert_includes prompt, "Never state or imply a different date"
+  end
+
+  test "cache version is tied to the persona so a persona change regenerates the insight" do
+    service = UpcomingMatchesInsightService.new([@tomorrow_match])
+    version = service.send(:cache_version)
+
+    original = UpcomingMatchesInsightService::PERSONA_VERSION
+    UpcomingMatchesInsightService.send(:remove_const, :PERSONA_VERSION)
+    UpcomingMatchesInsightService.const_set(:PERSONA_VERSION, "someone-else-v9")
+    begin
+      refute_equal version, service.send(:cache_version)
+    ensure
+      UpcomingMatchesInsightService.send(:remove_const, :PERSONA_VERSION)
+      UpcomingMatchesInsightService.const_set(:PERSONA_VERSION, original)
+    end
+  end
+
   test "returns nil when there are no upcoming matches" do
     assert_nil UpcomingMatchesInsightService.call([])
   end

@@ -10,7 +10,7 @@ friend_data = [
   { name: "Richard", profile_picture_url: ActionController::Base.helpers.asset_path('images-ben/Richard.jpeg') },
   { name: "Sam", profile_picture_url: ActionController::Base.helpers.asset_path('images-ben/Sam.jpeg') },
   { name: "Bea", profile_picture_url: ActionController::Base.helpers.asset_path('images-ben/Bea.jpeg') },
-  { name: "Nhien", profile_picture_url: ActionController::Base.helpers.asset_path('images-ben/Nhien.jpeg') }
+  { name: "Nhiên", profile_picture_url: ActionController::Base.helpers.asset_path('images-ben/Nhien.jpeg') }
 ]
 
 friends = friend_data.map { |data| Friend.create!(data) }
@@ -90,7 +90,7 @@ groups_data = {
   "Group 6"  => { friend: "Lewis",   teams: ["Portugal", "Ecuador", "Canada", "Panama"] },
   "Group 7"  => { friend: "Emma",    teams: ["Germany", "Croatia", "Paraguay", "Iraq"] },
   "Group 8"  => { friend: "Richard", teams: ["Netherlands", "Mexico", "Scotland", "Cabo Verde"] },
-  "Group 9"  => { friend: "Nhien",   teams: ["Belgium", "Switzerland", "Côte d'Ivoire", "Uzbekistan"] },
+  "Group 9"  => { friend: "Nhiên",   teams: ["Belgium", "Switzerland", "Côte d'Ivoire", "Uzbekistan"] },
   "Group 10" => { friend: "Matt",    teams: ["Norway", "Uruguay", "Czechia", "Ghana"] },
   "Group 11" => { friend: "Sam",     teams: ["Colombia", "USA", "Austria", "Korea Republic"] },
   "Group 12" => { friend: "Bea",     teams: ["Japan", "Morocco", "Sweden", "Egypt"] }

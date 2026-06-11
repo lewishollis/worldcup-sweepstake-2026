@@ -38,6 +38,19 @@
   </nav>
 
   <main class="flex-1 px-4 md:px-6 lg:px-8 pb-24 md:pb-8">
+    <!-- Manual refresh notice (live matches) -->
+    <% if @filter_params['MidEvent'] == '1' %>
+      <div class="mt-4 flex items-center justify-between gap-3 rounded-lg border border-border-light dark:border-border-dark bg-secondary/10 dark:bg-secondary/20 p-3 md:max-w-2xl">
+        <p class="text-sm text-text-secondary-light dark:text-text-secondary-dark">
+          Scores don't automatically update here &mdash; hit refresh
+        </p>
+        <button type="button" onclick="location.reload()" class="flex shrink-0 items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white">
+          <i class="fas fa-sync-alt"></i>
+          Refresh
+        </button>
+      </div>
+    <% end %>
+
     <!-- Sweepstake Stakes (upcoming matches) -->
     <% if @upcoming_summary.present? %>
       <div class="py-6">
@@ -123,7 +136,7 @@
               <% if match.status == 'MidEvent' %>
                 <div class="match-status-live">
                   <div class="pulse-dot"></div>
-                  <span>LIVE</span>
+                  <span>LIVE<%= " #{match.live_clock}" if match.live_clock.present? %></span>
                 </div>
               <% elsif match.status == 'PostEvent' %>
                 <span class="font-bold text-text-primary-light dark:text-text-primary-dark">FT</span>
@@ -178,7 +191,20 @@
               </div>
             </div>
 
-              <% if match.status == 'MidEvent' && match.accessible_event_summary.present? %>
+              <% if match.status == 'MidEvent' && (match.home_events.present? || match.away_events.present?) %>
+                <div class="match-summary flex justify-between gap-4">
+                  <div class="flex flex-col gap-1">
+                    <% Array(match.home_events).each do |ev| %>
+                      <span><%= live_event_icon(ev[:type]) %> <%= ev[:name] %> <%= ev[:minute] %></span>
+                    <% end %>
+                  </div>
+                  <div class="flex flex-col gap-1 items-end text-right">
+                    <% Array(match.away_events).each do |ev| %>
+                      <span><%= ev[:name] %> <%= ev[:minute] %> <%= live_event_icon(ev[:type]) %></span>
+                    <% end %>
+                  </div>
+                </div>
+              <% elsif match.status == 'MidEvent' && match.accessible_event_summary.present? %>
                 <div class="match-summary">
                   <%= match.accessible_event_summary %>
                 </div>

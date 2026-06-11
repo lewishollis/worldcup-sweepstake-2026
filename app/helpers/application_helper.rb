@@ -16,4 +16,8 @@ module ApplicationHelper
     label += " #{vn.strftime('%a')}" unless vn.to_date == uk.to_date
     label
   end
+
+  def live_event_icon(type)
+    { "goal" => "⚽", "yellow-card" => "🟨", "red-card" => "🟥" }.fetch(type, "•")
+  end
 end

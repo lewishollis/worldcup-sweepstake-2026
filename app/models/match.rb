@@ -5,6 +5,9 @@ class Match < ApplicationRecord
   validates :match_id, uniqueness: true
 
   attr_accessor :home_friend_name, :away_friend_name
+  # Transient live-match details (clock, goals, cards) — fetched per request,
+  # never persisted.
+  attr_accessor :live_clock, :home_events, :away_events
   attribute :home_friend_profile_picture_url, :string
   attribute :away_friend_profile_picture_url, :string
   attribute :match_status, :string

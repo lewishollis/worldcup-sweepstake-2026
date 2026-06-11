@@ -42,9 +42,11 @@ class MatchesController < ApplicationController
             away_friend_name = away_friend&.name || 'No owner'
 
             stage = event['stage'] || { 'name' => 'Unknown Stage' }
-            winner = event['status'] == 'MidEvent' ? nil : event['winner']
 
             match = Match.find_or_initialize_by(match_id: event['id'])
+            status = BbcEventParser.merge_status(BbcEventParser.status(event), match.status)
+            winner = status == 'MidEvent' ? nil : (BbcEventParser.winner(event) || match.winner)
+
             match.assign_attributes(
               home_team: home_team,
               away_team: away_team,
@@ -55,13 +57,26 @@ class MatchesController < ApplicationController
               away_friend_name: away_friend_name,
               home_friend_profile_picture_url: home_friend_profile_picture_url,
               away_friend_profile_picture_url: away_friend_profile_picture_url,
-              home_score: event['home']['score'].to_i,
-              away_score: event['away']['score'].to_i,
-              status: event['status'],
+              home_score: BbcEventParser.home_score(event) || match.home_score || 0,
+              away_score: BbcEventParser.away_score(event) || match.away_score || 0,
+              status: status,
               winner: winner,
               accessible_event_summary: event['accessibleEventSummary']
             )
             match.save! if match.new_record? || match.changed?
+
+            # Render-only: not persisted, so a genuinely delayed or postponed
+            # match falls back to upcoming once the window passes.
+            if match.status == 'PreEvent' && BbcEventParser.presumed_live?(event)
+              match.status = 'MidEvent'
+            end
+
+            if @filter_params['MidEvent'] == '1' && match.status == 'MidEvent'
+              cards = BbcLineupsService.cards(match.match_id)
+              match.live_clock = event.dig('periodLabel', 'value')
+              match.home_events = BbcEventParser.sort_by_minute(BbcEventParser.side_events(event, 'home') + cards[:home])
+              match.away_events = BbcEventParser.sort_by_minute(BbcEventParser.side_events(event, 'away') + cards[:away])
+            end
 
             @matches << match
           end

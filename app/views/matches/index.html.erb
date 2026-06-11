@@ -80,9 +80,9 @@
                 <div class="flex items-center gap-3">
                   <span class="text-sm font-bold text-text-secondary-light dark:text-text-secondary-dark w-5"><%= i + 1 %></span>
                   <% if group.friend&.profile_picture_url.present? %>
-                    <%= image_tag group.friend.profile_picture_url, class: "w-7 h-7 rounded-full object-cover" %>
+                    <%= image_tag group.friend.profile_picture_url, class: "w-9 h-9 rounded-full object-cover" %>
                   <% else %>
-                    <div class="w-7 h-7 rounded-full bg-secondary/30 flex items-center justify-center">
+                    <div class="w-9 h-9 rounded-full bg-secondary/30 flex items-center justify-center">
                       <span class="text-xs font-bold text-secondary"><%= group.friend&.name&.first || "?" %></span>
                     </div>
                   <% end %>
@@ -152,7 +152,7 @@
               <!-- Home Team -->
               <div class="match-team">
                 <% if match.home_friend_profile_picture_url.present? %>
-                  <%= image_tag match.home_friend_profile_picture_url, alt: match.home_friend_name, class: "h-8 w-8 object-cover rounded-full" %>
+                  <%= image_tag match.home_friend_profile_picture_url, alt: match.home_friend_name, class: "h-12 w-12 object-cover rounded-full" %>
                 <% else %>
                   <div class="match-team-avatar">
                     <span class="match-team-avatar-initial"><%= match.home_team.name[0] %></span>
@@ -182,7 +182,7 @@
                   <% end %>
                 </div>
                 <% if match.away_friend_profile_picture_url.present? %>
-                  <%= image_tag match.away_friend_profile_picture_url, alt: match.away_friend_name, class: "h-8 w-8 object-cover rounded-full" %>
+                  <%= image_tag match.away_friend_profile_picture_url, alt: match.away_friend_name, class: "h-12 w-12 object-cover rounded-full" %>
                 <% else %>
                   <div class="match-team-avatar">
                     <span class="match-team-avatar-initial"><%= match.away_team.name[0] %></span>

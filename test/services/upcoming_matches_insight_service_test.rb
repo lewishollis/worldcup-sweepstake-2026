@@ -139,4 +139,12 @@ class UpcomingMatchesInsightServiceTest < ActiveSupport::TestCase
 
     refute_includes prompt, "MATCHES ALREADY PLAYED"
   end
+
+  test "system prompt instructs John Botson never to reveal results of already-played matches" do
+    service = UpcomingMatchesInsightService.new([@tomorrow_match])
+    prompt = service.send(:build_system_prompt, TournamentContextService.new)
+
+    assert_includes prompt, "MATCHES ALREADY PLAYED"
+    assert_includes prompt, "Never mention the score, goalscorers, winner, or result"
+  end
 end

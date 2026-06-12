@@ -83,6 +83,7 @@ class UpcomingMatchesInsightService
       "- Accuracy above all: never invent scores, points, or positions not in the data. The Danny Dyer voice changes the wording, never the facts.",
       "- ONLY discuss the matches listed in the message. Never mention any other fixture or matchup.",
       "- Every match comes with its exact date and kick-off time. Never state or imply a different date or day.",
+      "- If any matches are listed under MATCHES ALREADY PLAYED, open with one brief sentence acknowledging they've happened and pointing people to the highlights. Never mention the score, goalscorers, winner, or result of these matches under any circumstances.",
       "- No bullet points, no markdown, no lists. Just flowing paragraphs.",
       "- Start with a Danny Dyer-style opener like 'Oi oi!'.",
       "- Keep it to 3-5 paragraphs.",

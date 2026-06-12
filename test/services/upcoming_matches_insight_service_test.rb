@@ -149,6 +149,17 @@ class UpcomingMatchesInsightServiceTest < ActiveSupport::TestCase
   end
 
   test "cache version changes when a match enters the recently-finished window" do
+    # Anchor match: PostEvent, Group Stage, but well outside the 24h "recently finished"
+    # window. This puts tournament_status at :group_stage for both snapshots below, so
+    # the only thing that can change cache_version is recently_finished_matches.
+    portugal = Team.create!(name: "Portugal", flag_url: "https://x.com/pt.svg")
+    ghana    = Team.create!(name: "Ghana", flag_url: "https://x.com/gh.svg")
+    Match.create!(
+      home_team: portugal, away_team: ghana, stage: "Group Stage", status: "PostEvent",
+      match_id: "umis-finished-old", home_score: 3, away_score: 0, winner: "home",
+      start_time: Time.zone.local(2026, 6, 1, 12, 0, 0)
+    )
+
     version_before = UpcomingMatchesInsightService.new([@tomorrow_match]).send(:cache_version)
 
     korea   = Team.create!(name: "Korea Republic", flag_url: "https://x.com/kr.svg")

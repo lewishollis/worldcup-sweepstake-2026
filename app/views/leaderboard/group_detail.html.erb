@@ -15,7 +15,7 @@
         <!-- Friend Profile -->
         <section class="flex items-center gap-4 mb-8">
           <% if @group.friend&.profile_picture_url.present? %>
-            <%= image_tag @group.friend.profile_picture_url, alt: @group.friend.name, class: "w-20 h-20 rounded-full object-cover" %>
+            <%= image_tag @group.friend.profile_picture_url, alt: @group.friend.name, class: "w-20 h-20 rounded-full object-cover cursor-pointer", data: { action: "click->image-modal#open", image_modal_src_param: @group.friend.profile_picture_url, image_modal_alt_param: @group.friend.name } %>
           <% else %>
             <div class="w-20 h-20 rounded-full bg-secondary/30 flex items-center justify-center">
               <i class="fas fa-user text-3xl text-secondary"></i>

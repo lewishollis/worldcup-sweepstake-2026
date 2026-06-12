@@ -34,8 +34,16 @@
   </head>
 
   <body class="bg-background-light dark:bg-background-dark font-display">
-    <div class="relative flex h-auto min-h-screen w-full flex-col">
+    <div class="relative flex h-auto min-h-screen w-full flex-col" data-controller="image-modal" data-action="keydown.esc@document->image-modal#close">
       <%= yield %>
+
+      <!-- Profile picture pop-out -->
+      <div data-image-modal-target="dialog" data-action="click->image-modal#close" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/80 p-4">
+        <button type="button" data-action="click->image-modal#close" aria-label="Close image" class="absolute top-4 right-4 flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-white text-xl">
+          <i class="fas fa-times"></i>
+        </button>
+        <img data-image-modal-target="image" src="" alt="" class="max-h-full max-w-full rounded-lg object-contain">
+      </div>
     </div>
   </body>
 </html>

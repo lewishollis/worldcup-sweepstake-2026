@@ -22,7 +22,7 @@
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-3">
                 <% if group.friend&.profile_picture_url.present? %>
-                  <%= image_tag group.friend.profile_picture_url, alt: group.friend.name, class: "w-12 h-12 rounded-full object-cover" %>
+                  <%= image_tag group.friend.profile_picture_url, alt: group.friend.name, class: "w-12 h-12 rounded-full object-cover cursor-pointer", data: { action: "click->image-modal#open", image_modal_src_param: group.friend.profile_picture_url, image_modal_alt_param: group.friend.name } %>
                 <% else %>
                   <div class="w-12 h-12 rounded-full bg-secondary/30 flex items-center justify-center">
                     <i class="fas fa-user text-xl text-secondary"></i>

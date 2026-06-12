@@ -49,7 +49,7 @@
 
             <!-- Profile Picture -->
             <% if group.friend.profile_picture_url.present? %>
-              <%= image_tag group.friend.profile_picture_url, alt: group.friend.name, class: "leaderboard-avatar" %>
+              <%= image_tag group.friend.profile_picture_url, alt: group.friend.name, class: "leaderboard-avatar cursor-pointer", data: { action: "click->image-modal#open", image_modal_src_param: group.friend.profile_picture_url, image_modal_alt_param: group.friend.name } %>
             <% else %>
               <div class="leaderboard-avatar-placeholder">
                 <span class="leaderboard-avatar-initial"><%= group.friend.name[0] %></span>

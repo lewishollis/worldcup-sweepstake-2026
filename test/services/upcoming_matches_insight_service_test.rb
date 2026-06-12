@@ -147,4 +147,20 @@ class UpcomingMatchesInsightServiceTest < ActiveSupport::TestCase
     assert_includes prompt, "MATCHES ALREADY PLAYED"
     assert_includes prompt, "Never mention the score, goalscorers, winner, or result"
   end
+
+  test "cache version changes when a match enters the recently-finished window" do
+    version_before = UpcomingMatchesInsightService.new([@tomorrow_match]).send(:cache_version)
+
+    korea   = Team.create!(name: "Korea Republic", flag_url: "https://x.com/kr.svg")
+    czechia = Team.create!(name: "Czechia", flag_url: "https://x.com/cz.svg")
+    Match.create!(
+      home_team: korea, away_team: czechia, stage: "Group Stage", status: "PostEvent",
+      match_id: "umis-finished-2", home_score: 1, away_score: 0, winner: "home",
+      start_time: Time.zone.local(2026, 6, 10, 2, 0, 0)
+    )
+
+    version_after = UpcomingMatchesInsightService.new([@tomorrow_match]).send(:cache_version)
+
+    refute_equal version_before, version_after
+  end
 end

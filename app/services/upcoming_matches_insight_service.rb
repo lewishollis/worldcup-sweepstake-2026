@@ -158,9 +158,10 @@ class UpcomingMatchesInsightService
 
   def cache_version
     match_ids   = @matches.map(&:match_id).sort.join(",")
+    recent_ids  = recently_finished_matches.map(&:match_id).sort.join(",")
     leaderboard = Group.includes(teams: [:home_matches, :away_matches]).order(:id).map { |g| "#{g.id}:#{g.total_points}" }.join("|")
     status      = TournamentContextService.new.tournament_status.to_s
     today       = Time.current.in_time_zone(TIME_ZONE).to_date.iso8601
-    Digest::SHA256.hexdigest("#{PERSONA_VERSION}|#{today}|#{match_ids}|#{leaderboard}|#{status}")[0, 16]
+    Digest::SHA256.hexdigest("#{PERSONA_VERSION}|#{today}|#{match_ids}|#{recent_ids}|#{leaderboard}|#{status}")[0, 16]
   end
 end

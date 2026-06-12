@@ -115,4 +115,28 @@ class UpcomingMatchesInsightServiceTest < ActiveSupport::TestCase
       assert_equal 1, AiInsightCache.where(key: "upcoming_matches_insight").count
     end
   end
+
+  test "prompt notes recently finished matches without revealing the score" do
+    korea   = Team.create!(name: "Korea Republic", flag_url: "https://x.com/kr.svg")
+    czechia = Team.create!(name: "Czechia", flag_url: "https://x.com/cz.svg")
+    Match.create!(
+      home_team: korea, away_team: czechia, stage: "Group Stage", status: "PostEvent",
+      match_id: "umis-finished-1", home_score: 2, away_score: 1, winner: "home",
+      start_time: Time.zone.local(2026, 6, 10, 2, 0, 0)
+    )
+
+    service = UpcomingMatchesInsightService.new([@tomorrow_match])
+    prompt = service.send(:build_user_message)
+
+    assert_includes prompt, "MATCHES ALREADY PLAYED (DO NOT REVEAL RESULTS):"
+    assert_includes prompt, "Korea Republic vs Czechia — Group Stage — Wednesday 10 June 2026, 02:00 UK time"
+    refute_includes prompt, "2-1", "the score must never appear in the prompt"
+  end
+
+  test "prompt omits the already-played section when nothing has finished recently" do
+    service = UpcomingMatchesInsightService.new([@tomorrow_match])
+    prompt = service.send(:build_user_message)
+
+    refute_includes prompt, "MATCHES ALREADY PLAYED"
+  end
 end

@@ -54,6 +54,16 @@ class UpcomingMatchesInsightService
     @matches.first.start_time.in_time_zone(TIME_ZONE).to_date
   end
 
+  # Matches that finished in the last 24 hours, regardless of which UK calendar
+  # date they fall on — covers overnight fixtures that crossed midnight.
+  def recently_finished_matches
+    @recently_finished_matches ||= Match.where(status: "PostEvent")
+                                         .where(start_time: 24.hours.ago..Time.current)
+                                         .includes(:home_team, :away_team)
+                                         .order(:start_time)
+                                         .to_a
+  end
+
   def generate
     context = TournamentContextService.new
     system_prompt = build_system_prompt(context)
@@ -94,7 +104,19 @@ class UpcomingMatchesInsightService
       "Today is #{today.strftime('%A, %d %B %Y')}. The tournament hasn't started yet — no matches have been played. Don't describe any action as already happening."
     end
 
-    lines = [context_line, "", "MATCHES ON #{day.strftime('%A %d %B %Y').upcase}#{day == today ? ' (TODAY)' : ''}:"]
+    lines = [context_line]
+
+    if recently_finished_matches.any?
+      lines << ""
+      lines << "MATCHES ALREADY PLAYED (DO NOT REVEAL RESULTS):"
+      recently_finished_matches.each do |match|
+        kickoff = match.start_time.in_time_zone(TIME_ZONE)
+        lines << "- #{match.home_team.name} vs #{match.away_team.name} — #{match.stage} — #{kickoff.strftime('%A %d %B %Y, %H:%M')} UK time"
+      end
+    end
+
+    lines << ""
+    lines << "MATCHES ON #{day.strftime('%A %d %B %Y').upcase}#{day == today ? ' (TODAY)' : ''}:"
 
     @matches.each do |match|
       home       = match.home_team.name

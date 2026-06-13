@@ -102,7 +102,8 @@ class UpcomingMatchesInsightServiceTest < ActiveSupport::TestCase
 
     assert_includes prompt, "You MAY forecast"
     assert_includes prompt, "puts them top of the group"
-    assert_match(/run-in/i, prompt)
+    # Upcoming fixtures are only mentioned when flagged as a decisive final game
+    assert_includes prompt, "final group game (could decide their fate)"
   end
 
   test "system prompt explains that group matches matter for knockout progression" do

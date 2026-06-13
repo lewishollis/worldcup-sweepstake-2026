@@ -68,9 +68,14 @@ class GameStateSnapshot
     lines << "  If draw: #{effect_phrase(effects[:draw][:home])}; #{effect_phrase(effects[:draw][:away])}"
     lines << "  If #{match.away_team.name} win: #{effect_phrase(effects[:away_win][:away])}"
 
+    # Only surface a side's next fixture when it could be pivotal: the side is
+    # still in contention and this is its final group game coming up next. Early
+    # rounds (two games still to play) are left out to keep the briefing short.
     [match.home_team, match.away_team].each do |team|
       run_in = remaining_group_fixtures(table, team, except: match)
-      lines << "  #{team.name}'s remaining #{table.group_name} games: #{run_in.join('; ')}" if run_in.any?
+      next unless run_in.size == 1 && qualification(table).flag(team) == :in_contention
+
+      lines << "  #{team.name}'s final group game (could decide their fate): #{run_in.first}"
     end
 
     lines << "Reminder: group games award no points directly. Reaching the knockouts — top 2, or one of the best third-placed teams — is where the owner's points begin (+1 for qualifying), with more points for each knockout win."

@@ -3,7 +3,7 @@ class UpcomingMatchesInsightService
   TIME_ZONE = "Europe/London".freeze
   # Folded into the cache version so changing the persona regenerates any
   # previously cached insight written in the old voice.
-  PERSONA_VERSION = "gary-lineker-v8".freeze
+  PERSONA_VERSION = "gary-lineker-v9".freeze
   # Owners based in Vietnam — matches involving their teams also show Vietnam time.
   VIETNAM_FRIENDS = ["Richard", "Nhiên"].freeze
   VIETNAM_TIME_ZONE = "Asia/Ho_Chi_Minh".freeze
@@ -107,14 +107,14 @@ class UpcomingMatchesInsightService
       "",
       "STRUCTURE — follow it exactly:",
       "- One short intro line.",
-      "- Then ONE short paragraph per match, in this order: (1) the two teams, their owners, and the kick-off time; (2) the group favourites by ranking; (3) what a win or a draw does for the table; (4) each side's run-in (their remaining group games).",
+      "- Then ONE short paragraph per match, in this order: (1) the two teams, their owners, and the kick-off time; (2) the group favourites by ranking; (3) what a win or a draw does for the table. Do NOT list a side's upcoming fixtures UNLESS a 'final group game (could decide their fate)' line is supplied for them — only then, mention who they face next.",
       "- Do NOT write a sign-off or good-luck line. End after the final match — a football fact is added automatically.",
       "",
       "STYLE EXAMPLE — copy this structure and plain tone; do NOT reuse its teams or names:",
       "\"\"\"",
       "The tournament continues, with two matches today.",
-      "First up, Qatar, owned by Ben, face Switzerland, owned by Nhiên, at 20:00 UK time (02:00 Vietnam time). Switzerland and Canada are the group favourites by ranking. A win for either side would put them top of the group; a draw leaves both among the leaders. Qatar then have Canada and Bosnia and Herz. to play; Switzerland face the same two.",
-      "Later, Brazil, owned by Aimee, take on Morocco, owned by Bea, at 23:00 UK time. Both are among the favourites to top the group. A win for either would put them top; a draw leaves both well placed. Brazil have Haiti and Scotland to come; Morocco face the same pair.",
+      "First up, Qatar, owned by Ben, face Switzerland, owned by Nhiên, at 20:00 UK time (02:00 Vietnam time). Switzerland and Canada are the group favourites by ranking. A win for either side would put them top of the group; a draw leaves both among the leaders.",
+      "Later, Brazil, owned by Aimee, take on Morocco, owned by Bea, at 23:00 UK time. Both are among the favourites to top the group. A win for either would put them top; a draw leaves both well placed.",
       "\"\"\"",
       "",
       "RULES:",
@@ -126,7 +126,7 @@ class UpcomingMatchesInsightService
       "- No hype or filler. Avoid words and phrases like 'thrilling', 'mouth-watering', 'cracking', 'feast', 'giant leap', 'looking to make a statement', 'football gods'.",
       "- Refer to ownership plainly as 'Team, owned by Friend'.",
       "- World rankings may appear next to team names (e.g. 'world #5'); lower is stronger. You MAY forecast from them — call the favourite, say who should go through, judge a kind or tough group — but ONLY from the rankings and results provided, never outside knowledge. Phrase forecasts as forecasts ('should', 'favourites'); hard facts (guaranteed/cannot finish top 2) are certainties.",
-      "- Use the supplied 'What tonight's result does' lines to say where a result moves a team — e.g. 'a win puts them top of the group'. Mention each side's run-in plainly ('still have X and Y to play').",
+      "- Use the supplied 'What tonight's result does' lines to say where a result moves a team — e.g. 'a win puts them top of the group'. Only mention a side's upcoming fixtures when a 'final group game (could decide their fate)' line is supplied — otherwise leave them out.",
       "- Balance the football and the sweepstake, but briefly.",
       "- Accuracy: never invent scores, points, or positions not in the data — and never invent fixtures or rankings. ONLY discuss the matches listed; never mention another fixture.",
       "- Every match comes with its exact date and kick-off time. Never state or imply a different date or day.",

@@ -42,6 +42,9 @@ class GameStateSnapshotTest < ActiveSupport::TestCase
     assert_includes text, "If Qatar win"
     assert_includes text, "If Switzerland win"
     assert_match(/\+1/, text) # qualifying-point reminder
+    # Qatar and Switzerland have no group games left after tonight, so the
+    # (decluttering) run-in line is omitted — it only appears when pivotal.
+    refute_includes text, "final group game"
   end
 
   test "world rankings appear in the group table and team summary when known" do
@@ -85,7 +88,9 @@ class GameStateSnapshotTest < ActiveSupport::TestCase
     assert_includes text, "Group favourites"
     assert_includes text, "Strongteam (world #5)"
     assert_includes text, "top of the group"                 # a win sends them top
-    assert_includes text, "Strongteam's remaining GZ games"
+    # Strongteam has one group game left after tonight and is in contention, so the
+    # pivotal final-game line is surfaced.
+    assert_includes text, "final group game (could decide their fate)"
     assert_includes text, "vs Weakteam (world #60)"
   end
 

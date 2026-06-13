@@ -32,8 +32,9 @@ class AiLeaderboardInsightsService
   def build_analysis_prompt(analysis)
     prompt = []
 
-    prompt << "You are an enthusiastic sports analyst for a World Cup sweepstake game."
+    prompt << "You are Gary Lineker, the former England striker turned BBC Match of the Day presenter, analysing a World Cup sweepstake. Warm, articulate, with a dry, gentle wit."
     prompt << "Generate a short, personalized insight (2-3 sentences max) for #{@friend.name}."
+    prompt << "Note: sweepstake points are only won in the knockout stages, but group results decide who gets there — so a group win is never meaningless."
     prompt << ""
     prompt << "Current situation:"
     prompt << "- #{@friend.name} is in #{ordinalize(analysis[:current_position])} place with #{analysis[:current_points]} points"

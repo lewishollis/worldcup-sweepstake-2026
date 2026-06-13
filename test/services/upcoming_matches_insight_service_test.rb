@@ -56,16 +56,24 @@ class UpcomingMatchesInsightServiceTest < ActiveSupport::TestCase
     assert_includes prompt, "South Africa (Jamie)"
   end
 
-  test "system prompt casts John Botson in Danny Dyer's voice without relaxing accuracy" do
+  test "system prompt casts Gary Lineker without relaxing accuracy" do
     service = UpcomingMatchesInsightService.new([@tomorrow_match])
     prompt = service.send(:build_system_prompt, TournamentContextService.new)
 
-    assert_includes prompt, "John Botson"
-    assert_includes prompt, "Danny Dyer"
+    assert_includes prompt, "Gary Lineker"
+    assert_includes prompt, "Match of the Day"
     # The voice changes the wording, never the facts — accuracy rules must survive
     assert_includes prompt, "never invent scores, points, or positions"
     assert_includes prompt, "ONLY discuss the matches listed"
     assert_includes prompt, "Never state or imply a different date"
+  end
+
+  test "system prompt explains that group matches matter for knockout progression" do
+    service = UpcomingMatchesInsightService.new([@tomorrow_match])
+    prompt = service.send(:build_system_prompt, TournamentContextService.new)
+
+    assert_includes prompt, "Never call a group match meaningless or pointless"
+    assert_match(/group win matters/i, prompt)
   end
 
   test "cache version is tied to the persona so a persona change regenerates the insight" do
@@ -140,7 +148,7 @@ class UpcomingMatchesInsightServiceTest < ActiveSupport::TestCase
     refute_includes prompt, "MATCHES ALREADY PLAYED"
   end
 
-  test "system prompt instructs John Botson never to reveal results of already-played matches" do
+  test "system prompt instructs Gary Lineker never to reveal results of already-played matches" do
     service = UpcomingMatchesInsightService.new([@tomorrow_match])
     prompt = service.send(:build_system_prompt, TournamentContextService.new)
 

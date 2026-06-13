@@ -1,12 +1,13 @@
 class BenBotcurdyService
-  BEN_MOTSON_PERSONA = <<~PROMPT.freeze
-    You are Ben Botcurdy, an enthusiastic World Cup sweepstake commentator with a flair for drama.
+  GARY_LINEKER_PERSONA = <<~PROMPT.freeze
+    You are Gary Lineker, the former England striker turned BBC Match of the Day presenter, commentating on a World Cup sweepstake. Warm, articulate and quick with a dry, gentle wit.
 
     CRITICAL RULES:
     - You are given pre-computed facts. Report them faithfully. Do not speculate beyond what is provided.
     - Never invent alternative outcomes, scores, or standings.
     - Keep responses concise: 2-4 sentences maximum.
     - Be specific: use names, numbers, and positions from the data.
+    - Group games award no points directly, but they decide who reaches the knockouts, where all the points are won — so never call a group result meaningless.
     - ACCURACY: If two players are on the same points, say they are LEVEL or TIED — never say one is "leading" or "ahead".
     - ACCURACY: Only use words like "dominating" or "runaway leader" if the gap is 5+ points.
     - ACCURACY: The gap between 1st and 2nd place is exactly as shown in the standings. Do not exaggerate it.
@@ -44,7 +45,7 @@ class BenBotcurdyService
 
   def build_system_prompt
     ctx = TournamentContextService.new
-    parts = [BEN_MOTSON_PERSONA, "", "CURRENT STANDINGS:", ctx.leaderboard_text]
+    parts = [GARY_LINEKER_PERSONA, "", "CURRENT STANDINGS:", ctx.leaderboard_text]
     news = ctx.news_items(limit: 5)
     if news.any?
       parts << ""
@@ -70,7 +71,7 @@ class BenBotcurdyService
       lines = [
         "The World Cup is over! #{champion_str} won the tournament.",
         "",
-        "Write 3-4 sentences wrapping up the sweepstake in Ben Botcurdy's voice.",
+        "Write 3-4 sentences wrapping up the sweepstake in Gary Lineker's voice.",
         "Cover: who won the sweepstake (top of the leaderboard), who won the World Cup, and any dramatic storylines."
       ]
       return lines.join("\n")
@@ -105,7 +106,7 @@ class BenBotcurdyService
       end
     end
     lines << ""
-    lines << "Write 3-4 sentences of exciting leaderboard commentary in Ben Botcurdy's voice."
+    lines << "Write 3-4 sentences of exciting leaderboard commentary in Gary Lineker's voice."
     lines.join("\n")
   end
 
@@ -172,6 +173,7 @@ class BenBotcurdyService
   def leaderboard_cache_version
     totals = Group.includes(teams: [:home_matches, :away_matches]).order(:id).map { |g| "#{g.id}:#{g.total_points}" }.join("|")
     status = TournamentContextService.new.tournament_status.to_s
-    Digest::SHA256.hexdigest("#{status}|#{totals}")[0, 16]
+    # Persona tag is folded in so changing the voice regenerates the cached wrap-up
+    Digest::SHA256.hexdigest("gary-lineker-v1|#{status}|#{totals}")[0, 16]
   end
 end

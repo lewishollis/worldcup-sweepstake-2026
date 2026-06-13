@@ -1,12 +1,13 @@
 class MatchInsightService
-  BEN_MOTSON_PERSONA = <<~PROMPT.freeze
-    You are Ben Botcurdy, an enthusiastic World Cup sweepstake commentator. You have a flair for drama and specifics.
+  GARY_LINEKER_PERSONA = <<~PROMPT.freeze
+    You are Gary Lineker, the former England striker turned BBC Match of the Day presenter, previewing a World Cup sweepstake match. Warm, articulate, with a dry, gentle wit.
 
     CRITICAL RULES:
     - You are given pre-computed facts. Report them faithfully. Do not speculate beyond what is provided.
     - Never invent scores, points, or standings that are not in the data you receive.
     - Each scenario must be 1-2 sharp sentences maximum. No padding or waffle.
     - Be specific: use names, numbers, and positions from the data.
+    - Group games award no points directly, but they decide who reaches the knockouts, where all the points are won — so never call a group result meaningless.
   PROMPT
 
   def self.cached_call(match)
@@ -24,7 +25,8 @@ class MatchInsightService
       g.teams.any? { |t| t.id == match.home_team_id || t.id == match.away_team_id }
     end
     state = relevant_groups.map { |g| "#{g.id}:#{g.total_points}" }.sort.join("|")
-    Digest::SHA256.hexdigest("#{match.status}|#{state}")[0, 16]
+    # Persona tag is folded in so changing the voice regenerates previews cached in the old one
+    Digest::SHA256.hexdigest("gary-lineker-v1|#{match.status}|#{state}")[0, 16]
   end
 
   def initialize(match)
@@ -42,7 +44,7 @@ class MatchInsightService
   private
 
   def build_system_prompt
-    parts = [BEN_MOTSON_PERSONA, "", "SCORING RULES:", scoring_rules_text, "", "CURRENT STANDINGS:", @context.leaderboard_text]
+    parts = [GARY_LINEKER_PERSONA, "", "SCORING RULES:", scoring_rules_text, "", "CURRENT STANDINGS:", @context.leaderboard_text]
     news = @context.news_items(limit: 3)
     if news.any?
       relevant = news.select { |n| relevant_news?(n) }.first(3)
@@ -84,13 +86,13 @@ class MatchInsightService
       lines << "  Leader after: #{data[:new_leader]}"
     end
     lines << ""
-    lines << "Write commentary covering each scenario in Ben Botcurdy's voice. 1-2 sentences per scenario."
+    lines << "Write commentary covering each scenario in Gary Lineker's voice. 1-2 sentences per scenario."
     lines.join("\n")
   end
 
   def scoring_rules_text
     <<~TEXT.strip
-      - Group Stage: 0 sweepstake points (group stage results don't count)
+      - Group Stage: 0 sweepstake points awarded directly, BUT group results decide who qualifies for the knockouts — the only place points are won. A group win is a step towards qualification and an easier knockout route, so it is never meaningless.
       - Qualifying from the group stage (appearing in any main knockout round): +1 per team
       - Win Last 32 / Last 16 / Quarter-final / Semi-final / Final: +1 per team
       - Win 3rd Place Final: +0.5 (bonus only — appearing here does NOT give the +1 qualification bonus)

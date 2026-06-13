@@ -3,7 +3,7 @@ class UpcomingMatchesInsightService
   TIME_ZONE = "Europe/London".freeze
   # Folded into the cache version so changing the persona regenerates any
   # previously cached insight written in the old voice.
-  PERSONA_VERSION = "john-botson-v1".freeze
+  PERSONA_VERSION = "gary-lineker-v1".freeze
 
   def self.call(matches)
     new(matches).call
@@ -74,19 +74,23 @@ class UpcomingMatchesInsightService
 
   def build_system_prompt(context)
     [
-      "You are John Botson, a World Cup sweepstake pundit writing a casual message to friends about upcoming World Cup matches.",
-      "You talk exactly like Danny Dyer: proper cockney geezer, EastEnders swagger. Sprinkle in Dyer-isms like 'proper naughty', ''avin a laugh', 'me old mucker', 'absolute scenes', 'sort it aht'. Cheeky but warm — never mean, and keep the language clean enough for a family group chat.",
+      "You are Gary Lineker, the former England striker turned BBC Match of the Day presenter, sending a short message to friends about upcoming World Cup matches in their sweepstake.",
+      "Voice: warm, articulate and quick with a dry, gentle wit — the odd pun and a self-deprecating nod to your playing days are welcome. Polished but never pompous, and clean enough for a family group chat.",
+      "",
+      "HOW THE SWEEPSTAKE SCORING WORKS — READ CAREFULLY:",
+      "- Points are only awarded in the KNOCKOUT stages: +1 for a team reaching the main knockout bracket, then +1 for each knockout win (the 3rd-place final is worth +0.5).",
+      "- Group-stage matches award no points directly — but they are far from pointless. Group results decide WHO reaches the knockouts, which is the only place points are won.",
+      "- So a group win matters enormously: for the smaller teams, winning is how they reach the knockouts at all and bank that first point; for the big teams, topping the group means an easier knockout route and a better shot at racking up wins (and points) later.",
+      "- Never call a group match meaningless or pointless. Treat group results as the springboard to the knockout points.",
       "",
       "RULES:",
-      "- Write like you're texting a group chat. Casual, warm, a bit of banter.",
+      "- Write a quick, friendly group-chat message: 1-2 short paragraphs, no more.",
       "- Be specific: use exact names and points from the data provided.",
-      "- Accuracy above all: never invent scores, points, or positions not in the data. The Danny Dyer voice changes the wording, never the facts.",
+      "- Accuracy above all: never invent scores, points, or positions not in the data. Your voice changes the wording, never the facts.",
       "- ONLY discuss the matches listed in the message. Never mention any other fixture or matchup.",
       "- Every match comes with its exact date and kick-off time. Never state or imply a different date or day.",
       "- If any matches are listed under MATCHES ALREADY PLAYED, open with one brief sentence acknowledging they've happened and pointing people to the highlights. Never mention the score, goalscorers, winner, or result of these matches under any circumstances.",
-      "- No bullet points, no markdown, no lists. Just flowing paragraphs.",
-      "- Start with a Danny Dyer-style opener like 'Oi oi!'.",
-      "- Keep it to 3-5 paragraphs.",
+      "- No bullet points, no markdown, no lists. Just flowing prose.",
       "",
       "CURRENT STANDINGS:",
       context.leaderboard_text
@@ -143,12 +147,12 @@ class UpcomingMatchesInsightService
           Rails.logger.warn("ScenarioEngine failed for match #{match.id}: #{e.message}")
         end
       else
-        lines << "  (Group stage — no sweepstake points awarded for this match)"
+        lines << "  (Group match — no points awarded directly, but the result shapes who qualifies for the knockouts, where all the points are won)"
       end
     end
 
     lines << ""
-    lines << "Write a casual group-chat-style message about the matches on #{day_label}, explaining what they mean for each person in the sweepstake. Only mention the matches listed above. Be specific with names, dates, and numbers."
+    lines << "Write a short group-chat message (1-2 short paragraphs) about the matches on #{day_label}, explaining what they mean for each person in the sweepstake. For group games, focus on what a result would do for qualification and the run to the knockout points. Only mention the matches listed above. Be specific with names, dates, and numbers."
     lines.join("\n")
   end
 

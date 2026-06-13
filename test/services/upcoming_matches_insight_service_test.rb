@@ -194,14 +194,26 @@ class UpcomingMatchesInsightServiceTest < ActiveSupport::TestCase
     assert_includes prompt, "What this match means:"
   end
 
-  test "cache version changes when a group result lands" do
+  test "cache version changes when a group result lands (isolated from tournament status)" do
+    # Anchor: a PostEvent group-stage match well outside the 24h recently-finished
+    # window, so tournament_status is already :group_stage for BOTH snapshots below.
+    # That leaves GameStateSnapshot.data_version as the only thing that can move
+    # cache_version when the new result lands.
+    portugal = Team.create!(name: "Portugal", flag_url: "https://x.com/pt.svg")
+    ghana    = Team.create!(name: "Ghana", flag_url: "https://x.com/gh.svg")
+    Match.create!(home_team: portugal, away_team: ghana, stage: "Group Stage", status: "PostEvent",
+                  group_name: "Group J", match_id: "gj-anchor", home_score: 3, away_score: 0,
+                  start_time: Time.zone.local(2026, 6, 1, 12, 0, 0))
+
     service = UpcomingMatchesInsightService.new([@tomorrow_match])
-    before = service.send(:cache_version)
-    ghana = Team.create!(name: "Ghana", flag_url: "https://x.com/gh.svg")
-    egypt = Team.create!(name: "Egypt", flag_url: "https://x.com/eg.svg")
-    Match.create!(home_team: ghana, away_team: egypt, stage: "Group Stage", status: "PostEvent",
+    before  = service.send(:cache_version)
+
+    egypt  = Team.create!(name: "Egypt", flag_url: "https://x.com/eg.svg")
+    sweden = Team.create!(name: "Sweden", flag_url: "https://x.com/se.svg")
+    Match.create!(home_team: egypt, away_team: sweden, stage: "Group Stage", status: "PostEvent",
                   group_name: "Group K", match_id: "gk-result", home_score: 1, away_score: 0,
-                  start_time: Time.zone.local(2026, 6, 11, 18, 0, 0))
+                  start_time: Time.zone.local(2026, 6, 2, 12, 0, 0))
+
     refute_equal before, service.send(:cache_version)
   end
 end

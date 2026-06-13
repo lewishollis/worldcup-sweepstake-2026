@@ -53,6 +53,7 @@ class MatchesController < ApplicationController
               start_time: event['date']['iso'],
               match_id: event['id'],
               stage: stage['name'],
+              group_name: BbcEventParser.group_name(event, secondary_group['displayLabel']),
               home_friend_name: home_friend_name,
               away_friend_name: away_friend_name,
               home_friend_profile_picture_url: home_friend_profile_picture_url,

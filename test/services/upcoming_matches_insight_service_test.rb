@@ -43,6 +43,16 @@ class UpcomingMatchesInsightServiceTest < ActiveSupport::TestCase
     refute_includes prompt, "Spain", "matches on later days must not appear in the prompt"
   end
 
+  test "the briefing ends with a verified football fact, not a generic sign-off" do
+    GroqClient.stub(:call, "Two matches today. Qatar face Switzerland.") do
+      result = UpcomingMatchesInsightService.new([@tomorrow_match]).send(:generate)
+
+      assert_includes result, "Football fact:"
+      assert UpcomingMatchesInsightService::FOOTBALL_FACTS.any? { |fact| result.include?(fact) },
+             "expected the sign-off to be one of the curated true facts"
+    end
+  end
+
   test "match line adds Vietnam time when a Vietnam-based owner is involved" do
     # @tomorrow_match is Mexico (owned by Richard) vs South Africa
     prompt = UpcomingMatchesInsightService.new([@tomorrow_match]).send(:build_user_message)
@@ -146,7 +156,8 @@ class UpcomingMatchesInsightServiceTest < ActiveSupport::TestCase
 
     GroqClient.stub(:call, "Real insight about Mexico vs South Africa.") do
       result = UpcomingMatchesInsightService.call([@tomorrow_match])
-      assert_equal "Real insight about Mexico vs South Africa.", result
+      assert result.start_with?("Real insight about Mexico vs South Africa."), "expected the generated message"
+      assert_includes result, "Football fact:" # verified sign-off appended
       assert_equal 1, AiInsightCache.where(key: "upcoming_matches_insight").count
     end
   end

@@ -3,10 +3,26 @@ class UpcomingMatchesInsightService
   TIME_ZONE = "Europe/London".freeze
   # Folded into the cache version so changing the persona regenerates any
   # previously cached insight written in the old voice.
-  PERSONA_VERSION = "gary-lineker-v7".freeze
+  PERSONA_VERSION = "gary-lineker-v8".freeze
   # Owners based in Vietnam — matches involving their teams also show Vietnam time.
   VIETNAM_FRIENDS = ["Richard", "Nhiên"].freeze
   VIETNAM_TIME_ZONE = "Asia/Ho_Chi_Minh".freeze
+
+  # Curated, verified, evergreen football facts. Appended verbatim as the sign-off
+  # so the closing trivia is always TRUE — never left to the model to invent.
+  # Keep these factual and timeless; add freely, but each must be checkably true.
+  FOOTBALL_FACTS = [
+    "Brazil are the only men's national team to have played at every World Cup finals.",
+    "The first men's World Cup, in 1930, was hosted and won by Uruguay.",
+    "Miroslav Klose is the men's World Cup all-time top scorer, with 16 goals.",
+    "Pelé is the only player to have won three men's World Cups: 1958, 1962 and 1970.",
+    "Only eight nations have ever won the men's World Cup.",
+    "Germany have reached more men's World Cup finals than any other nation.",
+    "The 2026 World Cup is the first to feature 48 teams.",
+    "The 2026 World Cup is co-hosted by Canada, Mexico and the USA — its first three hosts.",
+    "Cristiano Ronaldo is the only man to have scored at five different World Cups.",
+    "The 1994 World Cup final was the first to be decided by a penalty shootout."
+  ].freeze
 
   def self.call(matches)
     new(matches).call
@@ -72,7 +88,10 @@ class UpcomingMatchesInsightService
     system_prompt = build_system_prompt(snapshot)
     user_message  = build_user_message(snapshot)
 
-    GroqClient.call(system_prompt: system_prompt, user_message: user_message, max_tokens: 600)
+    message = GroqClient.call(system_prompt: system_prompt, user_message: user_message, max_tokens: 600)
+    # Append a verified fact as the sign-off, so it's always true (the model is
+    # told not to write its own sign-off).
+    message && "#{message.strip}\n\nFootball fact: #{FOOTBALL_FACTS.sample}"
   end
 
   def build_system_prompt(context_or_snapshot = GameStateSnapshot.new)
@@ -89,14 +108,13 @@ class UpcomingMatchesInsightService
       "STRUCTURE — follow it exactly:",
       "- One short intro line.",
       "- Then ONE short paragraph per match, in this order: (1) the two teams, their owners, and the kick-off time; (2) the group favourites by ranking; (3) what a win or a draw does for the table; (4) each side's run-in (their remaining group games).",
-      "- One short sign-off line.",
+      "- Do NOT write a sign-off or good-luck line. End after the final match — a football fact is added automatically.",
       "",
       "STYLE EXAMPLE — copy this structure and plain tone; do NOT reuse its teams or names:",
       "\"\"\"",
       "The tournament continues, with two matches today.",
       "First up, Qatar, owned by Ben, face Switzerland, owned by Nhiên, at 20:00 UK time (02:00 Vietnam time). Switzerland and Canada are the group favourites by ranking. A win for either side would put them top of the group; a draw leaves both among the leaders. Qatar then have Canada and Bosnia and Herz. to play; Switzerland face the same two.",
       "Later, Brazil, owned by Aimee, take on Morocco, owned by Bea, at 23:00 UK time. Both are among the favourites to top the group. A win for either would put them top; a draw leaves both well placed. Brazil have Haiti and Scotland to come; Morocco face the same pair.",
-      "Best of luck to all owners.",
       "\"\"\"",
       "",
       "RULES:",

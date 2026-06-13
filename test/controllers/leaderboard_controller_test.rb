@@ -6,7 +6,7 @@ class LeaderboardControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "group detail page renders a per-friend Gary Lineker insight" do
+  test "group detail page renders a per-friend John Botson insight" do
     friend = Friend.create!(name: "Ben")
     group  = Group.create!(name: "Group 3", friend: friend)
     group.teams << Team.create!(name: "Qatar", flag_url: "https://x.com/qa.svg")
@@ -14,6 +14,6 @@ class LeaderboardControllerTest < ActionDispatch::IntegrationTest
     get leaderboard_path(group)
 
     assert_response :success
-    assert_select "h3.insights-title", text: /Gary Lineker/
+    assert_select "h3.insights-title", text: /John Botson/
   end
 end

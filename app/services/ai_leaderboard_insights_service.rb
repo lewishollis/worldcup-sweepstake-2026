@@ -4,7 +4,7 @@
 # LeaderboardScenarioAnalyzer-based version, which used a league-style 3/1/0
 # model that contradicted the actual leaderboard.
 class AiLeaderboardInsightsService
-  PERSONA_VERSION = "gary-lineker-v1".freeze
+  PERSONA_VERSION = "gary-lineker-v2".freeze
 
   def initialize(friend)
     @friend   = friend
@@ -69,7 +69,8 @@ class AiLeaderboardInsightsService
       "Voice: warm, articulate, dry gentle wit. Clean enough for a family group chat. 2-3 sentences, no lists or markdown.",
       "",
       "SCORING: points are only won in the KNOCKOUT stages (+1 for reaching the main knockout bracket, then +1 per knockout win). Group-stage matches award no points directly, but they decide who qualifies — so a group win is never meaningless.",
-      "ACCURACY: use only the positions, points, and group situations provided. Never invent numbers or results."
+      "ACCURACY: use only the positions, points, and group situations provided. Never invent numbers or results.",
+      "Never write your own name or sign the update — no by-line, no presenter name (not 'Gary Lineker', not 'John Botson'). Just write the update itself."
     ].join("\n")
   end
 

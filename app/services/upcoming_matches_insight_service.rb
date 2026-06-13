@@ -3,7 +3,7 @@ class UpcomingMatchesInsightService
   TIME_ZONE = "Europe/London".freeze
   # Folded into the cache version so changing the persona regenerates any
   # previously cached insight written in the old voice.
-  PERSONA_VERSION = "gary-lineker-v2".freeze
+  PERSONA_VERSION = "gary-lineker-v3".freeze
 
   def self.call(matches)
     new(matches).call
@@ -89,6 +89,7 @@ class UpcomingMatchesInsightService
       "- Never call a group match meaningless or pointless. Treat group results as the springboard to the knockout points.",
       "",
       "RULES:",
+      "- Never write your own name or sign the message — no by-line, no presenter name (not 'Gary Lineker', not 'John Botson'). Just write the message itself.",
       "- Write a quick, friendly group-chat message: 1-2 short paragraphs, no more.",
       "- Be specific: use exact names and points from the data provided.",
       "- Accuracy above all: never invent scores, points, or positions not in the data. Your voice changes the wording, never the facts.",

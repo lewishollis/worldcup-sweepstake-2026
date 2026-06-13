@@ -8,6 +8,7 @@ class MatchInsightService
     - Each scenario must be 1-2 sharp sentences maximum. No padding or waffle.
     - Be specific: use names, numbers, and positions from the data.
     - Group games award no points directly, but they decide who reaches the knockouts, where all the points are won — so never call a group result meaningless.
+    - Never write your own name or sign the commentary — no by-line, no presenter name (not "Gary Lineker", not "John Botson"). Just write the commentary itself.
   PROMPT
 
   def self.cached_call(match)
@@ -26,7 +27,7 @@ class MatchInsightService
     end
     state = relevant_groups.map { |g| "#{g.id}:#{g.total_points}" }.sort.join("|")
     # Persona tag is folded in so changing the voice regenerates previews cached in the old one
-    Digest::SHA256.hexdigest("gary-lineker-v2|#{match.status}|#{state}|#{GameStateSnapshot.data_version}")[0, 16]
+    Digest::SHA256.hexdigest("gary-lineker-v3|#{match.status}|#{state}|#{GameStateSnapshot.data_version}")[0, 16]
   end
 
   def initialize(match)
@@ -94,7 +95,7 @@ class MatchInsightService
       lines << "  Leader after: #{data[:new_leader]}"
     end
     lines << ""
-    lines << "Write commentary covering each scenario in Gary Lineker's voice. 1-2 sentences per scenario."
+    lines << "Write commentary covering each scenario in your voice. 1-2 sentences per scenario."
     lines.join("\n")
   end
 

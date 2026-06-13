@@ -12,6 +12,7 @@ class BenBotcurdyService
     - ACCURACY: Only use words like "dominating" or "runaway leader" if the gap is 5+ points.
     - ACCURACY: The gap between 1st and 2nd place is exactly as shown in the standings. Do not exaggerate it.
     - Write naturally and interestingly — no bullet points, no lists, just flowing commentary.
+    - Never write your own name or sign the commentary — no by-line, no presenter name (not "Gary Lineker", not "John Botson"). Just write the commentary itself.
   PROMPT
 
   def initialize(context_type, context_data = {})
@@ -71,7 +72,7 @@ class BenBotcurdyService
       lines = [
         "The World Cup is over! #{champion_str} won the tournament.",
         "",
-        "Write 3-4 sentences wrapping up the sweepstake in Gary Lineker's voice.",
+        "Write 3-4 sentences wrapping up the sweepstake in your voice.",
         "Cover: who won the sweepstake (top of the leaderboard), who won the World Cup, and any dramatic storylines."
       ]
       return lines.join("\n")
@@ -111,7 +112,7 @@ class BenBotcurdyService
       end
     end
     lines << ""
-    lines << "Write 3-4 sentences of exciting leaderboard commentary in Gary Lineker's voice."
+    lines << "Write 3-4 sentences of exciting leaderboard commentary in your voice."
     lines.join("\n")
   end
 
@@ -179,6 +180,6 @@ class BenBotcurdyService
     totals = Group.includes(teams: [:home_matches, :away_matches]).order(:id).map { |g| "#{g.id}:#{g.total_points}" }.join("|")
     status = TournamentContextService.new.tournament_status.to_s
     # Persona tag is folded in so changing the voice regenerates the cached wrap-up
-    Digest::SHA256.hexdigest("gary-lineker-v2|#{status}|#{totals}|#{GameStateSnapshot.data_version}")[0, 16]
+    Digest::SHA256.hexdigest("gary-lineker-v3|#{status}|#{totals}|#{GameStateSnapshot.data_version}")[0, 16]
   end
 end

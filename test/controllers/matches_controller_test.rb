@@ -47,7 +47,7 @@ class MatchesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 2.0, @home_team.reload.progression_score
   end
 
-  test "group-stage match preview page renders the Gary Lineker preview box" do
+  test "group-stage match preview page renders the John Botson preview box" do
     home = Team.create!(name: "Qatar", flag_url: "https://x.com/qa.svg")
     away = Team.create!(name: "Switzerland", flag_url: "https://x.com/ch.svg")
     Match.create!(home_team: home, away_team: away, stage: "Group Stage", status: "PostEvent",
@@ -60,6 +60,6 @@ class MatchesControllerTest < ActionDispatch::IntegrationTest
     get match_path(upcoming)
 
     assert_response :success
-    assert_select "h3.commentary-title", text: /Gary Lineker's Preview/
+    assert_select "h3.commentary-title", text: /John Botson's Preview/
   end
 end

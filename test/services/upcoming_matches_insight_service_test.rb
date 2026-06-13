@@ -58,12 +58,15 @@ class UpcomingMatchesInsightServiceTest < ActiveSupport::TestCase
     assert_includes prompt, "South Africa (Jamie)"
   end
 
-  test "system prompt casts Gary Lineker without relaxing accuracy" do
+  test "system prompt keeps the Gary Lineker voice but forbids naming the presenter in the output" do
     service = UpcomingMatchesInsightService.new([@tomorrow_match])
     prompt = service.send(:build_system_prompt, TournamentContextService.new)
 
+    # Persona/voice stays Gary Lineker (shapes the voice only) ...
     assert_includes prompt, "Gary Lineker"
     assert_includes prompt, "Match of the Day"
+    # ... but the model must never write its name in the message it produces.
+    assert_includes prompt, "Never write your own name"
     # The voice changes the wording, never the facts — accuracy rules must survive
     assert_includes prompt, "never invent scores, points, or positions"
     assert_includes prompt, "ONLY discuss the matches listed"

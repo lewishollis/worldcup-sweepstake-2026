@@ -46,4 +46,20 @@ class MatchesControllerTest < ActionDispatch::IntegrationTest
     # 1.0 for qualifying + 1.0 for winning Last 32 = 2.0
     assert_equal 2.0, @home_team.reload.progression_score
   end
+
+  test "group-stage match preview page renders the Gary Lineker preview box" do
+    home = Team.create!(name: "Qatar", flag_url: "https://x.com/qa.svg")
+    away = Team.create!(name: "Switzerland", flag_url: "https://x.com/ch.svg")
+    Match.create!(home_team: home, away_team: away, stage: "Group Stage", status: "PostEvent",
+                  group_name: "Group B", match_id: "mc-played", home_score: 1, away_score: 0,
+                  start_time: Time.zone.local(2026, 6, 13, 17, 0, 0))
+    upcoming = Match.create!(home_team: home, away_team: away, stage: "Group Stage", status: "PreEvent",
+                             group_name: "Group B", match_id: "mc-upcoming",
+                             start_time: Time.zone.local(2026, 6, 17, 17, 0, 0))
+
+    get match_path(upcoming)
+
+    assert_response :success
+    assert_select "h3.commentary-title", text: /Gary Lineker's Preview/
+  end
 end

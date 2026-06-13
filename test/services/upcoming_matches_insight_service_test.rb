@@ -85,7 +85,7 @@ class UpcomingMatchesInsightServiceTest < ActiveSupport::TestCase
     service = UpcomingMatchesInsightService.new([@tomorrow_match])
     prompt = service.send(:build_system_prompt, TournamentContextService.new)
 
-    assert_includes prompt, "Never call a group match meaningless or pointless"
+    assert_match(/never call a group match meaningless or pointless/i, prompt)
     assert_match(/group win matters/i, prompt)
   end
 

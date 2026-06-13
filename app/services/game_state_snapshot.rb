@@ -117,13 +117,15 @@ class GameStateSnapshot
       else
         "#{team_effect[:tied] ? 'joint ' : ''}#{ordinal(team_effect[:position])} in the group"
       end
+    # Only append a qualification note when it's a hard certainty; the common
+    # "in contention" case is left implicit to avoid repeating it on every line.
     meaning =
       case team_effect[:flag]
-      when :clinched_top2      then "guaranteed top 2 — #{owner_name(team) || 'no owner'} banks +1 and is live for knockout points"
-      when :cannot_finish_top2 then "can no longer finish top 2 (best-third hopes only)"
-      else "still in contention to qualify"
+      when :clinched_top2      then " (guaranteed top 2 — #{owner_name(team) || 'no owner'} banks +1)"
+      when :cannot_finish_top2 then " (can no longer finish top 2)"
+      else ""
       end
-    "#{team.name} go #{place}, #{meaning}"
+    "#{team.name} go #{place}#{meaning}"
   end
 
   # The two strongest teams in the group by world ranking (lowest numbers).

@@ -3,7 +3,10 @@ class UpcomingMatchesInsightService
   TIME_ZONE = "Europe/London".freeze
   # Folded into the cache version so changing the persona regenerates any
   # previously cached insight written in the old voice.
-  PERSONA_VERSION = "gary-lineker-v6".freeze
+  PERSONA_VERSION = "gary-lineker-v7".freeze
+  # Owners based in Vietnam — matches involving their teams also show Vietnam time.
+  VIETNAM_FRIENDS = ["Richard", "Nhiên"].freeze
+  VIETNAM_TIME_ZONE = "Asia/Ho_Chi_Minh".freeze
 
   def self.call(matches)
     new(matches).call
@@ -85,24 +88,27 @@ class UpcomingMatchesInsightService
       "",
       "STRUCTURE — follow it exactly:",
       "- One short intro line.",
-      "- Then ONE short paragraph per match, in this order: (1) the two teams and their owners; (2) the group favourites by ranking; (3) what a win or a draw does — who goes top, who stays in contention; (4) each side's run-in (their remaining group games).",
+      "- Then ONE short paragraph per match, in this order: (1) the two teams, their owners, and the kick-off time; (2) the group favourites by ranking; (3) what a win or a draw does for the table; (4) each side's run-in (their remaining group games).",
       "- One short sign-off line.",
       "",
       "STYLE EXAMPLE — copy this structure and plain tone; do NOT reuse its teams or names:",
       "\"\"\"",
-      "The tournament is underway, with two matches today.",
-      "First up, Qatar, owned by Ben, face Switzerland, owned by Nhiên. Switzerland and Canada are the group favourites on world ranking. Qatar go top with a win and stay in contention; Switzerland go top with a win, and a draw keeps both near the top. Qatar still have Canada and Bosnia and Herz. to play; Switzerland face the same two.",
-      "Later, Brazil, owned by Aimee, take on Morocco, owned by Bea — both among the favourites to top their group. Either goes top with a win; a draw keeps both in contention. Brazil still have Haiti and Scotland to come; Morocco face the same pair.",
+      "The tournament continues, with two matches today.",
+      "First up, Qatar, owned by Ben, face Switzerland, owned by Nhiên, at 20:00 UK time (02:00 Vietnam time). Switzerland and Canada are the group favourites by ranking. A win for either side would put them top of the group; a draw leaves both among the leaders. Qatar then have Canada and Bosnia and Herz. to play; Switzerland face the same two.",
+      "Later, Brazil, owned by Aimee, take on Morocco, owned by Bea, at 23:00 UK time. Both are among the favourites to top the group. A win for either would put them top; a draw leaves both well placed. Brazil have Haiti and Scotland to come; Morocco face the same pair.",
       "Best of luck to all owners.",
       "\"\"\"",
       "",
       "RULES:",
       "- Never write your own name or sign the message — no by-line, no presenter name (not 'Gary Lineker', not 'John Botson'). Just write the briefing.",
       "- Be concise and scannable: short sentences, and state each point ONCE — never restate the same idea in different words.",
+      "- Combine the result outcomes into ONE short sentence where you can, e.g. 'A win for either side would put them top of the group; a draw leaves both among the leaders.' Don't write a separate clause for each team and each outcome.",
+      "- Don't tack on 'in contention' / 'still in contention' once you've said a result puts a side top — it's implied. Only state qualification status when it's a hard fact (guaranteed through, or out).",
+      "- Include each match's kick-off time exactly as given. When both a UK time and a Vietnam time are shown, include both.",
       "- No hype or filler. Avoid words and phrases like 'thrilling', 'mouth-watering', 'cracking', 'feast', 'giant leap', 'looking to make a statement', 'football gods'.",
       "- Refer to ownership plainly as 'Team, owned by Friend'.",
       "- World rankings may appear next to team names (e.g. 'world #5'); lower is stronger. You MAY forecast from them — call the favourite, say who should go through, judge a kind or tough group — but ONLY from the rankings and results provided, never outside knowledge. Phrase forecasts as forecasts ('should', 'favourites'); hard facts (guaranteed/cannot finish top 2) are certainties.",
-      "- Use the supplied 'What tonight's result does' lines to say where a result moves a team — e.g. 'a win puts them top of the group' — and tie it to qualifying. Mention each side's run-in plainly ('still have X and Y to play').",
+      "- Use the supplied 'What tonight's result does' lines to say where a result moves a team — e.g. 'a win puts them top of the group'. Mention each side's run-in plainly ('still have X and Y to play').",
       "- Balance the football and the sweepstake, but briefly.",
       "- Accuracy: never invent scores, points, or positions not in the data — and never invent fixtures or rankings. ONLY discuss the matches listed; never mention another fixture.",
       "- Every match comes with its exact date and kick-off time. Never state or imply a different date or day.",
@@ -147,9 +153,8 @@ class UpcomingMatchesInsightService
       # stale when group assignments change between API syncs
       home_owner = owner_name(match.home_team)
       away_owner = owner_name(match.away_team)
-      kickoff    = match.start_time.in_time_zone(TIME_ZONE)
       lines << ""
-      lines << "#{home} (#{home_owner || 'unowned'}) vs #{away} (#{away_owner || 'unowned'}) — #{match.stage} — #{kickoff.strftime('%A %d %B %Y, %H:%M')} UK time"
+      lines << "#{home} (#{home_owner || 'unowned'}) vs #{away} (#{away_owner || 'unowned'}) — #{match.stage} — #{kickoff_label(match, [home_owner, away_owner])}"
 
       if Team::KNOCKOUT_STAGES.include?(match.stage)
         begin
@@ -176,6 +181,18 @@ class UpcomingMatchesInsightService
 
   def owner_name(team)
     team.groups.first&.friend&.name
+  end
+
+  # Kick-off shown in UK time, plus Vietnam time when a Vietnam-based owner
+  # (Richard or Nhiên) has a team in the match.
+  def kickoff_label(match, owners)
+    uk    = match.start_time.in_time_zone(TIME_ZONE)
+    label = "#{uk.strftime('%A %d %B %Y, %H:%M')} UK time"
+    if owners.compact.any? { |o| VIETNAM_FRIENDS.include?(o) }
+      vn = match.start_time.in_time_zone(VIETNAM_TIME_ZONE)
+      label += " / #{vn.strftime('%H:%M')} Vietnam time"
+    end
+    label
   end
 
   def cache_version

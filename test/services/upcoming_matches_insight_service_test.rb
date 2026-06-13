@@ -43,6 +43,20 @@ class UpcomingMatchesInsightServiceTest < ActiveSupport::TestCase
     refute_includes prompt, "Spain", "matches on later days must not appear in the prompt"
   end
 
+  test "match line adds Vietnam time when a Vietnam-based owner is involved" do
+    # @tomorrow_match is Mexico (owned by Richard) vs South Africa
+    prompt = UpcomingMatchesInsightService.new([@tomorrow_match]).send(:build_user_message)
+    assert_includes prompt, "UK time"
+    assert_includes prompt, "Vietnam time"
+  end
+
+  test "match line shows UK time only when no Vietnam-based owner is involved" do
+    # @later_match is Spain vs Haiti, both unowned in this setup
+    prompt = UpcomingMatchesInsightService.new([@later_match]).send(:build_user_message)
+    assert_includes prompt, "UK time"
+    refute_includes prompt, "Vietnam time"
+  end
+
   test "every match line carries its full date and UK kick-off time" do
     service = UpcomingMatchesInsightService.new([@tomorrow_match])
     prompt = service.send(:build_user_message)

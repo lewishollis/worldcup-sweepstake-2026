@@ -43,6 +43,7 @@ namespace :matches do
           home_name = Team.canonical_name(event.dig("home", "fullName"))
           away_name = Team.canonical_name(event.dig("away", "fullName"))
           stage_name = event.dig("stage", "name") || "Unknown Stage"
+          group_label = BbcEventParser.group_name(event, secondary_group["displayLabel"])
           start_time = event.dig("date", "iso")
 
           unless home_name && away_name && start_time
@@ -63,6 +64,7 @@ namespace :matches do
             away_team:                away_team,
             start_time:               start_time,
             stage:                    stage_name,
+            group_name:               group_label,
             home_score:               event.dig("home", "score").to_i,
             away_score:               event.dig("away", "score").to_i,
             status:                   event["status"],

@@ -48,6 +48,15 @@ class BbcEventParser
     status(event) == 'MidEvent' ? nil : event['winner']
   end
 
+  # The BBC feed nests group-stage events under a secondaryGroup whose
+  # displayLabel is the tournament group ("Group A"). Knockout events carry a
+  # stage label there instead, so we only return a group for Group Stage events.
+  def self.group_name(event, secondary_group_label)
+    return nil unless event.dig('stage', 'name') == 'Group Stage'
+
+    secondary_group_label.presence
+  end
+
   # Flattens one side's feed actions (goals, red cards) into display events
   # like { type: 'goal', name: 'J. Quiñones', minute: "9'" }.
   def self.side_events(event, side)

@@ -136,4 +136,19 @@ class BbcEventParserTest < ActiveSupport::TestCase
 
     assert_equal %w[D B C A], BbcEventParser.sort_by_minute(events).map { |e| e[:name] }
   end
+
+  test "group_name returns the label for group-stage events" do
+    event = { "stage" => { "name" => "Group Stage" } }
+    assert_equal "Group A", BbcEventParser.group_name(event, "Group A")
+  end
+
+  test "group_name is nil for knockout events" do
+    event = { "stage" => { "name" => "Last 32" } }
+    assert_nil BbcEventParser.group_name(event, "Last 32")
+  end
+
+  test "group_name is nil when label is blank" do
+    event = { "stage" => { "name" => "Group Stage" } }
+    assert_nil BbcEventParser.group_name(event, "")
+  end
 end

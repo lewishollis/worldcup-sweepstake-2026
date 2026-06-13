@@ -103,6 +103,11 @@ class BenBotcurdyService
           deltas = data[:friend_deltas].map { |d| "#{d[:friend]} +#{d[:delta].to_i}" }.join(", ")
           lines << "  If #{scenario_labels[outcome]}: #{deltas} | Leader: #{data[:new_leader]}"
         end
+
+        if match.stage == "Group Stage"
+          group_context = GameStateSnapshot.new.group_context_text(match)
+          lines << "  #{group_context.gsub("\n", "\n  ")}" if group_context
+        end
       end
     end
     lines << ""
@@ -174,6 +179,6 @@ class BenBotcurdyService
     totals = Group.includes(teams: [:home_matches, :away_matches]).order(:id).map { |g| "#{g.id}:#{g.total_points}" }.join("|")
     status = TournamentContextService.new.tournament_status.to_s
     # Persona tag is folded in so changing the voice regenerates the cached wrap-up
-    Digest::SHA256.hexdigest("gary-lineker-v1|#{status}|#{totals}")[0, 16]
+    Digest::SHA256.hexdigest("gary-lineker-v2|#{status}|#{totals}|#{GameStateSnapshot.data_version}")[0, 16]
   end
 end

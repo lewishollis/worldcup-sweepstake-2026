@@ -35,6 +35,27 @@ class BenMotsonServiceTest < ActiveSupport::TestCase
     assert_kind_of String, result
   end
 
+  test "leaderboard cache version changes when a group result lands (isolated from tournament status)" do
+    # Anchor: a PostEvent group-stage match so tournament_status is already
+    # :group_stage for BOTH snapshots, leaving GameStateSnapshot.data_version as
+    # the only thing that can move the cache version.
+    portugal = Team.create!(name: "Portugal", flag_url: "https://x.com/pt.svg")
+    ghana    = Team.create!(name: "Ghana", flag_url: "https://x.com/gh.svg")
+    Match.create!(home_team: portugal, away_team: ghana, stage: "Group Stage", status: "PostEvent",
+                  group_name: "Group J", match_id: "bb-anchor", home_score: 3, away_score: 0,
+                  start_time: Time.zone.local(2026, 6, 1, 12, 0, 0))
+
+    svc = BenBotcurdyService.new(:leaderboard)
+    before = svc.send(:leaderboard_cache_version)
+
+    a = Team.create!(name: "Aaa", flag_url: "https://x.com/a.svg")
+    b = Team.create!(name: "Bbb", flag_url: "https://x.com/b.svg")
+    Match.create!(home_team: a, away_team: b, stage: "Group Stage", status: "PostEvent",
+                  group_name: "Group Z", match_id: "bb-gz", home_score: 2, away_score: 1,
+                  start_time: Time.zone.local(2026, 6, 2, 12, 0, 0))
+    refute_equal before, svc.send(:leaderboard_cache_version)
+  end
+
   private
 
   def with_env(vars, &block)

@@ -36,6 +36,21 @@ class MatchInsightServiceTest < ActiveSupport::TestCase
     end
   end
 
+  test "group-stage preview user message includes factual group context" do
+    home = Team.create!(name: "Qatar", flag_url: "https://x.com/qa.svg")
+    away = Team.create!(name: "Switzerland", flag_url: "https://x.com/ch.svg")
+    Match.create!(home_team: home, away_team: away, stage: "Group Stage", status: "PostEvent",
+                  group_name: "Group B", match_id: "mi-played", home_score: 1, away_score: 0,
+                  start_time: Time.zone.local(2026, 6, 13, 17, 0, 0))
+    upcoming = Match.create!(home_team: home, away_team: away, stage: "Group Stage", status: "PreEvent",
+                             group_name: "Group B", match_id: "mi-upcoming",
+                             start_time: Time.zone.local(2026, 6, 17, 17, 0, 0))
+
+    msg = MatchInsightService.new(upcoming).send(:build_user_message)
+    assert_includes msg, "Group B"
+    assert_includes msg, "What this match means:"
+  end
+
   private
 
   def with_env(vars, &block)

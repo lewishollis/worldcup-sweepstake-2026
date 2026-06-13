@@ -26,7 +26,7 @@ class MatchInsightService
     end
     state = relevant_groups.map { |g| "#{g.id}:#{g.total_points}" }.sort.join("|")
     # Persona tag is folded in so changing the voice regenerates previews cached in the old one
-    Digest::SHA256.hexdigest("gary-lineker-v1|#{match.status}|#{state}")[0, 16]
+    Digest::SHA256.hexdigest("gary-lineker-v2|#{match.status}|#{state}|#{GameStateSnapshot.data_version}")[0, 16]
   end
 
   def initialize(match)
@@ -68,6 +68,14 @@ class MatchInsightService
     end
 
     lines << "Provide match preview commentary for: #{@match.home_team.name} vs #{@match.away_team.name} (#{@match.stage})"
+
+    if @match.stage == "Group Stage"
+      group_context = GameStateSnapshot.new.group_context_text(@match)
+      if group_context
+        lines << ""
+        lines << group_context
+      end
+    end
     lines << ""
     lines << "PRE-COMPUTED SWEEPSTAKE SCENARIOS:"
     scenario_labels = { home_win: "#{@match.home_team.name} win", draw: "Draw", away_win: "#{@match.away_team.name} win" }

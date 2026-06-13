@@ -41,7 +41,10 @@ class GameStateSnapshot
     return nil unless match.stage == "Group Stage"
 
     table = @table_by_id[match.home_team_id]
-    return nil unless table
+    # Defensive: only render context when the resolved table is genuinely this
+    # match's group. Avoids ever showing the wrong group's table if a team's
+    # matches were ever associated with more than one group_name.
+    return nil unless table && table.group_name == match.group_name
 
     lines = ["#{table.group_name}: #{match.home_team.name} vs #{match.away_team.name} is a #{table.group_name} match.",
              "Current #{table.group_name} table (counts completed matches only):"]

@@ -9,6 +9,7 @@ class MatchInsightService
     - Be specific: use names, numbers, and positions from the data.
     - Group games award no points directly, but they decide who reaches the knockouts, where all the points are won — so never call a group result meaningless.
     - Never write your own name or sign the commentary — no by-line, no presenter name (not "Gary Lineker", not "John Botson"). Just write the commentary itself.
+    - A team's world ranking may appear next to its name (e.g. "world #5"); lower is stronger. You may comment on strength or who should progress, but ONLY from those numbers — never from outside knowledge.
   PROMPT
 
   def self.cached_call(match)
@@ -27,7 +28,7 @@ class MatchInsightService
     end
     state = relevant_groups.map { |g| "#{g.id}:#{g.total_points}" }.sort.join("|")
     # Persona tag is folded in so changing the voice regenerates previews cached in the old one
-    Digest::SHA256.hexdigest("gary-lineker-v3|#{match.status}|#{state}|#{GameStateSnapshot.data_version}")[0, 16]
+    Digest::SHA256.hexdigest("gary-lineker-v4|#{match.status}|#{state}|#{GameStateSnapshot.data_version}")[0, 16]
   end
 
   def initialize(match)

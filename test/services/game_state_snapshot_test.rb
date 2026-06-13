@@ -44,6 +44,27 @@ class GameStateSnapshotTest < ActiveSupport::TestCase
     assert_match(/\+1/, text) # qualifying-point reminder
   end
 
+  test "world rankings appear in the group table and team summary when known" do
+    @qatar.update_column(:fifa_rank, 56)
+    @swiss.update_column(:fifa_rank, 19)
+
+    snapshot = GameStateSnapshot.new
+    table_text = snapshot.group_context_text(@upcoming)
+    assert_includes table_text, "world #56" # Qatar
+    assert_includes table_text, "world #19" # Switzerland
+
+    summary = snapshot.team_group_summary(@qatar)
+    assert_includes summary, "Qatar (world #56)"
+    assert_includes summary, "Group rivals:"
+    assert_includes summary, "Switzerland (world #19)"
+  end
+
+  test "team summary omits the ranking when none is stored" do
+    summary = GameStateSnapshot.new.team_group_summary(@qatar) # no fifa_rank set
+    assert_includes summary, "Qatar are"
+    refute_includes summary, "world #"
+  end
+
   test "group_context_text is nil for knockout matches" do
     ko = Match.create!(home_team: @qatar, away_team: @swiss, stage: "Last 32", status: "PreEvent",
                        match_id: "ko-1", start_time: Time.zone.local(2026, 7, 1, 20, 0, 0))

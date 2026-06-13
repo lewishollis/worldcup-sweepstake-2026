@@ -4,7 +4,7 @@
 # LeaderboardScenarioAnalyzer-based version, which used a league-style 3/1/0
 # model that contradicted the actual leaderboard.
 class AiLeaderboardInsightsService
-  PERSONA_VERSION = "gary-lineker-v2".freeze
+  PERSONA_VERSION = "gary-lineker-v3".freeze
 
   def initialize(friend)
     @friend   = friend
@@ -69,7 +69,8 @@ class AiLeaderboardInsightsService
       "Voice: warm, articulate, dry gentle wit. Clean enough for a family group chat. 2-3 sentences, no lists or markdown.",
       "",
       "SCORING: points are only won in the KNOCKOUT stages (+1 for reaching the main knockout bracket, then +1 per knockout win). Group-stage matches award no points directly, but they decide who qualifies — so a group win is never meaningless.",
-      "ACCURACY: use only the positions, points, and group situations provided. Never invent numbers or results.",
+      "STRENGTH: each team may come with a world ranking (lower number = stronger). You MAY judge how strong a team is, whether it should go far, and how kind or tough its group looks — but base this ONLY on the ranking numbers provided, never on outside knowledge. If no ranking is given, don't speculate on strength.",
+      "ACCURACY: use only the positions, points, group situations, and rankings provided. Never invent numbers or results.",
       "Never write your own name or sign the update — no by-line, no presenter name (not 'Gary Lineker', not 'John Botson'). Just write the update itself."
     ].join("\n")
   end
@@ -82,7 +83,7 @@ class AiLeaderboardInsightsService
       analysis[:team_summaries].each { |s| lines << "  • #{s}" }
     end
     lines << ""
-    lines << "Write #{@friend.name}'s update now (2-3 sentences), focusing on what their teams need to reach or progress in the knockouts."
+    lines << "Write #{@friend.name}'s update now (2-3 sentences). Focus on what their teams need to reach or progress in the knockouts, and — using the world rankings above — flag which of their teams look strongest / should go far and whether any have a kind or tough group."
     lines.join("\n")
   end
 

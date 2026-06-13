@@ -50,7 +50,7 @@ class GameStateSnapshot
              "Current #{table.group_name} table (counts completed matches only):"]
     table.rows.each do |row|
       flag = FLAG_LABELS.fetch(qualification(table).flag(row.team))
-      lines << "  #{row.position}. #{row.team.name} #{row.points}pts (GD #{format('%+d', row.gd)}) — #{flag} — owned by #{owner_name(row.team) || 'unowned'}"
+      lines << "  #{row.position}. #{row.team.name}#{rank_suffix(row.team)} #{row.points}pts (GD #{format('%+d', row.gd)}) — #{flag} — owned by #{owner_name(row.team) || 'unowned'}"
     end
 
     table.in_progress.each do |m|
@@ -67,16 +67,29 @@ class GameStateSnapshot
   end
 
   # One factual line about a team's group situation, for the per-friend insight.
+  # Includes world ranks (the team's and its group rivals') so the AI can judge
+  # how strong the team is and how kind or tough its group is — strictly from the
+  # provided numbers, never from outside knowledge.
   def team_group_summary(team)
     table = @table_by_id[team.id]
     return nil unless table
 
-    row  = table.rows.find { |r| r.team.id == team.id }
-    flag = FLAG_LABELS.fetch(qualification(table).flag(team))
-    "#{team.name} are #{ordinal(row.position)} in #{table.group_name} on #{row.points}pts — #{flag}."
+    row    = table.rows.find { |r| r.team.id == team.id }
+    flag   = FLAG_LABELS.fetch(qualification(table).flag(team))
+    rivals = table.rows.reject { |r| r.team.id == team.id }
+                  .map { |r| "#{r.team.name}#{rank_suffix(r.team)}" }.join(", ")
+    summary = "#{team.name}#{rank_suffix(team)} are #{ordinal(row.position)} in #{table.group_name} on #{row.points}pts — #{flag}."
+    summary += " Group rivals: #{rivals}." if rivals.present?
+    summary
   end
 
   private
+
+  # " (world #5)" when a FIFA ranking snapshot is available, else "". Lower is
+  # stronger. The AI uses these to talk about strength/likelihood factually.
+  def rank_suffix(team)
+    team.fifa_rank ? " (world ##{team.fifa_rank})" : ""
+  end
 
   def qualification(table)
     @qual_cache[table.group_name] ||= GroupQualification.new(table)

@@ -3,7 +3,7 @@ class UpcomingMatchesInsightService
   TIME_ZONE = "Europe/London".freeze
   # Folded into the cache version so changing the persona regenerates any
   # previously cached insight written in the old voice.
-  PERSONA_VERSION = "gary-lineker-v3".freeze
+  PERSONA_VERSION = "gary-lineker-v4".freeze
 
   def self.call(matches)
     new(matches).call
@@ -90,6 +90,7 @@ class UpcomingMatchesInsightService
       "",
       "RULES:",
       "- Never write your own name or sign the message — no by-line, no presenter name (not 'Gary Lineker', not 'John Botson'). Just write the message itself.",
+      "- A team's world ranking may appear next to its name (e.g. 'world #5'); lower is stronger. You may comment on how strong a side is or who should progress, but ONLY from those numbers — never from outside knowledge.",
       "- Write a quick, friendly group-chat message: 1-2 short paragraphs, no more.",
       "- Be specific: use exact names and points from the data provided.",
       "- Accuracy above all: never invent scores, points, or positions not in the data. Your voice changes the wording, never the facts.",

@@ -13,6 +13,7 @@ class BenBotcurdyService
     - ACCURACY: The gap between 1st and 2nd place is exactly as shown in the standings. Do not exaggerate it.
     - Write naturally and interestingly — no bullet points, no lists, just flowing commentary.
     - Never write your own name or sign the commentary — no by-line, no presenter name (not "Gary Lineker", not "John Botson"). Just write the commentary itself.
+    - A team's world ranking may appear next to its name (e.g. "world #5"); lower is stronger. You may comment on strength or who should progress, but ONLY from those numbers — never from outside knowledge.
   PROMPT
 
   def initialize(context_type, context_data = {})
@@ -180,6 +181,6 @@ class BenBotcurdyService
     totals = Group.includes(teams: [:home_matches, :away_matches]).order(:id).map { |g| "#{g.id}:#{g.total_points}" }.join("|")
     status = TournamentContextService.new.tournament_status.to_s
     # Persona tag is folded in so changing the voice regenerates the cached wrap-up
-    Digest::SHA256.hexdigest("gary-lineker-v3|#{status}|#{totals}|#{GameStateSnapshot.data_version}")[0, 16]
+    Digest::SHA256.hexdigest("gary-lineker-v4|#{status}|#{totals}|#{GameStateSnapshot.data_version}")[0, 16]
   end
 end

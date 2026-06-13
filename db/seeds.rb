@@ -80,6 +80,9 @@ team_data = [
 
 teams = team_data.map { |data| Team.create!(data) }
 
+# Apply the FIFA world-ranking snapshot (strength signal for AI commentary)
+teams.each { |t| t.update_column(:fifa_rank, Team::FIFA_RANKS[t.name]) }
+
 # Groups from the actual draw, with friend assignments from the sweepstake draw
 groups_data = {
   "Group 1"  => { friend: "Ella",    teams: ["Spain", "Australia", "Tunisia", "Haiti"] },

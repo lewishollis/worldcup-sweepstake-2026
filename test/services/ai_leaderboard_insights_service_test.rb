@@ -41,6 +41,33 @@ class AiLeaderboardInsightsServiceTest < ActiveSupport::TestCase
     assert_includes msg, "Group B"
   end
 
+  test "prompt carries world rankings and permits strength judgement strictly from them" do
+    friend = Friend.create!(name: "Lewis")
+    group  = Group.create!(name: "LG", friend: friend)
+    portugal = team("Portugal"); rival = team("Panama")
+    portugal.update_column(:fifa_rank, 5)
+    rival.update_column(:fifa_rank, 34)
+    group.teams << portugal
+    Match.create!(home_team: portugal, away_team: rival, stage: "Group Stage", status: "PostEvent",
+                  group_name: "Group F", match_id: "al-str", home_score: 1, away_score: 0,
+                  start_time: Time.zone.local(2026, 6, 13, 17, 0, 0))
+
+    service  = AiLeaderboardInsightsService.new(friend)
+    user_msg = service.send(:build_user_message, service.send(:build_analysis))
+    sys_msg  = service.send(:build_system_prompt)
+
+    assert_includes user_msg, "Portugal (world #5)"
+    assert_includes user_msg, "world #34" # rival's rank, for judging group difficulty
+    assert_includes sys_msg, "STRENGTH"
+    assert_includes sys_msg, "never on outside knowledge"
+  end
+
+  test "FIFA_RANKS snapshot covers the 48-team field with sane values" do
+    assert_equal 48, Team::FIFA_RANKS.size
+    assert_equal 5, Team::FIFA_RANKS["Portugal"]
+    assert_equal 1, Team::FIFA_RANKS["Argentina"]
+  end
+
   test "returns a winner message for the friend in first place" do
     friend = Friend.create!(name: "Solo")
     Group.create!(name: "SG", friend: friend).teams << team("Portugal")

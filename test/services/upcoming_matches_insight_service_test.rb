@@ -19,12 +19,14 @@ class UpcomingMatchesInsightServiceTest < ActiveSupport::TestCase
       home_team: @mexico, away_team: @safrica, stage: "Group Stage", status: "PreEvent",
       match_id: "umis-1", home_score: 0, away_score: 0,
       start_time: Time.zone.local(2026, 6, 11, 20, 0, 0),
+      group_name: "Group A",
       home_friend_name: "No owner", away_friend_name: "No owner"
     )
     @later_match = Match.create!(
       home_team: @spain, away_team: @haiti, stage: "Group Stage", status: "PreEvent",
       match_id: "umis-2", home_score: 0, away_score: 0,
-      start_time: Time.zone.local(2026, 6, 13, 17, 0, 0)
+      start_time: Time.zone.local(2026, 6, 13, 17, 0, 0),
+      group_name: "Group H"
     )
   end
 
@@ -181,5 +183,25 @@ class UpcomingMatchesInsightServiceTest < ActiveSupport::TestCase
     version_after = UpcomingMatchesInsightService.new([@tomorrow_match]).send(:cache_version)
 
     refute_equal version_before, version_after
+  end
+
+  test "group match user message includes factual group context, not the old one-liner" do
+    service = UpcomingMatchesInsightService.new([@tomorrow_match])
+    prompt = service.send(:build_user_message)
+
+    refute_includes prompt, "no points awarded directly"
+    assert_includes prompt, "Group A"
+    assert_includes prompt, "What this match means:"
+  end
+
+  test "cache version changes when a group result lands" do
+    service = UpcomingMatchesInsightService.new([@tomorrow_match])
+    before = service.send(:cache_version)
+    ghana = Team.create!(name: "Ghana", flag_url: "https://x.com/gh.svg")
+    egypt = Team.create!(name: "Egypt", flag_url: "https://x.com/eg.svg")
+    Match.create!(home_team: ghana, away_team: egypt, stage: "Group Stage", status: "PostEvent",
+                  group_name: "Group K", match_id: "gk-result", home_score: 1, away_score: 0,
+                  start_time: Time.zone.local(2026, 6, 11, 18, 0, 0))
+    refute_equal before, service.send(:cache_version)
   end
 end

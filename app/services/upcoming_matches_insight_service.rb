@@ -3,7 +3,7 @@ class UpcomingMatchesInsightService
   TIME_ZONE = "Europe/London".freeze
   # Folded into the cache version so changing the persona regenerates any
   # previously cached insight written in the old voice.
-  PERSONA_VERSION = "gary-lineker-v1".freeze
+  PERSONA_VERSION = "gary-lineker-v2".freeze
 
   def self.call(matches)
     new(matches).call
@@ -65,14 +65,19 @@ class UpcomingMatchesInsightService
   end
 
   def generate
-    context = TournamentContextService.new
-    system_prompt = build_system_prompt(context)
-    user_message  = build_user_message
+    snapshot      = GameStateSnapshot.new
+    system_prompt = build_system_prompt(snapshot)
+    user_message  = build_user_message(snapshot)
 
     GroqClient.call(system_prompt: system_prompt, user_message: user_message, max_tokens: 600)
   end
 
-  def build_system_prompt(context)
+  def build_system_prompt(context_or_snapshot = GameStateSnapshot.new)
+    leaderboard = if context_or_snapshot.respond_to?(:leaderboard_text)
+                    context_or_snapshot.leaderboard_text
+                  else
+                    TournamentContextService.new.leaderboard_text
+                  end
     [
       "You are Gary Lineker, the former England striker turned BBC Match of the Day presenter, sending a short message to friends about upcoming World Cup matches in their sweepstake.",
       "Voice: warm, articulate and quick with a dry, gentle wit — the odd pun and a self-deprecating nod to your playing days are welcome. Polished but never pompous, and clean enough for a family group chat.",
@@ -92,12 +97,12 @@ class UpcomingMatchesInsightService
       "- If any matches are listed under MATCHES ALREADY PLAYED, open with one brief sentence acknowledging they've happened and pointing people to the highlights. Never mention the score, goalscorers, winner, or result of these matches under any circumstances.",
       "- No bullet points, no markdown, no lists. Just flowing prose.",
       "",
-      "CURRENT STANDINGS:",
-      context.leaderboard_text
+      "CURRENT STANDINGS (points totals only — do not list a person's other teams as if they are playing):",
+      leaderboard
     ].join("\n")
   end
 
-  def build_user_message
+  def build_user_message(snapshot = GameStateSnapshot.new)
     today = Time.current.in_time_zone(TIME_ZONE).to_date
     day   = match_day
     day_label = day == today ? "today (#{day.strftime('%A %d %B %Y')})" : day.strftime("%A %d %B %Y")
@@ -147,7 +152,8 @@ class UpcomingMatchesInsightService
           Rails.logger.warn("ScenarioEngine failed for match #{match.id}: #{e.message}")
         end
       else
-        lines << "  (Group match — no points awarded directly, but the result shapes who qualifies for the knockouts, where all the points are won)"
+        group_context = snapshot.group_context_text(match)
+        lines << group_context.lines.map { |l| "  #{l.chomp}" }.join("\n") if group_context
       end
     end
 
@@ -166,6 +172,6 @@ class UpcomingMatchesInsightService
     leaderboard = Group.includes(teams: [:home_matches, :away_matches]).order(:id).map { |g| "#{g.id}:#{g.total_points}" }.join("|")
     status      = TournamentContextService.new.tournament_status.to_s
     today       = Time.current.in_time_zone(TIME_ZONE).to_date.iso8601
-    Digest::SHA256.hexdigest("#{PERSONA_VERSION}|#{today}|#{match_ids}|#{recent_ids}|#{leaderboard}|#{status}")[0, 16]
+    Digest::SHA256.hexdigest("#{PERSONA_VERSION}|#{today}|#{match_ids}|#{recent_ids}|#{leaderboard}|#{status}|#{GameStateSnapshot.data_version}")[0, 16]
   end
 end

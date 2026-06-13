@@ -30,6 +30,17 @@
           </div>
         </section>
 
+        <!-- Per-friend insight -->
+        <% if @friend_insight.present? %>
+          <section class="insights-box mb-8">
+            <div class="insights-header">
+              <i class="fas fa-microphone insights-icon"></i>
+              <h3 class="insights-title">Gary Lineker on <%= @group.friend&.name %></h3>
+            </div>
+            <p class="insights-text"><%= @friend_insight %></p>
+          </section>
+        <% end %>
+
         <!-- Teams -->
         <section>
           <h3 class="text-lg font-semibold text-text-primary-light dark:text-text-primary-dark mb-3">Teams</h3>

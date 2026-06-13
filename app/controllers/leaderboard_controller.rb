@@ -12,7 +12,8 @@ class LeaderboardController < ApplicationController
 
   def show
     if params[:id] =~ /\A\d+\z/
-      @group = Group.includes(teams: [:home_matches, :away_matches]).find(params[:id])
+      @group = Group.includes(:friend, teams: [:home_matches, :away_matches]).find(params[:id])
+      @friend_insight = AiLeaderboardInsightsService.new(@group.friend).generate_personalized_insight[:commentary] if @group.friend
       render :group_detail
     else
       # Best penalty streak per friend — the official tie-breaker on points

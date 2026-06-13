@@ -47,12 +47,9 @@ class MatchesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 2.0, @home_team.reload.progression_score
   end
 
-  test "group-stage match preview page renders the John Botson preview box" do
+  test "per-match preview box is temporarily disabled (focus is the daily summary)" do
     home = Team.create!(name: "Qatar", flag_url: "https://x.com/qa.svg")
     away = Team.create!(name: "Switzerland", flag_url: "https://x.com/ch.svg")
-    Match.create!(home_team: home, away_team: away, stage: "Group Stage", status: "PostEvent",
-                  group_name: "Group B", match_id: "mc-played", home_score: 1, away_score: 0,
-                  start_time: Time.zone.local(2026, 6, 13, 17, 0, 0))
     upcoming = Match.create!(home_team: home, away_team: away, stage: "Group Stage", status: "PreEvent",
                              group_name: "Group B", match_id: "mc-upcoming",
                              start_time: Time.zone.local(2026, 6, 17, 17, 0, 0))
@@ -60,6 +57,6 @@ class MatchesControllerTest < ActionDispatch::IntegrationTest
     get match_path(upcoming)
 
     assert_response :success
-    assert_select "h3.commentary-title", text: /John Botson's Preview/
+    assert_select "h3.commentary-title", false # the John Botson preview box is not rendered
   end
 end

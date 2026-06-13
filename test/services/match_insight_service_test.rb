@@ -48,7 +48,7 @@ class MatchInsightServiceTest < ActiveSupport::TestCase
 
     msg = MatchInsightService.new(upcoming).send(:build_user_message)
     assert_includes msg, "Group B"
-    assert_includes msg, "What this match means:"
+    assert_includes msg, "What tonight's result does"
   end
 
   private

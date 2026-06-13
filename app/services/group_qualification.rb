@@ -18,19 +18,38 @@ class GroupQualification
     classify(team.id, completions)
   end
 
-  # For an upcoming group match, returns the per-team flag under each outcome:
-  # { home_win: { home: {team:, flag:}, away: {team:, flag:} }, draw: {...}, away_win: {...} }
+  # For an upcoming group match, per outcome, the per-team qualification flag AND
+  # the resulting group standing (where the result moves them in the table, as it
+  # currently stands — points only):
+  # { home_win: { home: {team:, flag:, position:, tied:}, away: {...} }, draw: {...}, away_win: {...} }
+  # `position` is 1 + teams strictly above; `tied` is true when another team is
+  # level on points (so position 1 + tied = joint top, not clear top).
   def effects(match)
     OUTCOMES.each_with_object({}) do |outcome, result|
       comps = completions(fixed: { match.id => [match, outcome] })
       result[outcome] = {
-        home: { team: match.home_team, flag: classify(match.home_team_id, comps) },
-        away: { team: match.away_team, flag: classify(match.away_team_id, comps) }
+        home: team_effect(match.home_team, match.home_team_id, match, outcome, comps),
+        away: team_effect(match.away_team, match.away_team_id, match, outcome, comps)
       }
     end
   end
 
   private
+
+  def team_effect(team, team_id, match, outcome, comps)
+    standing_after(match, outcome, team_id).merge(team: team, flag: classify(team_id, comps))
+  end
+
+  # The team's group standing if this match finished with `outcome`, applied to
+  # the current standings (other unplayed games left as-is). Points only.
+  def standing_after(match, outcome, team_id)
+    points = apply_outcome(@base.dup, match, outcome)
+    mine   = points[team_id]
+    {
+      position: 1 + points.count { |id, p| id != team_id && p > mine },
+      tied:     points.any?  { |id, p| id != team_id && p == mine }
+    }
+  end
 
   def remaining_matches
     @remaining_matches ||= @table.matches.reject { |m| m.status == "PostEvent" }

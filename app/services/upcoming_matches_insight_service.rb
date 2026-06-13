@@ -3,7 +3,7 @@ class UpcomingMatchesInsightService
   TIME_ZONE = "Europe/London".freeze
   # Folded into the cache version so changing the persona regenerates any
   # previously cached insight written in the old voice.
-  PERSONA_VERSION = "gary-lineker-v4".freeze
+  PERSONA_VERSION = "gary-lineker-v5".freeze
 
   def self.call(matches)
     new(matches).call
@@ -90,8 +90,11 @@ class UpcomingMatchesInsightService
       "",
       "RULES:",
       "- Never write your own name or sign the message — no by-line, no presenter name (not 'Gary Lineker', not 'John Botson'). Just write the message itself.",
-      "- A team's world ranking may appear next to its name (e.g. 'world #5'); lower is stronger. You may comment on how strong a side is or who should progress, but ONLY from those numbers — never from outside knowledge.",
-      "- Write a quick, friendly group-chat message: 1-2 short paragraphs, no more.",
+      "- World rankings may appear next to team names (e.g. 'world #5'); lower is stronger. You MAY forecast: call out the favourite, say a strong side should go through, and judge whether a group looks kind or tough — but base every such call ONLY on the rankings and results provided, never on outside knowledge. Hard facts (guaranteed/cannot finish top 2) are certainties; everything else is a forecast, so phrase it as one ('should', 'look favourites', 'likely').",
+      "- Use the supplied 'What tonight's result does' lines to tell people where a result moves a team — e.g. 'a win puts them top of the group' — and tie that to the owner's chances of reaching the knockouts.",
+      "- Name the group favourites and mention each side's run-in (their remaining group games and how tough the opponents are by ranking) when it's relevant.",
+      "- Balance the football and the sweepstake: cover both how the match looks and what it means for the owners.",
+      "- Length: a short paragraph per match, plus a brief opener and sign-off. Keep it tight, not a thesis.",
       "- Be specific: use exact names and points from the data provided.",
       "- Accuracy above all: never invent scores, points, or positions not in the data. Your voice changes the wording, never the facts.",
       "- ONLY discuss the matches listed in the message. Never mention any other fixture or matchup.",
@@ -160,7 +163,7 @@ class UpcomingMatchesInsightService
     end
 
     lines << ""
-    lines << "Write a short group-chat message (1-2 short paragraphs) about the matches on #{day_label}, explaining what they mean for each person in the sweepstake. For group games, focus on what a result would do for qualification and the run to the knockout points. Only mention the matches listed above. Be specific with names, dates, and numbers."
+    lines << "Write the group-chat message about the matches on #{day_label}: a short paragraph per match plus a brief opener and sign-off. For each game, weave together how it looks (favourites by ranking, who should progress, how kind the group/run-in is) and what it means for the owners — including where tonight's result would move a team in the table and their chances of reaching the knockouts. Forecasts are welcome but must come only from the rankings and results above; never invent anything. Only mention the matches listed above."
     lines.join("\n")
   end
 

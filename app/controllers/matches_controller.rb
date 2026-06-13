@@ -115,7 +115,9 @@ class MatchesController < ApplicationController
     @match = Match.includes(:home_team, :away_team).find(params[:id])
     if @match.status == "PreEvent"
       @scenarios = ScenarioEngine.new(@match).call
-      @match_insight = MatchInsightService.cached_call(@match)
+      # Per-match John Botson preview temporarily disabled while we refine the
+      # daily upcoming-matches summary. Re-enable by restoring this line:
+      # @match_insight = MatchInsightService.cached_call(@match)
     end
   end
 

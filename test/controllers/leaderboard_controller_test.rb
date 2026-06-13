@@ -6,7 +6,7 @@ class LeaderboardControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "group detail page renders a per-friend John Botson insight" do
+  test "per-friend insight is temporarily disabled (focus is the daily summary)" do
     friend = Friend.create!(name: "Ben")
     group  = Group.create!(name: "Group 3", friend: friend)
     group.teams << Team.create!(name: "Qatar", flag_url: "https://x.com/qa.svg")
@@ -14,6 +14,6 @@ class LeaderboardControllerTest < ActionDispatch::IntegrationTest
     get leaderboard_path(group)
 
     assert_response :success
-    assert_select "h3.insights-title", text: /John Botson/
+    assert_select "h3.insights-title", false # the per-friend insight box is not rendered
   end
 end

@@ -13,14 +13,18 @@ class LeaderboardController < ApplicationController
   def show
     if params[:id] =~ /\A\d+\z/
       @group = Group.includes(:friend, teams: [:home_matches, :away_matches]).find(params[:id])
-      @friend_insight = AiLeaderboardInsightsService.new(@group.friend).generate_personalized_insight[:commentary] if @group.friend
+      # Per-friend John Botson insight temporarily disabled while we refine the
+      # daily upcoming-matches summary. Re-enable by restoring this line:
+      # @friend_insight = AiLeaderboardInsightsService.new(@group.friend).generate_personalized_insight[:commentary] if @group.friend
       render :group_detail
     else
       # Best penalty streak per friend — the official tie-breaker on points
       @best_streaks = GameScore.best_per_friend.to_h { |e| [e[:friend_id], e[:best_streak]] }
       @leaderboard = Group.includes(:friend, teams: [:home_matches, :away_matches])
                           .sort_by { |group| [-group.total_points, -(@best_streaks[group.friend_id] || 0)] }
-      @ben_botcurdy_insight = BenBotcurdyService.new(:leaderboard).generate_insight
+      # Leaderboard wrap-up insight temporarily disabled while we refine the daily
+      # upcoming-matches summary. Re-enable by restoring this line:
+      # @ben_botcurdy_insight = BenBotcurdyService.new(:leaderboard).generate_insight
     end
   end
 

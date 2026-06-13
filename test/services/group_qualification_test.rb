@@ -56,6 +56,20 @@ class GroupQualificationTest < ActiveSupport::TestCase
     assert_equal :in_contention,      gq.flag(c)
   end
 
+  test "effects report the resulting group position (a win goes top)" do
+    a, b, c, d = team("Aaa"), team("Bbb"), team("Ccc"), team("Ddd")
+    match("GP", a, c, status: "PostEvent", hs: 1, as: 0, mid: "gp-ac") # Aaa 3
+    match("GP", b, d, status: "PostEvent", hs: 1, as: 0, mid: "gp-bd") # Bbb 3
+    upcoming = match("GP", a, b, status: "PreEvent", mid: "gp-ab")
+    match("GP", c, d, status: "PreEvent", mid: "gp-cd")
+
+    gq  = GroupQualification.new(GroupTable.new("GP", Match.where(group_name: "GP").to_a))
+    eff = gq.effects(upcoming)
+
+    assert_equal 1, eff[:home_win][:home][:position] # Aaa win -> top of the group
+    assert_equal 2, eff[:away_win][:home][:position] # Bbb win -> Aaa drops to 2nd
+  end
+
   test "effects: a win clinches top 2 for a contender" do
     a, b, c, d = team("Tt"), team("Uu"), team("Vv"), team("Ww")
     match("G3", a, b, status: "PostEvent", hs: 1, as: 0, mid: "g3-ab")

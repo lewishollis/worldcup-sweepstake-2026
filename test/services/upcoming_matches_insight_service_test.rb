@@ -73,6 +73,14 @@ class UpcomingMatchesInsightServiceTest < ActiveSupport::TestCase
     assert_includes prompt, "Never state or imply a different date"
   end
 
+  test "system prompt allows grounded forecasts and table-movement framing" do
+    prompt = UpcomingMatchesInsightService.new([@tomorrow_match]).send(:build_system_prompt, TournamentContextService.new)
+
+    assert_includes prompt, "You MAY forecast"
+    assert_includes prompt, "puts them top of the group"
+    assert_match(/run-in/i, prompt)
+  end
+
   test "system prompt explains that group matches matter for knockout progression" do
     service = UpcomingMatchesInsightService.new([@tomorrow_match])
     prompt = service.send(:build_system_prompt, TournamentContextService.new)
@@ -194,7 +202,7 @@ class UpcomingMatchesInsightServiceTest < ActiveSupport::TestCase
 
     refute_includes prompt, "no points awarded directly"
     assert_includes prompt, "Group A"
-    assert_includes prompt, "What this match means:"
+    assert_includes prompt, "What tonight's result does"
   end
 
   test "cache version changes when a group result lands (isolated from tournament status)" do

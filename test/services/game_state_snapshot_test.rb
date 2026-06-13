@@ -65,6 +65,30 @@ class GameStateSnapshotTest < ActiveSupport::TestCase
     refute_includes summary, "world #"
   end
 
+  test "group context shows favourites, table movement, and the run-in" do
+    strong = Team.create!(name: "Strongteam", flag_url: "https://x.com/s.svg"); strong.update_column(:fifa_rank, 5)
+    mid    = Team.create!(name: "Midteam",    flag_url: "https://x.com/m.svg"); mid.update_column(:fifa_rank, 30)
+    weak   = Team.create!(name: "Weakteam",   flag_url: "https://x.com/w.svg"); weak.update_column(:fifa_rank, 60)
+    other  = Team.create!(name: "Otherteam",  flag_url: "https://x.com/o.svg"); other.update_column(:fifa_rank, 80)
+
+    g = lambda do |id, home, away, status, hs = nil, as = nil, day = 18|
+      Match.create!(home_team: home, away_team: away, stage: "Group Stage", status: status,
+                    group_name: "GZ", match_id: id, home_score: hs, away_score: as,
+                    start_time: Time.zone.local(2026, 6, day, 17, 0, 0))
+    end
+    g.call("gz-wo", weak, other, "PostEvent", 1, 1)          # both on 1pt
+    tonight = g.call("gz-sm", strong, mid, "PreEvent", nil, nil, 14)
+    g.call("gz-sw", strong, weak, "PreEvent", nil, nil, 18)  # Strongteam's run-in
+    g.call("gz-mo", mid, other, "PreEvent", nil, nil, 18)    # Midteam's run-in
+
+    text = GameStateSnapshot.new.group_context_text(tonight)
+    assert_includes text, "Group favourites"
+    assert_includes text, "Strongteam (world #5)"
+    assert_includes text, "top of the group"                 # a win sends them top
+    assert_includes text, "Strongteam's remaining GZ games"
+    assert_includes text, "vs Weakteam (world #60)"
+  end
+
   test "group_context_text is nil for knockout matches" do
     ko = Match.create!(home_team: @qatar, away_team: @swiss, stage: "Last 32", status: "PreEvent",
                        match_id: "ko-1", start_time: Time.zone.local(2026, 7, 1, 20, 0, 0))

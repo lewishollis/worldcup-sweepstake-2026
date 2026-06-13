@@ -57,11 +57,22 @@ class GameStateSnapshot
       lines << "  (in progress: #{m.home_team.name} vs #{m.away_team.name} — not yet counted)"
     end
 
-    lines << "What this match means:"
+    favourites = group_favourites(table)
+    if favourites.any?
+      lines << "Group favourites (strongest by world ranking): #{favourites.map { |t| "#{t.name}#{rank_suffix(t)}" }.join(', ')}."
+    end
+
+    lines << "What tonight's result does (as the table stands):"
     effects = qualification(table).effects(match)
-    lines << "  If #{match.home_team.name} win: #{effect_phrase(effects[:home_win][:home], match.home_team)}"
-    lines << "  If draw: #{effect_phrase(effects[:draw][:home], match.home_team)}; #{effect_phrase(effects[:draw][:away], match.away_team)}"
-    lines << "  If #{match.away_team.name} win: #{effect_phrase(effects[:away_win][:away], match.away_team)}"
+    lines << "  If #{match.home_team.name} win: #{effect_phrase(effects[:home_win][:home])}"
+    lines << "  If draw: #{effect_phrase(effects[:draw][:home])}; #{effect_phrase(effects[:draw][:away])}"
+    lines << "  If #{match.away_team.name} win: #{effect_phrase(effects[:away_win][:away])}"
+
+    [match.home_team, match.away_team].each do |team|
+      run_in = remaining_group_fixtures(table, team, except: match)
+      lines << "  #{team.name}'s remaining #{table.group_name} games: #{run_in.join('; ')}" if run_in.any?
+    end
+
     lines << "Reminder: group games award no points directly. Reaching the knockouts — top 2, or one of the best third-placed teams — is where the owner's points begin (+1 for qualifying), with more points for each knockout win."
     lines.join("\n")
   end
@@ -95,12 +106,43 @@ class GameStateSnapshot
     @qual_cache[table.group_name] ||= GroupQualification.new(table)
   end
 
-  def effect_phrase(team_effect, team)
-    case team_effect[:flag]
-    when :clinched_top2      then "#{team.name} would be guaranteed top 2 → #{owner_name(team) || 'no owner'} banks +1 and stays live for knockout points"
-    when :cannot_finish_top2 then "#{team.name} could not finish top 2, and would need to be among the best third-placed teams to reach the knockouts"
-    else "#{team.name} stay in contention but are not yet safe"
-    end
+  # Describes where an outcome moves a team in the table and what it means for
+  # qualification (and so for the owner). Uses the resulting position from
+  # GroupQualification#effects.
+  def effect_phrase(team_effect)
+    team  = team_effect[:team]
+    place =
+      if team_effect[:position] == 1
+        team_effect[:tied] ? "up among the group leaders" : "top of the group"
+      else
+        "#{team_effect[:tied] ? 'joint ' : ''}#{ordinal(team_effect[:position])} in the group"
+      end
+    meaning =
+      case team_effect[:flag]
+      when :clinched_top2      then "guaranteed top 2 — #{owner_name(team) || 'no owner'} banks +1 and is live for knockout points"
+      when :cannot_finish_top2 then "can no longer finish top 2 (best-third hopes only)"
+      else "still in contention to qualify"
+      end
+    "#{team.name} go #{place}, #{meaning}"
+  end
+
+  # The two strongest teams in the group by world ranking (lowest numbers).
+  # Teams without a ranking are excluded.
+  def group_favourites(table, count: 2)
+    table.teams.select(&:fifa_rank).sort_by(&:fifa_rank).first(count)
+  end
+
+  # A team's not-yet-played group fixtures other than `except` — the run-in —
+  # as "vs Opponent (world #n) on 17 Jun", ordered by date.
+  def remaining_group_fixtures(table, team, except:)
+    table.matches
+         .select { |m| m.status != "PostEvent" && m.id != except.id && (m.home_team_id == team.id || m.away_team_id == team.id) }
+         .sort_by { |m| m.start_time || Time.at(0) }
+         .map do |m|
+           opponent = m.home_team_id == team.id ? m.away_team : m.home_team
+           date     = m.start_time ? m.start_time.in_time_zone("Europe/London").strftime("%-d %b") : "TBC"
+           "vs #{opponent.name}#{rank_suffix(opponent)} on #{date}"
+         end
   end
 
   def owner_name(team)

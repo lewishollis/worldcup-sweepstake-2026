@@ -47,6 +47,36 @@ class GameStateSnapshotTest < ActiveSupport::TestCase
     refute_includes text, "final group game"
   end
 
+  test "group context flags an opening match when neither side has played yet" do
+    spain = Team.create!(name: "Spain", flag_url: "https://x.com/es.svg")
+    fiji  = Team.create!(name: "Fiji",  flag_url: "https://x.com/fj.svg")
+    peru  = Team.create!(name: "Peru",  flag_url: "https://x.com/pe.svg")
+    iran  = Team.create!(name: "Iran",  flag_url: "https://x.com/ir.svg")
+
+    opener = Match.create!(home_team: spain, away_team: fiji, stage: "Group Stage",
+                           status: "PreEvent", group_name: "Group Z", match_id: "gz-open",
+                           start_time: Time.zone.local(2026, 6, 13, 17, 0, 0))
+    Match.create!(home_team: peru, away_team: iran, stage: "Group Stage",
+                  status: "PreEvent", group_name: "Group Z", match_id: "gz-other",
+                  start_time: Time.zone.local(2026, 6, 13, 20, 0, 0))
+
+    text = GameStateSnapshot.new.group_context_text(opener)
+    assert_includes text, "opening Group Z match for both Spain and Fiji"
+  end
+
+  test "group context omits the opening-match note once both sides have played" do
+    # Qatar and Switzerland have each played two games in the setup.
+    text = GameStateSnapshot.new.group_context_text(@upcoming)
+    refute_includes text, "opening"
+  end
+
+  test "a result that leaves teams level at the top says so on points, not vaguely" do
+    # Qatar and Switzerland both sit on 6pts, so a draw keeps them joint top.
+    text = GameStateSnapshot.new.group_context_text(@upcoming)
+    assert_includes text, "level on points at the top of the group"
+    refute_includes text, "among the group leaders"
+  end
+
   test "world rankings appear in the group table and team summary when known" do
     @qatar.update_column(:fifa_rank, 56)
     @swiss.update_column(:fifa_rank, 19)
@@ -88,6 +118,8 @@ class GameStateSnapshotTest < ActiveSupport::TestCase
     assert_includes text, "Group favourites"
     assert_includes text, "Strongteam (world #5)"
     assert_includes text, "top of the group"                 # a win sends them top
+    # Strongteam is still in contention, so the live chance to qualify is spelled out.
+    assert_includes text, "still in with a chance of going through"
     # Strongteam has one group game left after tonight and is in contention, so the
     # pivotal final-game line is surfaced.
     assert_includes text, "final group game (could decide their fate)"

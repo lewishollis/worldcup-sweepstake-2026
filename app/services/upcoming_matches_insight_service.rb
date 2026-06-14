@@ -1,9 +1,14 @@
 class UpcomingMatchesInsightService
   CACHE_KEY = "upcoming_matches_insight".freeze
+  # Remembers the last football fact served so the next render never repeats it.
+  # Kept OUT of the main cached body so the fact varies on every page view even
+  # while the briefing itself is cached.
+  FOOTBALL_FACT_KEY = "upcoming_matches_football_fact".freeze
+  FOOTBALL_FACT_VERSION = "v1".freeze
   TIME_ZONE = "Europe/London".freeze
   # Folded into the cache version so changing the persona regenerates any
   # previously cached insight written in the old voice.
-  PERSONA_VERSION = "gary-lineker-v9".freeze
+  PERSONA_VERSION = "gary-lineker-v11".freeze
   # Owners based in Vietnam — matches involving their teams also show Vietnam time.
   VIETNAM_FRIENDS = ["Richard", "Nhiên"].freeze
   VIETNAM_TIME_ZONE = "Asia/Ho_Chi_Minh".freeze
@@ -38,13 +43,14 @@ class UpcomingMatchesInsightService
     version = cache_version
     if AiInsightCache.table_exists?
       cached = AiInsightCache.fetch(key: CACHE_KEY, version: version)
-      return cached if cached
+      # Append a fresh fact even on a cache hit, so it differs every render.
+      return with_football_fact(cached) if cached
     end
 
     result = generate
     if result
       AiInsightCache.store(key: CACHE_KEY, version: version, content: result) if AiInsightCache.table_exists?
-      result
+      with_football_fact(result)
     else
       # Fallback is deliberately not cached so a real insight can replace it next request
       "Check the standings for today's sweepstake picture."
@@ -89,9 +95,25 @@ class UpcomingMatchesInsightService
     user_message  = build_user_message(snapshot)
 
     message = GroqClient.call(system_prompt: system_prompt, user_message: user_message, max_tokens: 600)
-    # Append a verified fact as the sign-off, so it's always true (the model is
-    # told not to write its own sign-off).
-    message && "#{message.strip}\n\nFootball fact: #{FOOTBALL_FACTS.sample}"
+    # Return the briefing body only — the verified football fact is appended later
+    # (per render, not per cache) so it stays fresh every time. See #with_football_fact.
+    message&.strip
+  end
+
+  # Appends a verified, true fact as the sign-off. Done outside the cache so the
+  # fact changes on every render even when the briefing body is cached.
+  def with_football_fact(body)
+    "#{body.strip}\n\nFootball fact: #{next_football_fact}"
+  end
+
+  # A curated fact that is never the same as the one served on the previous render.
+  def next_football_fact
+    return FOOTBALL_FACTS.sample unless AiInsightCache.table_exists?
+
+    previous = AiInsightCache.fetch(key: FOOTBALL_FACT_KEY, version: FOOTBALL_FACT_VERSION)
+    fact = (FOOTBALL_FACTS - [previous]).sample
+    AiInsightCache.store(key: FOOTBALL_FACT_KEY, version: FOOTBALL_FACT_VERSION, content: fact)
+    fact
   end
 
   def build_system_prompt(context_or_snapshot = GameStateSnapshot.new)
@@ -107,28 +129,29 @@ class UpcomingMatchesInsightService
       "",
       "STRUCTURE — follow it exactly:",
       "- One short intro line.",
-      "- Then ONE short paragraph per match, in this order: (1) the two teams, their owners, and the kick-off time; (2) the group favourites by ranking; (3) what a win or a draw does for the table. Do NOT list a side's upcoming fixtures UNLESS a 'final group game (could decide their fate)' line is supplied for them — only then, mention who they face next.",
+      "- Then ONE paragraph per match (2–5 short sentences), in this order: (1) the two teams, their owners, and the kick-off time; (2) if an opening-match note is supplied, mention it's their first group game; (3) the group favourites by ranking, with a brief underdog/upset angle when the ranking gap is wide; (4) what a win or a draw does for the table and for qualification; (5) optionally ONE brief, well-known historical note about a team in the fixture. Do NOT list a side's upcoming fixtures UNLESS a 'final group game (could decide their fate)' line is supplied for them — only then, mention who they face next.",
       "- Do NOT write a sign-off or good-luck line. End after the final match — a football fact is added automatically.",
       "",
       "STYLE EXAMPLE — copy this structure and plain tone; do NOT reuse its teams or names:",
       "\"\"\"",
       "The tournament continues, with two matches today.",
-      "First up, Qatar, owned by Ben, face Switzerland, owned by Nhiên, at 20:00 UK time (02:00 Vietnam time). Switzerland and Canada are the group favourites by ranking. A win for either side would put them top of the group; a draw leaves both among the leaders.",
-      "Later, Brazil, owned by Aimee, take on Morocco, owned by Bea, at 23:00 UK time. Both are among the favourites to top the group. A win for either would put them top; a draw leaves both well placed.",
+      "First up, Germany, owned by Emma, face Curaçao, owned by Jamie, at 18:00 UK time. It's the opening Group E match for both sides. Germany are the group's top-ranked side and clear favourites; a Curaçao win would be a major upset on the rankings. A win for Germany would put them top of the group; a draw leaves both level on points and still in with a chance of going through. Germany have reached more World Cup finals than any other nation.",
+      "Later, Netherlands, owned by Richard, take on Japan, owned by Bea, at 21:00 UK time / 03:00 Vietnam time. It's the opening Group F fixture, and on the rankings the two strongest sides in the group. A win for either would put them in a strong early position to qualify; a draw leaves both level at the top.",
       "\"\"\"",
       "",
       "RULES:",
       "- Never write your own name or sign the message — no by-line, no presenter name (not 'Gary Lineker', not 'John Botson'). Just write the briefing.",
       "- Be concise and scannable: short sentences, and state each point ONCE — never restate the same idea in different words.",
-      "- Combine the result outcomes into ONE short sentence where you can, e.g. 'A win for either side would put them top of the group; a draw leaves both among the leaders.' Don't write a separate clause for each team and each outcome.",
-      "- Don't tack on 'in contention' / 'still in contention' once you've said a result puts a side top — it's implied. Only state qualification status when it's a hard fact (guaranteed through, or out).",
+      "- Combine the result outcomes into ONE short sentence where you can, e.g. 'A win for either side would put them top of the group; a draw leaves both level on points and still in with a chance of going through.' Don't write a separate clause for each team and each outcome.",
+      "- State the qualification picture plainly, using the supplied notes: when teams are level on points, say they're level on points (never 'among the leaders' or similar vagueness); when a side still has a chance of reaching the next round, say so once; when it's a hard fact (guaranteed through, or out), state that certainty. Don't repeat the same status more than once per match.",
       "- Include each match's kick-off time exactly as given. When both a UK time and a Vietnam time are shown, include both.",
       "- No hype or filler. Avoid words and phrases like 'thrilling', 'mouth-watering', 'cracking', 'feast', 'giant leap', 'looking to make a statement', 'football gods'.",
       "- Refer to ownership plainly as 'Team, owned by Friend'.",
-      "- World rankings may appear next to team names (e.g. 'world #5'); lower is stronger. You MAY forecast from them — call the favourite, say who should go through, judge a kind or tough group — but ONLY from the rankings and results provided, never outside knowledge. Phrase forecasts as forecasts ('should', 'favourites'); hard facts (guaranteed/cannot finish top 2) are certainties.",
+      "- World rankings may appear next to team names (e.g. 'world #5'); lower is stronger. You MAY forecast from them — call the favourite, say who should go through, judge a kind or tough group, and flag a likely upset when a far lower-ranked side could win. Phrase forecasts as forecasts ('should', 'favourites'); hard facts (guaranteed/cannot finish top 2) are certainties.",
+      "- COLOUR you MAY add from your own football knowledge: one brief, well-known historical note about a team in the fixture (a past tournament, a debut, a notable record) and light context. Keep it to a single short note per match, and only facts you are confident are genuinely true — if unsure, leave it out. Never invent specific statistics, records, scores, or results.",
       "- Use the supplied 'What tonight's result does' lines to say where a result moves a team — e.g. 'a win puts them top of the group'. Only mention a side's upcoming fixtures when a 'final group game (could decide their fate)' line is supplied — otherwise leave them out.",
       "- Balance the football and the sweepstake, but briefly.",
-      "- Accuracy: never invent scores, points, or positions not in the data — and never invent fixtures or rankings. ONLY discuss the matches listed; never mention another fixture.",
+      "- HARD FACTS come ONLY from the data, never from memory or invention: current scores, points, positions, the rankings and qualification flags supplied, which fixtures exist, and kick-off times/dates. ONLY discuss the matches listed; never mention another fixture. (The historical colour above is the only thing you may add from outside the data.)",
       "- Every match comes with its exact date and kick-off time. Never state or imply a different date or day.",
       "- If any matches are listed under MATCHES ALREADY PLAYED, acknowledge them in one short line pointing to the highlights. Never mention the score, goalscorers, winner, or result of these matches.",
       "- No markdown, no lists. Plain paragraphs only.",
@@ -193,7 +216,7 @@ class UpcomingMatchesInsightService
     end
 
     lines << ""
-    lines << "Write the briefing for #{day_label}, following the required structure exactly: one short intro line, then one short paragraph per match (teams + owners → group favourites → what a win or draw does → the run-in), then a one-line sign-off. Keep it concise and scannable, state each point once, no hype or filler. Forecasts only from the rankings and results above; never invent anything. Only the matches listed above."
+    lines << "Write the briefing for #{day_label}, following the required structure exactly: one short intro line, then one paragraph per match (teams + owners + kick-off → opening-match note if supplied → favourites/ranking with any upset angle → what a win or draw does for the table and qualification → one brief historical note if you have a true one). Keep it concise and scannable, state each point once, no hype or filler. Hard facts (scores, points, positions, fixtures, times) only from the data above; brief historical colour may come from your own knowledge if you are sure it's true. Do NOT write a sign-off — a football fact is added automatically. Only the matches listed above."
     lines.join("\n")
   end
 

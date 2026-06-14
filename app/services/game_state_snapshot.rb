@@ -62,6 +62,9 @@ class GameStateSnapshot
       lines << "Group favourites (strongest by world ranking): #{favourites.map { |t| "#{t.name}#{rank_suffix(t)}" }.join(', ')}."
     end
 
+    opener = opening_match_line(table, match)
+    lines << opener if opener
+
     lines << "What tonight's result does (as the table stands):"
     effects = qualification(table).effects(match)
     lines << "  If #{match.home_team.name} win: #{effect_phrase(effects[:home_win][:home])}"
@@ -118,19 +121,38 @@ class GameStateSnapshot
     team  = team_effect[:team]
     place =
       if team_effect[:position] == 1
-        team_effect[:tied] ? "up among the group leaders" : "top of the group"
+        team_effect[:tied] ? "level on points at the top of the group" : "top of the group"
       else
         "#{team_effect[:tied] ? 'joint ' : ''}#{ordinal(team_effect[:position])} in the group"
       end
-    # Only append a qualification note when it's a hard certainty; the common
-    # "in contention" case is left implicit to avoid repeating it on every line.
+    # State the qualification picture plainly: certainties as facts, and the
+    # common "in contention" case spelled out as a live chance to go through —
+    # never left vague.
     meaning =
       case team_effect[:flag]
       when :clinched_top2      then " (guaranteed top 2 — #{owner_name(team) || 'no owner'} banks +1)"
       when :cannot_finish_top2 then " (can no longer finish top 2)"
+      when :in_contention      then " (still in with a chance of going through)"
       else ""
       end
     "#{team.name} go #{place}#{meaning}"
+  end
+
+  # A factual note when this is a team's first group game, derived from the table
+  # (which counts only completed matches). Lets the AI flag opening matches
+  # without guessing. Returns nil when both teams have already played.
+  def opening_match_line(table, match)
+    home = table.rows.find { |r| r.team.id == match.home_team_id }
+    away = table.rows.find { |r| r.team.id == match.away_team_id }
+    return nil unless home && away
+
+    if home.played.zero? && away.played.zero?
+      "This is the opening #{table.group_name} match for both #{match.home_team.name} and #{match.away_team.name}."
+    elsif home.played.zero?
+      "This is #{match.home_team.name}'s opening group match; #{match.away_team.name} have played #{away.played}."
+    elsif away.played.zero?
+      "This is #{match.away_team.name}'s opening group match; #{match.home_team.name} have played #{home.played}."
+    end
   end
 
   # The two strongest teams in the group by world ranking (lowest numbers).

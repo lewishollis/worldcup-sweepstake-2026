@@ -45,11 +45,33 @@ class UpcomingMatchesInsightServiceTest < ActiveSupport::TestCase
 
   test "the briefing ends with a verified football fact, not a generic sign-off" do
     GroqClient.stub(:call, "Two matches today. Qatar face Switzerland.") do
-      result = UpcomingMatchesInsightService.new([@tomorrow_match]).send(:generate)
+      result = UpcomingMatchesInsightService.call([@tomorrow_match])
 
       assert_includes result, "Football fact:"
       assert UpcomingMatchesInsightService::FOOTBALL_FACTS.any? { |fact| result.include?(fact) },
              "expected the sign-off to be one of the curated true facts"
+    end
+  end
+
+  test "the football fact is appended per render, not baked into the cached body" do
+    GroqClient.stub(:call, "Real insight about Mexico vs South Africa.") do
+      UpcomingMatchesInsightService.call([@tomorrow_match])
+    end
+
+    cached = AiInsightCache.find_by(key: "upcoming_matches_insight").content
+    refute_includes cached, "Football fact:", "the fact must be appended after caching, so it can vary"
+  end
+
+  test "consecutive renders never repeat the same football fact" do
+    GroqClient.stub(:call, "Real insight about Mexico vs South Africa.") do
+      facts = 8.times.map do
+        result = UpcomingMatchesInsightService.call([@tomorrow_match])
+        result[/Football fact: (.+)\z/m, 1]
+      end
+
+      facts.each_cons(2) do |earlier, later|
+        refute_equal earlier, later, "each render's fact must differ from the one before it"
+      end
     end
   end
 
@@ -92,9 +114,22 @@ class UpcomingMatchesInsightServiceTest < ActiveSupport::TestCase
     # ... but the model must never write its name in the message it produces.
     assert_includes prompt, "Never write your own name"
     # The voice changes the wording, never the facts — accuracy rules must survive
-    assert_includes prompt, "never invent scores, points, or positions"
+    assert_includes prompt, "HARD FACTS come ONLY from the data"
     assert_includes prompt, "ONLY discuss the matches listed"
     assert_includes prompt, "Never state or imply a different date"
+  end
+
+  test "system prompt permits brief historical colour but ring-fences the hard facts" do
+    prompt = UpcomingMatchesInsightService.new([@tomorrow_match]).send(:build_system_prompt, TournamentContextService.new)
+
+    # Colour from the model's own football knowledge is now allowed, with a guardrail
+    assert_includes prompt, "COLOUR you MAY add from your own football knowledge"
+    assert_includes prompt, "if unsure, leave it out"
+    # ... but hard facts still come only from the data, and only listed fixtures are discussed
+    assert_includes prompt, "HARD FACTS come ONLY from the data"
+    assert_includes prompt, "never mention another fixture"
+    # The opening-match enrichment is requested in the structure
+    assert_includes prompt, "opening-match note"
   end
 
   test "system prompt allows grounded forecasts and table-movement framing" do

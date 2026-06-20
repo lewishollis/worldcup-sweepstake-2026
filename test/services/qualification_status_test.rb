@@ -37,8 +37,13 @@ class QualificationStatusTest < ActiveSupport::TestCase
     # One match played in an otherwise-open group: Bb beat Cc heavily and sits 2nd
     # on the live table, but nothing is mathematically clinched yet.
     a, b, c, d = team("Aa"), team("Bb"), team("Cc"), team("Dd")
-    match("G2", a, d, status: "PostEvent", hs: 3, as: 0) # Aa 3pts, GD +3 -> 1st
-    match("G2", b, c, status: "PostEvent", hs: 5, as: 0) # Bb 3pts, GD +5 -> top on GD... pos 1/2
+    match("G2", a, d, status: "PostEvent", hs: 3, as: 0) # Aa 3pts, GD +3
+    match("G2", b, c, status: "PostEvent", hs: 5, as: 0) # Bb 3pts, GD +5
+    # Remaining group fixtures — unplayed, so the oracle treats the group as live:
+    match("G2", a, b, status: "PreEvent")
+    match("G2", a, c, status: "PreEvent")
+    match("G2", b, d, status: "PreEvent")
+    match("G2", c, d, status: "PreEvent")
 
     # Aa and Bb both 3pts; ordered by GD -> Bb 1st, Aa 2nd. Both top-2, neither clinched.
     assert_equal :likely,     status_for("G2", a)

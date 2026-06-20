@@ -28,6 +28,8 @@ module ApplicationHelper
     qualification_status_index[team.id]
   end
 
+  # Methods below are private — helpers callable from views must go ABOVE this
+  # line, or they will silently fail in templates with NoMethodError.
   private
 
   def qualification_status_index

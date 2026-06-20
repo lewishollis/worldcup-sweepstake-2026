@@ -26,18 +26,29 @@ class QualificationStatus
     @qualification = qualification
   end
 
+  # The top two of a group qualify.
+  QUALIFYING_SLOTS = 2
+
   def key
     case @qualification.flag(@team)
     when :clinched_top2      then :through
     when :cannot_finish_top2 then :out
-    else top_two_now? ? :likely : :contention
+    else likely_top2? ? :likely : :contention
     end
   end
 
   private
 
-  def top_two_now?
-    row = @table.rows.find { |r| r.team.id == @team.id }
-    row && row.position <= 2
+  # A top-2 slot earned only on goal difference is fragile, so "Likely" demands
+  # daylight on POINTS: the team must out-point whoever sits in the first
+  # non-qualifying slot. Teams level on points — even if nosed ahead on GD or
+  # goals scored — are still :contention, not :likely.
+  def likely_top2?
+    rows = @table.rows
+    row  = rows.find { |r| r.team.id == @team.id }
+    return false unless row && row.position <= QUALIFYING_SLOTS
+
+    first_below_line = rows[QUALIFYING_SLOTS] # 0-based index == position (slots + 1)
+    first_below_line.nil? || row.points > first_below_line.points
   end
 end

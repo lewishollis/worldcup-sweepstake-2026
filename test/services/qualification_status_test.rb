@@ -18,6 +18,24 @@ class QualificationStatusTest < ActiveSupport::TestCase
     QualificationStatus.for(t, table: table, qualification: GroupQualification.new(table))
   end
 
+  # Regression: Group G after matchday 1 had all four teams on 1 point, GD 0,
+  # separated only by goals scored. The top two on goals-for must NOT read as
+  # :likely — level on points means nobody has a qualifying cushion yet.
+  test "teams level on points are :contention, not :likely when separated only by goals" do
+    a, b, c, d = team("Aa"), team("Bb"), team("Cc"), team("Dd")
+    match("G3", a, b, status: "PostEvent", hs: 1, as: 1) # both 1pt, GF1
+    match("G3", c, d, status: "PostEvent", hs: 2, as: 2) # both 1pt, GF2 (sorted above on goals)
+    match("G3", a, c, status: "PreEvent")
+    match("G3", a, d, status: "PreEvent")
+    match("G3", b, c, status: "PreEvent")
+    match("G3", b, d, status: "PreEvent")
+
+    assert_equal :contention, status_for("G3", a)
+    assert_equal :contention, status_for("G3", b)
+    assert_equal :contention, status_for("G3", c)
+    assert_equal :contention, status_for("G3", d)
+  end
+
   test "clinched team is :through, eliminated team is :out" do
     a, b, c, d = team("Aa"), team("Bb"), team("Cc"), team("Dd")
     match("G1", a, b, status: "PostEvent", hs: 1, as: 0)

@@ -52,6 +52,25 @@ class MatchesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "qualification badge renders Through for a clinched team and nothing for an ungrouped team" do
+    a = Team.create!(name: "Aa", flag_url: "https://x.com/Aa.svg")
+    b = Team.create!(name: "Bb", flag_url: "https://x.com/Bb.svg")
+    c = Team.create!(name: "Cc", flag_url: "https://x.com/Cc.svg")
+    d = Team.create!(name: "Dd", flag_url: "https://x.com/Dd.svg")
+    [[a, b], [a, c], [a, d], [b, c], [b, d], [c, d]].each_with_index do |(h, w), i|
+      Match.create!(home_team: h, away_team: w, stage: "Group Stage", status: "PostEvent",
+                    group_name: "G1", match_id: "qb-#{i}", home_score: 1, away_score: 0,
+                    start_time: Time.zone.local(2026, 6, 13, 17, 0, 0))
+    end
+
+    through = ApplicationController.render(partial: "shared/qualification_badge", locals: { team: a })
+    assert_includes through, "Through"
+
+    zz = Team.create!(name: "Zz", flag_url: "https://x.com/Zz.svg")
+    ungrouped = ApplicationController.render(partial: "shared/qualification_badge", locals: { team: zz })
+    assert_equal "", ungrouped.strip
+  end
+
   test "per-match preview box is temporarily disabled (focus is the daily summary)" do
     home = Team.create!(name: "Qatar", flag_url: "https://x.com/qa.svg")
     away = Team.create!(name: "Switzerland", flag_url: "https://x.com/ch.svg")

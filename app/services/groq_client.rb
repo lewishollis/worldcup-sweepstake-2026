@@ -1,6 +1,6 @@
 class GroqClient
   GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions".freeze
-  PRIMARY_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct".freeze
+  PRIMARY_MODEL = "openai/gpt-oss-120b".freeze
   FALLBACK_MODEL = "llama-3.3-70b-versatile".freeze
 
   def self.call(system_prompt:, user_message:, max_tokens: 300, model: PRIMARY_MODEL)
@@ -26,14 +26,19 @@ class GroqClient
     request = Net::HTTP::Post.new(uri.path)
     request["Authorization"] = "Bearer #{api_key}"
     request["Content-Type"]  = "application/json"
-    request.body = {
+    body = {
       model:      @model,
       max_tokens: @max_tokens,
       messages:   [
         { role: "system", content: @system_prompt },
         { role: "user",   content: @user_message }
       ]
-    }.to_json
+    }
+    # GPT-OSS models reason before answering and will spend the whole token
+    # budget on hidden reasoning unless capped. Other models 400 on this param,
+    # so only send it for GPT-OSS.
+    body[:reasoning_effort] = "low" if @model.start_with?("openai/gpt-oss")
+    request.body = body.to_json
 
     response = http.request(request)
 

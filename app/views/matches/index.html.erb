@@ -218,6 +218,7 @@
         </div>
       <% end %>
     <% end %>
+    <%= render "matches/group_standings" if @standings&.any? %>
   </main>
 </div>
 

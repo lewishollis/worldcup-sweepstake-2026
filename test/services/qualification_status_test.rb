@@ -57,6 +57,6 @@ class QualificationStatusTest < ActiveSupport::TestCase
     assert_equal "Through",       QualificationStatus.label(:through)
     assert_equal "Likely",        QualificationStatus.label(:likely)
     assert_equal "Out",           QualificationStatus.label(:out)
-    assert_equal "In contention", QualificationStatus.label(:contention)
+    assert_equal "In the mix",    QualificationStatus.label(:contention)
   end
 end

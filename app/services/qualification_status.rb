@@ -9,7 +9,7 @@ class QualificationStatus
     through:    "Through",
     likely:     "Likely",
     out:        "Out",
-    contention: "In contention"
+    contention: "In the mix"
   }.freeze
 
   def self.for(team, table:, qualification:)

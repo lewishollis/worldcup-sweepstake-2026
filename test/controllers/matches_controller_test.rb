@@ -71,6 +71,29 @@ class MatchesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "", ungrouped.strip
   end
 
+  test "qualification badge renders In the mix for a team still in contention" do
+    a = Team.create!(name: "Aa", flag_url: "https://x.com/Aa.svg")
+    b = Team.create!(name: "Bb", flag_url: "https://x.com/Bb.svg")
+    c = Team.create!(name: "Cc", flag_url: "https://x.com/Cc.svg")
+    d = Team.create!(name: "Dd", flag_url: "https://x.com/Dd.svg")
+    Match.create!(home_team: a, away_team: d, stage: "Group Stage", status: "PostEvent",
+                  group_name: "G2", match_id: "qm-ad", home_score: 3, away_score: 0,
+                  start_time: Time.zone.local(2026, 6, 13, 17, 0, 0))
+    Match.create!(home_team: b, away_team: c, stage: "Group Stage", status: "PostEvent",
+                  group_name: "G2", match_id: "qm-bc", home_score: 5, away_score: 0,
+                  start_time: Time.zone.local(2026, 6, 13, 17, 0, 0))
+    # Remaining fixtures unplayed, so the group is live and Cc (4th, 0 pts) is
+    # still mathematically able to reach the top 2.
+    [[a, b], [a, c], [b, d], [c, d]].each_with_index do |(h, w), i|
+      Match.create!(home_team: h, away_team: w, stage: "Group Stage", status: "PreEvent",
+                    group_name: "G2", match_id: "qm-pre-#{i}",
+                    start_time: Time.zone.local(2026, 6, 13, 17, 0, 0))
+    end
+
+    rendered = ApplicationController.render(partial: "shared/qualification_badge", locals: { team: c })
+    assert_includes rendered, "In the mix"
+  end
+
   test "group_standings partial renders a clinched team with a Through badge" do
     a = Team.create!(name: "Aa", flag_url: "https://x.com/Aa.svg")
     b = Team.create!(name: "Bb", flag_url: "https://x.com/Bb.svg")

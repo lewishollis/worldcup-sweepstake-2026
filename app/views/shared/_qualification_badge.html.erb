@@ -1,0 +1,16 @@
+<%# app/views/shared/_qualification_badge.html.erb
+    Renders a small qualification badge for a group-stage team.
+    :through/:likely/:out get a badge; :contention and nil render nothing. %>
+<% status = team_qualification_status(team) %>
+<% if status && status != :contention %>
+  <%
+    badge_classes = {
+      through: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
+      likely:  "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+      out:     "bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
+    }
+  %>
+  <span class="inline-block align-middle text-[10px] leading-none font-semibold px-1.5 py-0.5 rounded <%= badge_classes[status] %>">
+    <%= QualificationStatus.label(status) %>
+  </span>
+<% end %>

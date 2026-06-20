@@ -70,6 +70,7 @@
                   <% if team.flag_url.present? %>
                     <%= image_tag team.flag_url, alt: team.name, class: "leaderboard-flag" %>
                   <% end %>
+                  <%= render "shared/qualification_badge", team: team %>
                 <% end %>
                 <% if group.teams.size > 3 %>
                   <span class="text-xs text-text-secondary-light dark:text-text-secondary-dark">+<%= group.teams.size - 3 %></span>

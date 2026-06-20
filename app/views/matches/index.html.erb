@@ -160,6 +160,7 @@
                 <% end %>
                 <div class="flex flex-col min-w-0">
                   <span class="match-team-name"><%= match.home_team.name %></span>
+                  <%= render "shared/qualification_badge", team: match.home_team %>
                   <% if match.home_friend_name != 'No owner' %>
                     <span class="match-team-owner"><%= match.home_friend_name %></span>
                   <% end %>
@@ -177,6 +178,7 @@
               <div class="match-team justify-end">
                 <div class="flex flex-col items-end min-w-0">
                   <span class="match-team-name text-right"><%= match.away_team.name %></span>
+                  <%= render "shared/qualification_badge", team: match.away_team %>
                   <% if match.away_friend_name != 'No owner' %>
                     <span class="match-team-owner"><%= match.away_friend_name %></span>
                   <% end %>

@@ -47,6 +47,11 @@ class MatchesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 2.0, @home_team.reload.progression_score
   end
 
+  test "index renders without error when group data exists" do
+    get matches_path(filter: { PostEvent: "1" })
+    assert_response :success
+  end
+
   test "per-match preview box is temporarily disabled (focus is the daily summary)" do
     home = Team.create!(name: "Qatar", flag_url: "https://x.com/qa.svg")
     away = Team.create!(name: "Switzerland", flag_url: "https://x.com/ch.svg")

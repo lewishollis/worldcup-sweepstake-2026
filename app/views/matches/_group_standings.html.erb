@@ -1,0 +1,43 @@
+<%# app/views/matches/_group_standings.html.erb %>
+<section class="mt-10">
+  <h2 class="text-lg md:text-xl font-bold leading-tight tracking-[-0.015em] text-text-primary-light dark:text-text-primary-dark pb-2 pt-6">
+    GROUP STANDINGS
+  </h2>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4">
+    <% @standings.each do |table| %>
+      <div class="bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm">
+        <h3 class="font-bold text-text-primary-light dark:text-text-primary-dark mb-3"><%= table.group_name %></h3>
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-text-secondary-light dark:text-text-secondary-dark text-xs">
+              <th class="text-left font-medium py-1 w-6">#</th>
+              <th class="text-left font-medium py-1">Team</th>
+              <th class="text-center font-medium py-1 w-6" title="Played">P</th>
+              <th class="text-center font-medium py-1 w-6" title="Goal difference">GD</th>
+              <th class="text-center font-medium py-1 w-8" title="Points">Pts</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% table.rows.each do |row| %>
+              <tr class="border-t border-gray-100 dark:border-gray-800">
+                <td class="py-1.5 text-text-secondary-light dark:text-text-secondary-dark"><%= row.position %></td>
+                <td class="py-1.5">
+                  <span class="font-medium text-text-primary-light dark:text-text-primary-dark"><%= row.team.name %></span>
+                  <%= render "shared/qualification_badge", team: row.team %>
+                </td>
+                <td class="py-1.5 text-center text-text-secondary-light dark:text-text-secondary-dark"><%= row.played %></td>
+                <td class="py-1.5 text-center text-text-secondary-light dark:text-text-secondary-dark"><%= format('%+d', row.gd) %></td>
+                <td class="py-1.5 text-center font-bold text-text-primary-light dark:text-text-primary-dark"><%= row.points %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+        <% table.in_progress.each do |m| %>
+          <p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-2">
+            In progress: <%= m.home_team.name %> vs <%= m.away_team.name %> — not yet counted
+          </p>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</section>

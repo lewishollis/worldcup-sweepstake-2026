@@ -59,6 +59,7 @@
                   <% end %>
                   <div class="flex-1">
                     <p class="font-semibold text-text-primary-light dark:text-text-primary-dark"><%= team.name %></p>
+                    <%= render "shared/qualification_badge", team: team %>
                     <p class="text-xs text-text-secondary-light dark:text-text-secondary-dark">
                       <%= team.matches.where(status: 'PostEvent').count %> matches played
                     </p>

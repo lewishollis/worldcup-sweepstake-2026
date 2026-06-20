@@ -95,6 +95,11 @@ class MatchesController < ApplicationController
       @matches.sort_by! { |match| match.start_time } if @filter_params['PostEvent'] == '1'
       @matches.reverse! if @filter_params['PostEvent'] == '1'
 
+      # Live World Cup group standings for the on-page standings section.
+      # Independent of the fixtures filter; derives from persisted Match rows
+      # the loop above just refreshed.
+      @standings = GroupTable.all
+
       if @matches.any? && @filter_params.present?
         filter_type = @filter_params.find { |k, v| v == '1' }&.first
         if filter_type == 'PreEvent'

@@ -20,4 +20,24 @@ module ApplicationHelper
   def live_event_icon(type)
     { "goal" => "⚽", "yellow-card" => "🟨", "red-card" => "🟥" }.fetch(type, "•")
   end
+
+  # Per-request map of team_id => qualification status symbol, built once from
+  # every group-stage table. Returns nil for teams in no table (e.g. knockout
+  # fixtures), so the badge partial simply renders nothing for them.
+  def team_qualification_status(team)
+    qualification_status_index[team.id]
+  end
+
+  # Methods below are private — helpers callable from views must go ABOVE this
+  # line, or they will silently fail in templates with NoMethodError.
+  private
+
+  def qualification_status_index
+    @qualification_status_index ||= GroupTable.all.each_with_object({}) do |table, index|
+      qualification = GroupQualification.new(table)
+      table.teams.each do |t|
+        index[t.id] = QualificationStatus.for(t, table: table, qualification: qualification)
+      end
+    end
+  end
 end

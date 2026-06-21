@@ -37,11 +37,15 @@
 }
 
 .leaderboard-flags {
-  @apply flex gap-1 mt-1;
+  @apply flex flex-wrap gap-x-2 gap-y-1 mt-1;
+}
+
+.leaderboard-team {
+  @apply inline-flex items-center gap-1 flex-shrink-0;
 }
 
 .leaderboard-flag {
-  @apply h-4 w-4 rounded-full object-cover;
+  @apply h-4 w-4 flex-shrink-0 rounded-full object-cover;
 }
 
 /* Group Card Components */

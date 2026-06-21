@@ -4,7 +4,7 @@ class UpcomingMatchesInsightService
   # Kept OUT of the main cached body so the fact varies on every page view even
   # while the briefing itself is cached.
   FOOTBALL_FACT_KEY = "upcoming_matches_football_fact".freeze
-  FOOTBALL_FACT_VERSION = "v1".freeze
+  FOOTBALL_FACT_VERSION = "v2".freeze
   TIME_ZONE = "Europe/London".freeze
   # Folded into the cache version so changing the persona regenerates any
   # previously cached insight written in the old voice.
@@ -26,7 +26,15 @@ class UpcomingMatchesInsightService
     "The 2026 World Cup is the first to feature 48 teams.",
     "The 2026 World Cup is co-hosted by Canada, Mexico and the USA — its first three hosts.",
     "Cristiano Ronaldo is the only man to have scored at five different World Cups.",
-    "The 1994 World Cup final was the first to be decided by a penalty shootout."
+    "The 1994 World Cup final was the first to be decided by a penalty shootout.",
+    "Italy and Brazil are the only nations to win the men's World Cup in consecutive tournaments.",
+    "Just Fontaine scored 13 goals at the 1958 World Cup — still the record for a single tournament.",
+    "Hakan Şükür scored the fastest goal in men's World Cup history, after 11 seconds in 2002.",
+    "Spain won their first men's World Cup in 2010, in South Africa.",
+    "Germany's 7–1 win over Brazil in 2014 is the biggest margin in a men's World Cup semi-final.",
+    "Norman Whiteside is the youngest player to appear at a men's World Cup, aged 17 in 1982.",
+    "The 1950 World Cup was the only edition decided by a final group stage rather than a one-off final.",
+    "Lionel Messi has more men's World Cup appearances than any other player."
   ].freeze
 
   def self.call(matches)
@@ -106,14 +114,31 @@ class UpcomingMatchesInsightService
     "#{body.strip}\n\nFootball fact: #{next_football_fact}"
   end
 
-  # A curated fact that is never the same as the one served on the previous render.
+  # A curated fact, drawn from a shuffle-bag so every fact is served once before
+  # any repeats. We remember the recent history (all-but-one of the pool) and pick
+  # only from facts not in it, which cycles through the whole list in turn.
   def next_football_fact
     return FOOTBALL_FACTS.sample unless AiInsightCache.table_exists?
 
-    previous = AiInsightCache.fetch(key: FOOTBALL_FACT_KEY, version: FOOTBALL_FACT_VERSION)
-    fact = (FOOTBALL_FACTS - [previous]).sample
-    AiInsightCache.store(key: FOOTBALL_FACT_KEY, version: FOOTBALL_FACT_VERSION, content: fact)
+    recent    = recent_football_facts
+    remaining = FOOTBALL_FACTS - recent
+    # Pool exhausted (or history cleared): start a fresh cycle, but never repeat
+    # the most recent fact back-to-back.
+    remaining = FOOTBALL_FACTS - [recent.first] if remaining.empty?
+    fact      = remaining.sample
+
+    store_recent_football_facts(([fact] + recent).first(FOOTBALL_FACTS.size - 1))
     fact
+  end
+
+  # Most-recent-first list of facts already served this cycle.
+  def recent_football_facts
+    raw = AiInsightCache.fetch(key: FOOTBALL_FACT_KEY, version: FOOTBALL_FACT_VERSION)
+    raw.to_s.split("\n").select { |f| FOOTBALL_FACTS.include?(f) }
+  end
+
+  def store_recent_football_facts(facts)
+    AiInsightCache.store(key: FOOTBALL_FACT_KEY, version: FOOTBALL_FACT_VERSION, content: facts.join("\n"))
   end
 
   def build_system_prompt(context_or_snapshot = GameStateSnapshot.new)

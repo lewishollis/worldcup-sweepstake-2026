@@ -12,7 +12,7 @@
       out:        "bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
     }
   %>
-  <span class="inline-block align-middle text-[10px] leading-none font-semibold px-1.5 py-0.5 rounded <%= badge_classes[status] %>">
+  <span class="inline-block align-middle whitespace-nowrap text-[10px] leading-none font-semibold px-1.5 py-0.5 rounded <%= badge_classes[status] %>">
     <%= QualificationStatus.label(status) %>
   </span>
 <% end %>

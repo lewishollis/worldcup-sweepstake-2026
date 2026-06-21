@@ -46,11 +46,13 @@ class Team < ApplicationRecord
   has_many :friends, through: :friend_groups
 
   def progression_score
-    return 0.0 if played_knockout_matches.none?
+    return 0.0 if knockout_matches.none?
 
-    # +1 for qualifying only if they appeared in the main bracket (not just the bronze final)
-    score = played_knockout_matches.any? { |m| MAIN_KNOCKOUT_STAGES.include?(m.stage) } ? 1.0 : 0.0
+    # +1 for qualifying to the main bracket — awarded as soon as a fixture there
+    # exists (on qualification, not on having played). Bronze-final-only doesn't count.
+    score = knockout_matches.any? { |m| MAIN_KNOCKOUT_STAGES.include?(m.stage) } ? 1.0 : 0.0
 
+    # Per-round points come from finished games only.
     played_knockout_matches.each do |match|
       won = (match.home_team_id == id && match.winner == 'home') ||
             (match.away_team_id == id && match.winner == 'away')
@@ -59,8 +61,10 @@ class Team < ApplicationRecord
     score
   end
 
+  # Advanced to the knockouts as soon as a bracket fixture exists for them —
+  # even before kick-off (PreEvent) — not only once a knockout game has finished.
   def progressed?
-    played_knockout_matches.any?
+    knockout_matches.any?
   end
 
   # Used in views to query matches for display. Callers should not use this
@@ -71,10 +75,17 @@ class Team < ApplicationRecord
 
   private
 
-  def played_knockout_matches
+  # All knockout-stage matches involving this team, any status — a fixture
+  # existing means they've been drawn into the bracket (i.e. advanced).
+  def knockout_matches
     # Do not memoize: reload does not clear instance variables, so caching here
     # would return stale results after a reload call.
     all_matches = home_matches.to_a + away_matches.to_a
-    all_matches.select { |m| m.status == 'PostEvent' && KNOCKOUT_STAGES.include?(m.stage) }
+    all_matches.select { |m| KNOCKOUT_STAGES.include?(m.stage) }
+  end
+
+  # Finished knockout matches only — scoring counts results, not fixtures.
+  def played_knockout_matches
+    knockout_matches.select { |m| m.status == 'PostEvent' }
   end
 end

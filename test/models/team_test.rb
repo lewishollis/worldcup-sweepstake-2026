@@ -136,11 +136,23 @@ class TeamTest < ActiveSupport::TestCase
     assert_equal 0.5, @team.reload.progression_score
   end
 
-  test "progression_score ignores PreEvent knockout matches" do
+  test "progression_score awards the qualification bonus for a knockout fixture before kick-off" do
     Match.create!(home_team: @team, away_team: @opponent, stage: "Last 32",
                   status: "PreEvent", winner: nil, match_id: "r32-pre",
                   start_time: 1.day.from_now)
-    assert_equal 0.0, @team.reload.progression_score
+    # +1 for reaching the main bracket; no win points until the game is played.
+    assert_equal 1.0, @team.reload.progression_score
+  end
+
+  test "progression_score does not award win points for an unfinished knockout game" do
+    Match.create!(home_team: @team, away_team: @opponent, stage: "Last 32",
+                  status: "PostEvent", winner: "home", match_id: "r32-played",
+                  start_time: 2.days.ago)
+    Match.create!(home_team: @team, away_team: @opponent, stage: "Last 16",
+                  status: "PreEvent", winner: nil, match_id: "r16-pre",
+                  start_time: 1.day.from_now)
+    # +1 qualification, +1 for the won Last 32 — but nothing for the pending Last 16.
+    assert_equal 2.0, @team.reload.progression_score
   end
 
   # --- progressed? ---
@@ -160,6 +172,13 @@ class TeamTest < ActiveSupport::TestCase
     Match.create!(home_team: @team, away_team: @opponent, stage: "Last 32",
                   status: "PostEvent", winner: "away", match_id: "r32-1",
                   start_time: 1.day.ago)
+    assert @team.reload.progressed?
+  end
+
+  test "progressed? is true once a knockout fixture exists, even before kick-off" do
+    Match.create!(home_team: @team, away_team: @opponent, stage: "Last 32",
+                  status: "PreEvent", winner: nil, match_id: "r32-pre",
+                  start_time: 1.day.from_now)
     assert @team.reload.progressed?
   end
 

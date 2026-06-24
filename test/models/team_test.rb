@@ -189,17 +189,19 @@ class TeamTest < ActiveSupport::TestCase
     assert_equal 1.0, @team.reload.progression_score
   end
 
-  # Builds a group where `team` has mathematically clinched a top-2 finish:
-  # it wins all three group games, so it is top 2 in every remaining completion.
+  # Builds a COMPLETE 4-team group (all 6 fixtures played) where `team` wins every
+  # game and so has mathematically clinched a top-2 finish. A full round-robin is
+  # required: KnockoutQualification only trusts complete groups.
   def clinch_team_in_group!(team)
     KnockoutQualification.reset!
     b = Team.create!(name: "Grp-B", flag_url: "https://x/b.svg")
     c = Team.create!(name: "Grp-C", flag_url: "https://x/c.svg")
     d = Team.create!(name: "Grp-D", flag_url: "https://x/d.svg")
-    [b, c, d].each_with_index do |opp, i|
-      Match.create!(home_team: team, away_team: opp, stage: "Group Stage", status: "PostEvent",
+    fixtures = [[team, b], [team, c], [team, d], [b, c], [b, d], [c, d]]
+    fixtures.each_with_index do |(home, away), i|
+      Match.create!(home_team: home, away_team: away, stage: "Group Stage", status: "PostEvent",
                     group_name: "Group Z", home_score: 1, away_score: 0,
-                    match_id: "gz-#{i}", start_time: (3 - i).days.ago)
+                    match_id: "gz-#{i}", start_time: (6 - i).days.ago)
     end
   end
 

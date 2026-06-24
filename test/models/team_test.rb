@@ -182,6 +182,27 @@ class TeamTest < ActiveSupport::TestCase
     assert @team.reload.progressed?
   end
 
+  test "progressed? and the +1 are awarded on a clinched top-2 finish before any knockout fixture exists" do
+    clinch_team_in_group!(@team)
+    # No knockout fixture for the team yet — only the clinched group finish.
+    assert @team.reload.progressed?
+    assert_equal 1.0, @team.reload.progression_score
+  end
+
+  # Builds a group where `team` has mathematically clinched a top-2 finish:
+  # it wins all three group games, so it is top 2 in every remaining completion.
+  def clinch_team_in_group!(team)
+    KnockoutQualification.reset!
+    b = Team.create!(name: "Grp-B", flag_url: "https://x/b.svg")
+    c = Team.create!(name: "Grp-C", flag_url: "https://x/c.svg")
+    d = Team.create!(name: "Grp-D", flag_url: "https://x/d.svg")
+    [b, c, d].each_with_index do |opp, i|
+      Match.create!(home_team: team, away_team: opp, stage: "Group Stage", status: "PostEvent",
+                    group_name: "Group Z", home_score: 1, away_score: 0,
+                    match_id: "gz-#{i}", start_time: (3 - i).days.ago)
+    end
+  end
+
   # --- canonical_name ---
 
   test "canonical_name maps BBC API names to seed names" do

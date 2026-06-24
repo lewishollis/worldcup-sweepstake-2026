@@ -46,11 +46,12 @@ class Team < ApplicationRecord
   has_many :friends, through: :friend_groups
 
   def progression_score
-    return 0.0 if knockout_matches.none?
-
-    # +1 for qualifying to the main bracket — awarded as soon as a fixture there
-    # exists (on qualification, not on having played). Bronze-final-only doesn't count.
-    score = knockout_matches.any? { |m| MAIN_KNOCKOUT_STAGES.include?(m.stage) } ? 1.0 : 0.0
+    # +1 for reaching the main knockout bracket — earned as soon as qualification
+    # is certain: a top-2 finish is mathematically clinched ("Through"), OR a main
+    # bracket fixture already exists. The clinched check removes the delay between
+    # going through and the BBC feed publishing the fixture. Bronze-final-only
+    # doesn't count toward this +1.
+    score = reached_main_bracket? ? 1.0 : 0.0
 
     # Per-round points come from finished games only.
     played_knockout_matches.each do |match|
@@ -61,10 +62,11 @@ class Team < ApplicationRecord
     score
   end
 
-  # Advanced to the knockouts as soon as a bracket fixture exists for them —
-  # even before kick-off (PreEvent) — not only once a knockout game has finished.
+  # Advanced to the knockouts once qualification is certain — a clinched top-2
+  # finish ("Through") or any knockout fixture already on the calendar (which also
+  # covers best-third-placed qualifiers the group-table oracle can't confirm).
   def progressed?
-    knockout_matches.any?
+    KnockoutQualification.clinched?(self) || knockout_matches.any?
   end
 
   # Used in views to query matches for display. Callers should not use this
@@ -74,6 +76,13 @@ class Team < ApplicationRecord
   end
 
   private
+
+  # Reached the MAIN knockout bracket (Last 32 onward, excluding the bronze final)
+  # — true once a top-2 finish is clinched or a main-bracket fixture exists.
+  def reached_main_bracket?
+    KnockoutQualification.clinched?(self) ||
+      knockout_matches.any? { |m| MAIN_KNOCKOUT_STAGES.include?(m.stage) }
+  end
 
   # All knockout-stage matches involving this team, any status — a fixture
   # existing means they've been drawn into the bracket (i.e. advanced).

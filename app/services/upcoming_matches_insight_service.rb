@@ -8,7 +8,7 @@ class UpcomingMatchesInsightService
   TIME_ZONE = "Europe/London".freeze
   # Folded into the cache version so changing the persona regenerates any
   # previously cached insight written in the old voice.
-  PERSONA_VERSION = "gary-lineker-v11".freeze
+  PERSONA_VERSION = "gary-lineker-v12".freeze
   # Owners based in Vietnam — matches involving their teams also show Vietnam time.
   VIETNAM_FRIENDS = ["Richard", "Nhiên"].freeze
   VIETNAM_TIME_ZONE = "Asia/Ho_Chi_Minh".freeze
@@ -154,14 +154,14 @@ class UpcomingMatchesInsightService
       "",
       "STRUCTURE — follow it exactly:",
       "- One short intro line.",
-      "- Then ONE paragraph per match (2–5 short sentences), in this order: (1) the two teams, their owners, and the kick-off time; (2) if an opening-match note is supplied, mention it's their first group game; (3) the group favourites by ranking, with a brief underdog/upset angle when the ranking gap is wide; (4) what a win or a draw does for the table and for qualification; (5) optionally ONE brief, well-known historical note about a team in the fixture. Do NOT list a side's upcoming fixtures UNLESS a 'final group game (could decide their fate)' line is supplied for them — only then, mention who they face next.",
+      "- Then ONE paragraph per match (2–5 short sentences), in this order: (1) the two teams, their owners, and the kick-off time; (2) if an opening-match note is supplied, mention it's their first group game; (3) the group favourites by ranking, with a brief underdog/upset angle when the ranking gap is wide; (4) what a win or a draw means for qualification AND, concretely, for the owner's points — state the points consequence in plain terms (the +1 for qualifying coming into reach, a guaranteed top-two banking it, or a defeat that puts it out of reach). The football is the reason; the owner's points are the point. Do NOT list a side's upcoming fixtures UNLESS a 'final group game (could decide their fate)' line is supplied for them — only then, mention who they face next.",
       "- Do NOT write a sign-off or good-luck line. End after the final match — a football fact is added automatically.",
       "",
       "STYLE EXAMPLE — copy this structure and plain tone; do NOT reuse its teams or names:",
       "\"\"\"",
       "The tournament continues, with two matches today.",
-      "First up, Germany, owned by Emma, face Curaçao, owned by Jamie, at 18:00 UK time. It's the opening Group E match for both sides. Germany are the group's top-ranked side and clear favourites; a Curaçao win would be a major upset on the rankings. A win for Germany would put them top of the group; a draw leaves both level on points and still in with a chance of going through. Germany have reached more World Cup finals than any other nation.",
-      "Later, Netherlands, owned by Richard, take on Japan, owned by Bea, at 21:00 UK time / 03:00 Vietnam time. It's the opening Group F fixture, and on the rankings the two strongest sides in the group. A win for either would put them in a strong early position to qualify; a draw leaves both level at the top.",
+      "First up, Germany, owned by Emma, face Curaçao, owned by Jamie, at 18:00 UK time. It's the opening Group E match for both sides, and Germany are the group's top-ranked side and clear favourites — a Curaçao win would be a major upset on the rankings. A Germany win puts Emma's side top and well placed to qualify, with the +1 for going through in their sights; a draw leaves both level on points, that point still there for the taking.",
+      "Later, Netherlands, owned by Richard, take on Japan, owned by Bea, at 21:00 UK time / 03:00 Vietnam time. It's the opening Group F fixture between the group's two strongest sides on the rankings. A win for either pushes its owner close to a top-two finish and the qualifying point; a draw keeps both right in the hunt for it.",
       "\"\"\"",
       "",
       "RULES:",
@@ -173,10 +173,10 @@ class UpcomingMatchesInsightService
       "- No hype or filler. Avoid words and phrases like 'thrilling', 'mouth-watering', 'cracking', 'feast', 'giant leap', 'looking to make a statement', 'football gods'.",
       "- Refer to ownership plainly as 'Team, owned by Friend'.",
       "- World rankings may appear next to team names (e.g. 'world #5'); lower is stronger. You MAY forecast from them — call the favourite, say who should go through, judge a kind or tough group, and flag a likely upset when a far lower-ranked side could win. Phrase forecasts as forecasts ('should', 'favourites'); hard facts (guaranteed/cannot finish top 2) are certainties.",
-      "- COLOUR you MAY add from your own football knowledge: one brief, well-known historical note about a team in the fixture (a past tournament, a debut, a notable record) and light context. Keep it to a single short note per match, and only facts you are confident are genuinely true — if unsure, leave it out. Never invent specific statistics, records, scores, or results.",
+      "- Do NOT add historical notes, anniversaries, past results, debuts, records, or any trivia from your own knowledge. The closing football fact is added automatically and is the only trivia in the briefing — your job is the matches and what they mean for the owners.",
       "- Use the supplied 'What tonight's result does' lines to say where a result moves a team — e.g. 'a win puts them top of the group'. Only mention a side's upcoming fixtures when a 'final group game (could decide their fate)' line is supplied — otherwise leave them out.",
-      "- Balance the football and the sweepstake, but briefly.",
-      "- HARD FACTS come ONLY from the data, never from memory or invention: current scores, points, positions, the rankings and qualification flags supplied, which fixtures exist, and kick-off times/dates. ONLY discuss the matches listed; never mention another fixture. (The historical colour above is the only thing you may add from outside the data.)",
+      "- The sweepstake is the point: for every match, make the result's consequence for the owner's POINTS explicit, using the supplied qualification flags — e.g. 'a win all but seals top two and the +1 for qualifying', 'now guaranteed through, so that point's banked', or 'defeat and the chance of a point is gone'. Lead with the football reason (the favourite, the ranking gap), then land it on the owner's points. Say it once, plainly.",
+      "- HARD FACTS come ONLY from the data, never from memory or invention: current scores, points, positions, the rankings and qualification flags supplied, which fixtures exist, and kick-off times/dates. ONLY discuss the matches listed; never mention another fixture. Add nothing from outside the supplied data.",
       "- Every match comes with its exact date and kick-off time. Never state or imply a different date or day.",
       "- If any matches are listed under MATCHES ALREADY PLAYED, acknowledge them in one short line pointing to the highlights. Never mention the score, goalscorers, winner, or result of these matches.",
       "- No markdown, no lists. Plain paragraphs only.",
@@ -241,7 +241,7 @@ class UpcomingMatchesInsightService
     end
 
     lines << ""
-    lines << "Write the briefing for #{day_label}, following the required structure exactly: one short intro line, then one paragraph per match (teams + owners + kick-off → opening-match note if supplied → favourites/ranking with any upset angle → what a win or draw does for the table and qualification → one brief historical note if you have a true one). Keep it concise and scannable, state each point once, no hype or filler. Hard facts (scores, points, positions, fixtures, times) only from the data above; brief historical colour may come from your own knowledge if you are sure it's true. Do NOT write a sign-off — a football fact is added automatically. Only the matches listed above."
+    lines << "Write the briefing for #{day_label}, following the required structure exactly: one short intro line, then one paragraph per match (teams + owners + kick-off → opening-match note if supplied → favourites/ranking with any upset angle → what a win or draw means for qualification AND, concretely, for the owner's points). Keep it concise and scannable, state each point once, no hype or filler. Use ONLY the data above — no historical notes or trivia from your own knowledge. Do NOT write a sign-off — a football fact is added automatically. Only the matches listed above."
     lines.join("\n")
   end
 

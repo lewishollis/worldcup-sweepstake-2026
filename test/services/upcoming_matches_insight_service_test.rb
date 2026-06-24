@@ -119,17 +119,24 @@ class UpcomingMatchesInsightServiceTest < ActiveSupport::TestCase
     assert_includes prompt, "Never state or imply a different date"
   end
 
-  test "system prompt permits brief historical colour but ring-fences the hard facts" do
+  test "system prompt forbids history from the model's own knowledge and ring-fences the hard facts" do
     prompt = UpcomingMatchesInsightService.new([@tomorrow_match]).send(:build_system_prompt, TournamentContextService.new)
 
-    # Colour from the model's own football knowledge is now allowed, with a guardrail
-    assert_includes prompt, "COLOUR you MAY add from your own football knowledge"
-    assert_includes prompt, "if unsure, leave it out"
-    # ... but hard facts still come only from the data, and only listed fixtures are discussed
+    # Freeform historical colour is no longer permitted — it caused false facts.
+    refute_includes prompt, "COLOUR you MAY add from your own football knowledge"
+    assert_includes prompt, "Do NOT add historical notes"
+    # Hard facts still come only from the data, and only listed fixtures are discussed
     assert_includes prompt, "HARD FACTS come ONLY from the data"
     assert_includes prompt, "never mention another fixture"
     # The opening-match enrichment is requested in the structure
     assert_includes prompt, "opening-match note"
+  end
+
+  test "system prompt makes the owner's points consequence the focus of each match" do
+    prompt = UpcomingMatchesInsightService.new([@tomorrow_match]).send(:build_system_prompt, TournamentContextService.new)
+
+    assert_includes prompt, "The sweepstake is the point"
+    assert_match(/owner's POINTS explicit/i, prompt)
   end
 
   test "system prompt allows grounded forecasts and table-movement framing" do

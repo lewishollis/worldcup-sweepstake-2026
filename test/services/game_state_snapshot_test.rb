@@ -47,6 +47,78 @@ class GameStateSnapshotTest < ActiveSupport::TestCase
     refute_includes text, "final group game"
   end
 
+  # Regression: Qatar and Switzerland are BOTH on 6pts and have already clinched
+  # top 2 before tonight's match. The result cannot bank either owner a +1 — it
+  # only decides seeding. The snapshot must not frame the +1 as still at stake,
+  # or the AI writes "a Qatar win banks Ben's +1" for an already-secured point.
+  test "already-clinched teams: result only affects seeding, the +1 is not at stake" do
+    text = GameStateSnapshot.new.group_context_text(@upcoming)
+    refute_includes text, "banks +1"
+    assert_match(/already (through|secured)/i, text)
+    assert_match(/seeding/i, text)
+  end
+
+  test "an outcome that newly clinches a contender still banks the +1" do
+    lead  = Team.create!(name: "Leadteam",  flag_url: "https://x.com/l.svg")
+    push  = Team.create!(name: "Pushteam",  flag_url: "https://x.com/p.svg")
+    rival = Team.create!(name: "Rivalteam", flag_url: "https://x.com/r.svg")
+    base  = Team.create!(name: "Baseteam",  flag_url: "https://x.com/b.svg")
+    Group.create!(name: "GC owner", friend: @ben).teams << push
+
+    g = lambda do |id, home, away, status, hs = nil, as = nil|
+      Match.create!(home_team: home, away_team: away, stage: "Group Stage", status: status,
+                    group_name: "GC", match_id: id, home_score: hs, away_score: as,
+                    start_time: Time.zone.local(2026, 6, 18, 17, 0, 0))
+    end
+    g.call("gc-1", lead, push,  "PostEvent", 1, 0)
+    g.call("gc-2", rival, base, "PostEvent", 1, 0)
+    g.call("gc-3", lead, rival, "PostEvent", 1, 0) # Leadteam 6, Rivalteam 3
+    g.call("gc-4", push, base,  "PostEvent", 1, 0) # Pushteam 3, Baseteam 0
+    tonight = g.call("gc-5", push, rival, "PreEvent") # Pushteam(3) v Rivalteam(3)
+    g.call("gc-6", lead, base, "PreEvent")
+
+    text = GameStateSnapshot.new.group_context_text(tonight)
+    # A Pushteam win reaches 6 and clinches top 2 (was only in contention) — that
+    # genuinely banks the +1, so the causal phrasing is correct here.
+    assert_includes text, "banks +1"
+  end
+
+  # A team out of the top 2 is NOT necessarily out: the best third-placed teams
+  # also advance. Brazil and Morocco (0pts) can't finish top 2 — Qatar and
+  # Switzerland have clinched — but a win still reaches 3rd, so the best-third
+  # route is open. The standings must say so, not imply they're done.
+  test "standings show best-third hope for a team out of the top 2 but able to reach 3rd" do
+    text = GameStateSnapshot.new.group_context_text(@upcoming)
+    assert_includes text, "alive for a best-third place"
+  end
+
+  test "result lines flag a best-third hope when a win lifts a team to 3rd" do
+    brazil_v_morocco = Match.find_by(match_id: "gb-6")
+    text = GameStateSnapshot.new.group_context_text(brazil_v_morocco)
+    assert_includes text, "alive for a best-third place"
+  end
+
+  # A team that cannot reach even 3rd in any completion is genuinely out — the
+  # label must say so, not offer a best-third hope it doesn't have.
+  test "standings mark a team out of every route as fully out" do
+    a, b, c, d = %w[Aaa Bbb Ccc Ddd].map { |n| Team.create!(name: n, flag_url: "https://x.com/#{n}.svg") }
+    g = lambda do |id, home, away, status, hs = nil, as = nil|
+      Match.create!(home_team: home, away_team: away, stage: "Group Stage", status: status,
+                    group_name: "GE", match_id: id, home_score: hs, away_score: as,
+                    start_time: Time.zone.local(2026, 6, 18, 17, 0, 0))
+    end
+    g.call("ge-ad", a, d, "PostEvent", 1, 0)
+    g.call("ge-bd", b, d, "PostEvent", 1, 0)
+    g.call("ge-cd", c, d, "PostEvent", 1, 0) # Ddd 0, played all 3 → out
+    g.call("ge-ab", a, b, "PostEvent", 1, 0)
+    tonight = g.call("ge-ac", a, c, "PreEvent")
+    g.call("ge-bc", b, c, "PreEvent")
+
+    text = GameStateSnapshot.new.group_context_text(tonight)
+    assert_includes text, "cannot finish top 2 or reach a best-third place"
+    refute_includes text, "Ddd 0pts (GD -3) — cannot finish top 2, but still alive"
+  end
+
   test "group context flags an opening match when neither side has played yet" do
     spain = Team.create!(name: "Spain", flag_url: "https://x.com/es.svg")
     fiji  = Team.create!(name: "Fiji",  flag_url: "https://x.com/fj.svg")

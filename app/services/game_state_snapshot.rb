@@ -4,11 +4,6 @@
 # instead of hand-assembling world-state, which keeps the facts identical across
 # every voice and stops the model dragging in teams that aren't in the fixture.
 class GameStateSnapshot
-  FLAG_LABELS = {
-    clinched_top2:      "GUARANTEED top 2",
-    cannot_finish_top2: "CANNOT finish top 2",
-    in_contention:      "still in contention"
-  }.freeze
 
   # Hash of group-stage results; folded into AI cache keys so a new group result
   # invalidates stale commentary (group results never change leaderboard points,
@@ -49,7 +44,7 @@ class GameStateSnapshot
     lines = ["#{table.group_name}: #{match.home_team.name} vs #{match.away_team.name} is a #{table.group_name} match.",
              "Current #{table.group_name} table (counts completed matches only):"]
     table.rows.each do |row|
-      flag = FLAG_LABELS.fetch(qualification(table).flag(row.team))
+      flag = qualification_label(table, row.team)
       lines << "  #{row.position}. #{row.team.name}#{rank_suffix(row.team)} #{row.points}pts (GD #{format('%+d', row.gd)}) — #{flag} — owned by #{owner_name(row.team) || 'unowned'}"
     end
 
@@ -65,11 +60,21 @@ class GameStateSnapshot
     opener = opening_match_line(table, match)
     lines << opener if opener
 
+    # A team already top-2 (or already out) BEFORE this match: the result cannot
+    # change its qualification, only its seeding. Flagging this stops the AI
+    # attributing an already-banked +1 to tonight's outcome.
+    base_flag = ->(team) { qualification(table).flag(team) }
+    [match.home_team, match.away_team].each do |team|
+      next unless base_flag.call(team) == :clinched_top2
+
+      lines << "  Note: #{team.name} have ALREADY secured top 2 (#{owner_name(team) || 'their owner'}'s +1 is already banked) — tonight's result only affects their final seeding, not whether they qualify."
+    end
+
     lines << "What tonight's result does (as the table stands):"
     effects = qualification(table).effects(match)
-    lines << "  If #{match.home_team.name} win: #{effect_phrase(effects[:home_win][:home])}"
-    lines << "  If draw: #{effect_phrase(effects[:draw][:home])}; #{effect_phrase(effects[:draw][:away])}"
-    lines << "  If #{match.away_team.name} win: #{effect_phrase(effects[:away_win][:away])}"
+    lines << "  If #{match.home_team.name} win: #{effect_phrase(effects[:home_win][:home], base_flag.call(match.home_team))}"
+    lines << "  If draw: #{effect_phrase(effects[:draw][:home], base_flag.call(match.home_team))}; #{effect_phrase(effects[:draw][:away], base_flag.call(match.away_team))}"
+    lines << "  If #{match.away_team.name} win: #{effect_phrase(effects[:away_win][:away], base_flag.call(match.away_team))}"
 
     # Only surface a side's next fixture when it could be pivotal: the side is
     # still in contention and this is its final group game coming up next. Early
@@ -94,7 +99,7 @@ class GameStateSnapshot
     return nil unless table
 
     row    = table.rows.find { |r| r.team.id == team.id }
-    flag   = FLAG_LABELS.fetch(qualification(table).flag(team))
+    flag   = qualification_label(table, team)
     rivals = table.rows.reject { |r| r.team.id == team.id }
                   .map { |r| "#{r.team.name}#{rank_suffix(r.team)}" }.join(", ")
     summary = "#{team.name}#{rank_suffix(team)} are #{ordinal(row.position)} in #{table.group_name} on #{row.points}pts — #{flag}."
@@ -114,10 +119,30 @@ class GameStateSnapshot
     @qual_cache[table.group_name] ||= GroupQualification.new(table)
   end
 
+  # A team's current qualification status in words. A side out of the top 2 is
+  # NOT automatically out: the best third-placed teams also advance, so we only
+  # say "out" when even a 3rd-place finish has gone (cannot_reach_knockouts?).
+  def qualification_label(table, team)
+    qual = qualification(table)
+    case qual.flag(team)
+    when :clinched_top2 then "GUARANTEED top 2"
+    when :in_contention then "still in contention"
+    when :cannot_finish_top2
+      if qual.cannot_reach_knockouts?(team)
+        "OUT — cannot finish top 2 or reach a best-third place"
+      else
+        "cannot finish top 2, but still alive for a best-third place"
+      end
+    end
+  end
+
   # Describes where an outcome moves a team in the table and what it means for
   # qualification (and so for the owner). Uses the resulting position from
   # GroupQualification#effects.
-  def effect_phrase(team_effect)
+  # `base_flag` is the team's qualification flag BEFORE this match. It lets us
+  # tell a result that NEWLY clinches top 2 (genuinely banks the +1) apart from a
+  # team that was already through (the +1 is already banked; this only seeds).
+  def effect_phrase(team_effect, base_flag = nil)
     team  = team_effect[:team]
     place =
       if team_effect[:position] == 1
@@ -130,8 +155,18 @@ class GameStateSnapshot
     # never left vague.
     meaning =
       case team_effect[:flag]
-      when :clinched_top2      then " (guaranteed top 2 — #{owner_name(team) || 'no owner'} banks +1)"
-      when :cannot_finish_top2 then " (can no longer finish top 2)"
+      when :clinched_top2
+        if base_flag == :clinched_top2
+          " (already through — this only affects seeding, not the +1)"
+        else
+          " (guaranteed top 2 — #{owner_name(team) || 'no owner'} banks +1)"
+        end
+      when :cannot_finish_top2
+        if team_effect[:eliminated]
+          " (out — cannot finish top 2 or reach a best-third place)"
+        else
+          " (out of the top 2, but still alive for a best-third place — no +1 yet)"
+        end
       when :in_contention      then " (still in with a chance of going through)"
       else ""
       end

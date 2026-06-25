@@ -93,6 +93,25 @@ class GroupQualificationTest < ActiveSupport::TestCase
     refute gq.cannot_reach_knockouts?(d)
   end
 
+  # effects flag whether an outcome leaves a team out of EVERY route (eliminated)
+  # vs out of the top 2 but still alive for a best-third place.
+  test "effects mark a 4th-placed loser eliminated but keep a 3rd-placed team alive" do
+    a, b, c, d = team("Aa"), team("Bb"), team("Cc"), team("Dd")
+    match("GK", a, d, status: "PostEvent", hs: 1, as: 0, mid: "gk-ad")
+    match("GK", b, d, status: "PostEvent", hs: 1, as: 0, mid: "gk-bd")
+    match("GK", c, d, status: "PostEvent", hs: 1, as: 0, mid: "gk-cd") # Dd 0, played all 3
+    match("GK", a, b, status: "PostEvent", hs: 1, as: 0, mid: "gk-ab") # Aa 6, Bb 3
+    upcoming = match("GK", b, c, status: "PreEvent", mid: "gk-bc") # Bb(3) v Cc(3)
+    match("GK", a, c, status: "PreEvent", mid: "gk-ac")
+
+    gq  = GroupQualification.new(GroupTable.new("GK", Match.where(group_name: "GK").to_a))
+    eff = gq.effects(upcoming)
+    # Cc losing to Bb drops to 3rd but can still chase a best-third place.
+    refute eff[:home_win][:away][:eliminated], "Cc keeps a best-third hope"
+    # Dd has played all three and sits below three teams — out of every route.
+    assert gq.cannot_reach_knockouts?(d), "Dd is fully out"
+  end
+
   test "effects report the resulting group position (a win goes top)" do
     a, b, c, d = team("Aaa"), team("Bbb"), team("Ccc"), team("Ddd")
     match("GP", a, c, status: "PostEvent", hs: 1, as: 0, mid: "gp-ac") # Aaa 3

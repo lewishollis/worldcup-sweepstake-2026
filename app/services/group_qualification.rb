@@ -46,7 +46,14 @@ class GroupQualification
   private
 
   def team_effect(team, team_id, match, outcome, comps)
-    standing_after(match, outcome, team_id).merge(team: team, flag: classify(team_id, comps))
+    standing_after(match, outcome, team_id).merge(
+      team:       team,
+      flag:       classify(team_id, comps),
+      # Out of EVERY route under this outcome — not even a best-third place is
+      # reachable (last in every completion). Distinguishes a team that drops out
+      # of the top 2 but stays alive via 3rd from one that is genuinely finished.
+      eliminated: comps.all? { |points| outside_top3?(team_id, points) }
+    )
   end
 
   # The team's group standing if this match finished with `outcome`, applied to

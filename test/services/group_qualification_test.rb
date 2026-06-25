@@ -56,6 +56,43 @@ class GroupQualificationTest < ActiveSupport::TestCase
     assert_equal :in_contention,      gq.flag(c)
   end
 
+  # cannot_reach_knockouts? proves a team is out of BOTH the top-2 AND the
+  # best-third path — i.e. mathematically locked into last place (4th) in every
+  # completion. Finishing 3rd keeps the best-third door open, so it is NOT "out".
+  test "settled group: only the last-placed team cannot reach the knockouts" do
+    a, b, c, d = team("Aa"), team("Bb"), team("Cc"), team("Dd")
+    match("G1", a, b, status: "PostEvent", hs: 1, as: 0)
+    match("G1", a, c, status: "PostEvent", hs: 1, as: 0)
+    match("G1", a, d, status: "PostEvent", hs: 1, as: 0) # Aa 9
+    match("G1", b, c, status: "PostEvent", hs: 1, as: 0)
+    match("G1", b, d, status: "PostEvent", hs: 1, as: 0) # Bb 6
+    match("G1", c, d, status: "PostEvent", hs: 1, as: 0) # Cc 3, Dd 0
+
+    gq = GroupQualification.new(GroupTable.new("G1", Match.where(group_name: "G1").to_a))
+    refute gq.cannot_reach_knockouts?(a), "1st can reach the knockouts"
+    refute gq.cannot_reach_knockouts?(b), "2nd can reach the knockouts"
+    refute gq.cannot_reach_knockouts?(c), "3rd is alive via the best-third route"
+    assert gq.cannot_reach_knockouts?(d), "last place is out of every path"
+  end
+
+  # A team that cannot finish top 2 but can still finish 3rd is NOT out of the
+  # knockouts — the best-third route remains mathematically open.
+  test "can-still-finish-3rd team is not eliminated even when top 2 is gone" do
+    a, b, c, d = team("Pp"), team("Qq"), team("Rr"), team("Ss")
+    match("G2", a, b, status: "PostEvent", hs: 1, as: 0, mid: "g2-ab")
+    match("G2", c, d, status: "PostEvent", hs: 1, as: 0, mid: "g2-cd")
+    match("G2", a, c, status: "PostEvent", hs: 1, as: 0, mid: "g2-ac") # Pp 6, Rr 3
+    match("G2", b, d, status: "PostEvent", hs: 1, as: 0, mid: "g2-bd") # Qq 3, Ss 0
+    match("G2", a, d, status: "PreEvent", mid: "g2-ad")
+    match("G2", b, c, status: "PreEvent", mid: "g2-bc")
+
+    gq = GroupQualification.new(GroupTable.new("G2", Match.where(group_name: "G2").to_a))
+    # Ss on 0: cannot finish top 2, but a win (→3) ties Rr/Qq for 3rd, so the
+    # best-third route is still open → not eliminated.
+    assert_equal :cannot_finish_top2, gq.flag(d)
+    refute gq.cannot_reach_knockouts?(d)
+  end
+
   test "effects report the resulting group position (a win goes top)" do
     a, b, c, d = team("Aaa"), team("Bbb"), team("Ccc"), team("Ddd")
     match("GP", a, c, status: "PostEvent", hs: 1, as: 0, mid: "gp-ac") # Aaa 3

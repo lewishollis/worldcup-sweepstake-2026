@@ -4,10 +4,15 @@
 # so the oracle stays purely mathematical: a team that is top-2 only on goal
 # difference reads as :likely ("in a qualifying spot, not yet safe") rather
 # than the oracle's conservative :in_contention.
+#
+# "Out" means eliminated from EVERY route — both the top 2 and the best-third
+# path (8 of the 12 third-placed teams advance). A team that can no longer
+# finish top 2 but can still finish 3rd is :third_hope, not :out.
 class QualificationStatus
   LABELS = {
     through:    "Through",
     likely:     "Likely",
+    third_hope: "3rd-place hope",
     out:        "Out",
     contention: "In the mix"
   }.freeze
@@ -30,11 +35,14 @@ class QualificationStatus
   QUALIFYING_SLOTS = 2
 
   def key
-    case @qualification.flag(@team)
-    when :clinched_top2      then :through
-    when :cannot_finish_top2 then :out
-    else likely_top2? ? :likely : :contention
-    end
+    return :through if @qualification.flag(@team) == :clinched_top2
+    return :out     if @qualification.cannot_reach_knockouts?(@team)
+
+    # Top 2 is mathematically gone, but the team can still finish 3rd: its only
+    # remaining route is the best-third-placed path.
+    return :third_hope if @qualification.flag(@team) == :cannot_finish_top2
+
+    likely_top2? ? :likely : :contention
   end
 
   private

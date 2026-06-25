@@ -36,7 +36,10 @@ class QualificationStatusTest < ActiveSupport::TestCase
     assert_equal :contention, status_for("G3", d)
   end
 
-  test "clinched team is :through, eliminated team is :out" do
+  # Settled group: top 2 are Through. The 3rd-placed team is NOT out — the best
+  # third-placed teams (8 of the 12 across all groups) still advance, so it reads
+  # as :third_hope. Only the last-placed team, out of every path, is :out.
+  test "settled group: top 2 Through, 3rd is :third_hope, last is :out" do
     a, b, c, d = team("Aa"), team("Bb"), team("Cc"), team("Dd")
     match("G1", a, b, status: "PostEvent", hs: 1, as: 0)
     match("G1", a, c, status: "PostEvent", hs: 1, as: 0)
@@ -45,10 +48,25 @@ class QualificationStatusTest < ActiveSupport::TestCase
     match("G1", b, d, status: "PostEvent", hs: 1, as: 0) # Bb 6
     match("G1", c, d, status: "PostEvent", hs: 1, as: 0) # Cc 3, Dd 0
 
-    assert_equal :through, status_for("G1", a)
-    assert_equal :through, status_for("G1", b)
-    assert_equal :out,     status_for("G1", c)
-    assert_equal :out,     status_for("G1", d)
+    assert_equal :through,     status_for("G1", a)
+    assert_equal :through,     status_for("G1", b)
+    assert_equal :third_hope,  status_for("G1", c)
+    assert_equal :out,         status_for("G1", d)
+  end
+
+  # A team mathematically out of the top 2 but still able to finish 3rd is
+  # :third_hope, not :out — its only remaining route is the best-third path.
+  test "top-2 gone but 3rd still reachable is :third_hope" do
+    a, b, c, d = team("Pp"), team("Qq"), team("Rr"), team("Ss")
+    match("G4", a, b, status: "PostEvent", hs: 1, as: 0)
+    match("G4", c, d, status: "PostEvent", hs: 1, as: 0)
+    match("G4", a, c, status: "PostEvent", hs: 1, as: 0) # Pp 6, Rr 3
+    match("G4", b, d, status: "PostEvent", hs: 1, as: 0) # Qq 3, Ss 0
+    match("G4", a, d, status: "PreEvent")
+    match("G4", b, c, status: "PreEvent")
+
+    # Ss (0pts) cannot finish top 2, but a win ties it for 3rd → :third_hope.
+    assert_equal :third_hope, status_for("G4", d)
   end
 
   test "top-2-on-goal-difference but not points-clinched is :likely, 3rd is :contention" do
@@ -74,6 +92,7 @@ class QualificationStatusTest < ActiveSupport::TestCase
   test "label maps each key to its display string" do
     assert_equal "Through",       QualificationStatus.label(:through)
     assert_equal "Likely",        QualificationStatus.label(:likely)
+    assert_equal "3rd-place hope", QualificationStatus.label(:third_hope)
     assert_equal "Out",           QualificationStatus.label(:out)
     assert_equal "In the mix",    QualificationStatus.label(:contention)
   end

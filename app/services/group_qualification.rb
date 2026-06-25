@@ -18,6 +18,15 @@ class GroupQualification
     classify(team.id, completions)
   end
 
+  # True when the team is mathematically out of EVERY route to the knockouts —
+  # not just the top 2, but the best-third-placed path too. In a 4-team group
+  # that means provably last (outside the top 3) in every completion, even under
+  # the best tiebreak. Points-only and conservative: a points-tie for 3rd keeps
+  # the best-third door open, so it does NOT count as out.
+  def cannot_reach_knockouts?(team)
+    completions.all? { |points| outside_top3?(team.id, points) }
+  end
+
   # For an upcoming group match, per outcome, the per-team qualification flag AND
   # the resulting group standing (where the result moves them in the table, as it
   # currently stands — points only):
@@ -120,5 +129,12 @@ class GroupQualification
   def safe_out?(team_id, points)
     mine = points[team_id]
     points.count { |id, p| id != team_id && p > mine } >= 2
+  end
+
+  # Outside the top 3 (last in a 4-team group): at least three other teams
+  # strictly out-point this team, so it cannot even be a third-placed finisher.
+  def outside_top3?(team_id, points)
+    mine = points[team_id]
+    points.count { |id, p| id != team_id && p > mine } >= 3
   end
 end

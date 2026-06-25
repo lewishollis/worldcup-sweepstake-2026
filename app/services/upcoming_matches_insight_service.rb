@@ -6,9 +6,10 @@ class UpcomingMatchesInsightService
   FOOTBALL_FACT_KEY = "upcoming_matches_football_fact".freeze
   FOOTBALL_FACT_VERSION = "v2".freeze
   TIME_ZONE = "Europe/London".freeze
-  # Folded into the cache version so changing the persona regenerates any
-  # previously cached insight written in the old voice.
-  PERSONA_VERSION = "gary-lineker-v12".freeze
+  # Folded into the cache version so changing the persona — or the generation
+  # parameters (e.g. the token budget) — regenerates any previously cached
+  # insight produced under the old settings.
+  PERSONA_VERSION = "gary-lineker-v13".freeze
   # Owners based in Vietnam — matches involving their teams also show Vietnam time.
   VIETNAM_FRIENDS = ["Richard", "Nhiên"].freeze
   VIETNAM_TIME_ZONE = "Asia/Ho_Chi_Minh".freeze
@@ -102,7 +103,11 @@ class UpcomingMatchesInsightService
     system_prompt = build_system_prompt(snapshot)
     user_message  = build_user_message(snapshot)
 
-    message = GroqClient.call(system_prompt: system_prompt, user_message: user_message, max_tokens: 600)
+    # A full match day (6+ fixtures) with qualification context runs ~580 tokens,
+    # which sat right against the old 600 cap and truncated on verbose runs. Give
+    # comfortable headroom — billing is per token used, so the cap only bounds the
+    # worst case, and generation still stops cleanly well short of it.
+    message = GroqClient.call(system_prompt: system_prompt, user_message: user_message, max_tokens: 1200)
     # Return the briefing body only — the verified football fact is appended later
     # (per render, not per cache) so it stays fresh every time. See #with_football_fact.
     message&.strip

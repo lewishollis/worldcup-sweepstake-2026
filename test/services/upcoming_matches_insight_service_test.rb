@@ -132,6 +132,18 @@ class UpcomingMatchesInsightServiceTest < ActiveSupport::TestCase
     assert_includes prompt, "opening-match note"
   end
 
+  # Regression: the model invented "opening Group F/D fixtures" for teams that had
+  # already played, cued by the style example's unconditional "opening" wording.
+  test "system prompt forbids claiming a fixture is an opening game unless supplied" do
+    prompt = UpcomingMatchesInsightService.new([@tomorrow_match]).send(:build_system_prompt, TournamentContextService.new)
+
+    # Hard rule against the hallucination.
+    assert_includes prompt, "unless an opening-match note is explicitly supplied"
+    # The example must not model an unconditional "opening" claim.
+    refute_includes prompt, "opening Group E match"
+    refute_includes prompt, "opening Group F fixture"
+  end
+
   test "system prompt makes the owner's points consequence the focus of each match" do
     prompt = UpcomingMatchesInsightService.new([@tomorrow_match]).send(:build_system_prompt, TournamentContextService.new)
 

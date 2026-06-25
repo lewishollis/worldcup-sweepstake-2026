@@ -19,6 +19,7 @@ class GroqClientTest < ActiveSupport::TestCase
       Net::HTTP.stub(:new, ->(_host, _port) {
         http = Minitest::Mock.new
         http.expect(:use_ssl=, nil, [true])
+        http.expect(:open_timeout=, nil, [5])
         http.expect(:read_timeout=, nil, [15])
         http.expect(:request, response_stub, [Net::HTTP::Post])
         http
@@ -38,6 +39,7 @@ class GroqClientTest < ActiveSupport::TestCase
       Net::HTTP.stub(:new, ->(_host, _port) {
         http = Minitest::Mock.new
         http.expect(:use_ssl=, nil, [true])
+        http.expect(:open_timeout=, nil, [5])
         http.expect(:read_timeout=, nil, [15])
         http.expect(:request, bad_response, [Net::HTTP::Post])
         http
@@ -74,6 +76,7 @@ class GroqClientTest < ActiveSupport::TestCase
       Net::HTTP.stub(:new, ->(_host, _port) {
         http = Object.new
         http.define_singleton_method(:use_ssl=) { |_| }
+        http.define_singleton_method(:open_timeout=) { |_| }
         http.define_singleton_method(:read_timeout=) { |_| }
         http.define_singleton_method(:request) { |req| sent = req.body; response_stub }
         http

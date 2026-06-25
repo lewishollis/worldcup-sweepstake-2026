@@ -21,6 +21,11 @@ class GroqClient
     uri = URI(GROQ_API_URL)
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = true
+    # Bound BOTH phases: without an explicit open_timeout, Net::HTTP defaults to
+    # 60s to establish a connection — long enough on its own to blow Heroku's 30s
+    # router limit (H12) if Groq is slow to accept. Cap connect short; reads can
+    # take longer while the model generates.
+    http.open_timeout = 5
     http.read_timeout = 15
 
     request = Net::HTTP::Post.new(uri.path)

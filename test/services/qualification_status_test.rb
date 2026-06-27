@@ -2,6 +2,12 @@
 require "test_helper"
 
 class QualificationStatusTest < ActiveSupport::TestCase
+  # KnockoutQualification memoizes its clinched set by GameStateSnapshot.data_version
+  # (a hash of group-stage results). Two tests here share an identical group-stage
+  # signature, so without this reset the second would read a stale set keyed to the
+  # first test's already-rolled-back team ids.
+  setup { KnockoutQualification.reset! }
+
   def team(name)
     Team.create!(name: name, flag_url: "https://x.com/#{name}.svg")
   end
@@ -87,6 +93,26 @@ class QualificationStatusTest < ActiveSupport::TestCase
     # Cc lost heavily (0pts, GD -5) and Dd (0pts, GD -3) sit 3rd/4th, still alive.
     assert_equal :contention, status_for("G2", c)
     assert_equal :contention, status_for("G2", d)
+  end
+
+  # Regression: a best-third-placed team that has actually been drawn into the
+  # knockouts (a real Last-32 fixture exists, so Team#progressed? is true and the
+  # "Advanced" pill shows) must NOT still read as :third_hope. The badge has to
+  # agree with the pill — it's :through.
+  test "best-third qualifier with a knockout fixture is :through, not :third_hope" do
+    a, b, c, d = team("Aa"), team("Bb"), team("Cc"), team("Dd")
+    match("G1", a, b, status: "PostEvent", hs: 1, as: 0)
+    match("G1", a, c, status: "PostEvent", hs: 1, as: 0)
+    match("G1", a, d, status: "PostEvent", hs: 1, as: 0) # Aa 9
+    match("G1", b, c, status: "PostEvent", hs: 1, as: 0)
+    match("G1", b, d, status: "PostEvent", hs: 1, as: 0) # Bb 6
+    match("G1", c, d, status: "PostEvent", hs: 1, as: 0) # Cc 3, Dd 0
+
+    # Cc finished 3rd but has been drawn into the Last 32 as a best third.
+    Match.create!(home_team: c, away_team: a, stage: "Last 32", status: "PreEvent",
+                  match_id: "ko-cc", start_time: Time.zone.local(2026, 7, 1, 17, 0, 0))
+
+    assert_equal :through, status_for("G1", c)
   end
 
   test "label maps each key to its display string" do

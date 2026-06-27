@@ -35,7 +35,11 @@ class QualificationStatus
   QUALIFYING_SLOTS = 2
 
   def key
-    return :through if @qualification.flag(@team) == :clinched_top2
+    # A confirmed knockout berth — a clinched top-2 finish OR an actual knockout
+    # fixture already drawn (the best-third path the group oracle can't confirm) —
+    # reads as :through. This keeps the badge in step with the "Advanced" pill,
+    # which is driven by the same Team#progressed? signal.
+    return :through if @team.progressed?
     return :out     if @qualification.cannot_reach_knockouts?(@team)
 
     # Top 2 is mathematically gone, but the team can still finish 3rd: its only

@@ -112,8 +112,10 @@ class ScenarioEngineTest < ActiveSupport::TestCase
     end
   end
 
-  test "Last 16 awards qualify bonus plus win bonus when neither team has qualified yet" do
-    # These teams have NO existing PostEvent knockout matches
+  test "Last 16 awards only the win bonus — qualify bonus is already in current_score" do
+    # The +1 qualify bonus is awarded as soon as a main-bracket fixture exists, so
+    # it's always in group.total_points before ScenarioEngine runs. Only the round
+    # win earns an additional point here.
     mex = Team.create!(name: "Mexico_#{SecureRandom.hex(4)}")
     chi = Team.create!(name: "Chile_#{SecureRandom.hex(4)}")
     mg  = Group.create!(name: "MG_#{SecureRandom.hex(4)}", friend: Friend.create!(name: "MxF_#{SecureRandom.hex(4)}"))
@@ -129,19 +131,19 @@ class ScenarioEngineTest < ActiveSupport::TestCase
     result = ScenarioEngine.new(match).call
     home_win = result[:home_win]
 
-    # Mexico (winner): qualify +1 + Last 16 win +1 = 2
-    # Chile  (loser):  qualify +1 = 1
+    # Mexico (winner): Last 16 win +1 only
+    # Chile  (loser):  no new points
     mex_total = home_win[:team_points].select { |t| t[:team_id] == mex.id }.sum { |t| t[:points_awarded] }
     chi_total  = home_win[:team_points].select { |t| t[:team_id] == chi.id }.sum { |t| t[:points_awarded] }
-    assert_equal 2, mex_total
-    assert_equal 1, chi_total
+    assert_equal 1, mex_total
+    assert_equal 0, chi_total
 
-    # Also test away_win: Chile wins, Chile gets qualify+win=2, Mexico gets qualify=1
+    # away_win: Chile wins +1, Mexico gets nothing
     away_win = result[:away_win]
     mex_away = away_win[:team_points].select { |t| t[:team_id] == mex.id }.sum { |t| t[:points_awarded] }
     chi_away  = away_win[:team_points].select { |t| t[:team_id] == chi.id }.sum { |t| t[:points_awarded] }
-    assert_equal 1, mex_away  # qualify only
-    assert_equal 2, chi_away  # qualify + win
+    assert_equal 0, mex_away
+    assert_equal 1, chi_away
   end
 
   test "rank changes detected when outcome flips leaderboard position" do

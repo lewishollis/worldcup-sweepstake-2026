@@ -9,7 +9,7 @@ class UpcomingMatchesInsightService
   # Folded into the cache version so changing the persona — or the generation
   # parameters (e.g. the token budget) — regenerates any previously cached
   # insight produced under the old settings.
-  PERSONA_VERSION = "gary-lineker-v14".freeze
+  PERSONA_VERSION = "gary-lineker-v15".freeze
   # Owners based in Vietnam — matches involving their teams also show Vietnam time.
   VIETNAM_FRIENDS = ["Richard", "Nhiên"].freeze
   VIETNAM_TIME_ZONE = "Asia/Ho_Chi_Minh".freeze

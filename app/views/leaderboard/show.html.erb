@@ -71,7 +71,7 @@
                     <% if team.flag_url.present? %>
                       <%= image_tag team.flag_url, alt: team.name, class: "leaderboard-flag" %>
                     <% end %>
-                    <%= render "shared/qualification_badge", team: team %>
+                    <%= render "shared/progression_ticks", team: team, compact: true %>
                   </span>
                 <% end %>
               </div>

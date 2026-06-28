@@ -42,10 +42,10 @@ class QualificationStatusTest < ActiveSupport::TestCase
     assert_equal :contention, status_for("G3", d)
   end
 
-  # Settled group: top 2 are Through. The 3rd-placed team is NOT out — the best
-  # third-placed teams (8 of the 12 across all groups) still advance, so it reads
-  # as :third_hope. Only the last-placed team, out of every path, is :out.
-  test "settled group: top 2 Through, 3rd is :third_hope, last is :out" do
+  # Settled group (all 6 games played): top 2 are :through. The 3rd-placed team
+  # is :out — the best-third selection is done and they weren't picked (no
+  # knockout fixture, so progressed? is false). Only :third_hope while games remain.
+  test "settled group: top 2 Through, 3rd and last are both :out" do
     a, b, c, d = team("Aa"), team("Bb"), team("Cc"), team("Dd")
     match("G1", a, b, status: "PostEvent", hs: 1, as: 0)
     match("G1", a, c, status: "PostEvent", hs: 1, as: 0)
@@ -54,10 +54,10 @@ class QualificationStatusTest < ActiveSupport::TestCase
     match("G1", b, d, status: "PostEvent", hs: 1, as: 0) # Bb 6
     match("G1", c, d, status: "PostEvent", hs: 1, as: 0) # Cc 3, Dd 0
 
-    assert_equal :through,     status_for("G1", a)
-    assert_equal :through,     status_for("G1", b)
-    assert_equal :third_hope,  status_for("G1", c)
-    assert_equal :out,         status_for("G1", d)
+    assert_equal :through, status_for("G1", a)
+    assert_equal :through, status_for("G1", b)
+    assert_equal :out,     status_for("G1", c)
+    assert_equal :out,     status_for("G1", d)
   end
 
   # A team mathematically out of the top 2 but still able to finish 3rd is

@@ -2,15 +2,6 @@ class ScenarioEngine
   def initialize(match)
     @match = match
     @all_groups = Group.includes(:teams, :friend).all
-    # Preload whether each team has already played a PostEvent knockout match (earned qualify bonus)
-    @home_has_qualified = Match.where(status: "PostEvent", stage: Team::MAIN_KNOCKOUT_STAGES)
-                               .where("home_team_id = ? OR away_team_id = ?", match.home_team_id, match.home_team_id)
-                               .where.not(id: match.id)
-                               .exists?
-    @away_has_qualified = Match.where(status: "PostEvent", stage: Team::MAIN_KNOCKOUT_STAGES)
-                               .where("home_team_id = ? OR away_team_id = ?", match.away_team_id, match.away_team_id)
-                               .where.not(id: match.id)
-                               .exists?
   end
 
   def call
@@ -46,14 +37,10 @@ class ScenarioEngine
 
     points = []
 
-    # Award +1 qualify bonus to any team appearing in their first PostEvent knockout match
-    [
-      { id: @match.home_team_id, name: @match.home_team.name, qualified: @home_has_qualified },
-      { id: @match.away_team_id, name: @match.away_team.name, qualified: @away_has_qualified }
-    ].each do |t|
-      next if t[:qualified]
-      points << { team_id: t[:id], team_name: t[:name], points_awarded: 1, reason: "Qualify from group stage" }
-    end
+    # The +1 qualify bonus (reaching the main bracket) is already reflected in
+    # current_score via Team#progression_score — it's awarded the moment a
+    # main-bracket fixture exists, so it's always in group.total_points before
+    # ScenarioEngine is called. Never add it here.
 
     case stage
     when "Last 32", "Last 16", "Quarter-finals", "Semi-finals"

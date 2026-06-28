@@ -42,9 +42,12 @@ class QualificationStatus
     return :through if @team.progressed?
     return :out     if @qualification.cannot_reach_knockouts?(@team)
 
-    # Top 2 is mathematically gone, but the team can still finish 3rd: its only
-    # remaining route is the best-third-placed path.
-    return :third_hope if @qualification.flag(@team) == :cannot_finish_top2
+    # Top 2 is mathematically gone. If group games remain, the team may still
+    # take the best-third-placed route. Once all games are done, that selection
+    # has already happened — if they didn't progress, they're out.
+    if @qualification.flag(@team) == :cannot_finish_top2
+      return group_games_remaining? ? :third_hope : :out
+    end
 
     likely_top2? ? :likely : :contention
   end
@@ -62,5 +65,9 @@ class QualificationStatus
 
     first_below_line = rows[QUALIFYING_SLOTS] # 0-based index == position (slots + 1)
     first_below_line.nil? || row.points > first_below_line.points
+  end
+
+  def group_games_remaining?
+    @table.matches.any? { |m| m.status != "PostEvent" }
   end
 end

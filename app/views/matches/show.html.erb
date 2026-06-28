@@ -20,7 +20,7 @@
             <%= image_tag @match.home_team.flag_url, class: "w-12 h-12 rounded-full object-cover mx-auto mb-2" %>
           <% end %>
           <p class="font-bold text-text-primary-light dark:text-text-primary-dark"><%= @match.home_team.name %></p>
-          <%= render "shared/qualification_badge", team: @match.home_team %>
+          <%= render "shared/progression_ticks", team: @match.home_team %>
           <% home_friend = @match.home_team.groups.first&.friend %>
           <p class="text-xs text-text-secondary-light dark:text-text-secondary-dark"><%= home_friend&.name || "No owner" %></p>
         </div>
@@ -42,7 +42,7 @@
             <%= image_tag @match.away_team.flag_url, class: "w-12 h-12 rounded-full object-cover mx-auto mb-2" %>
           <% end %>
           <p class="font-bold text-text-primary-light dark:text-text-primary-dark"><%= @match.away_team.name %></p>
-          <%= render "shared/qualification_badge", team: @match.away_team %>
+          <%= render "shared/progression_ticks", team: @match.away_team %>
           <% away_friend = @match.away_team.groups.first&.friend %>
           <p class="text-xs text-text-secondary-light dark:text-text-secondary-dark"><%= away_friend&.name || "No owner" %></p>
         </div>

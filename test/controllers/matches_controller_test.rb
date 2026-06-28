@@ -94,7 +94,7 @@ class MatchesControllerTest < ActionDispatch::IntegrationTest
     assert_includes rendered, "In the mix"
   end
 
-  test "group_standings partial renders a clinched team with a Through badge" do
+  test "group_standings partial renders a clinched team with a Group tick" do
     a = Team.create!(name: "Aa", flag_url: "https://x.com/Aa.svg")
     b = Team.create!(name: "Bb", flag_url: "https://x.com/Bb.svg")
     c = Team.create!(name: "Cc", flag_url: "https://x.com/Cc.svg")
@@ -110,7 +110,8 @@ class MatchesControllerTest < ActionDispatch::IntegrationTest
       assigns: { standings: GroupTable.all }
     )
     assert_includes rendered, "G1"
-    assert_includes rendered, "Through"
+    assert_includes rendered, "Group"
+    assert_includes rendered, "fa-check"
   end
 
   test "per-match preview box is temporarily disabled (focus is the daily summary)" do

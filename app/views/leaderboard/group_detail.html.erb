@@ -59,7 +59,7 @@
                   <% end %>
                   <div class="flex-1">
                     <p class="font-semibold text-text-primary-light dark:text-text-primary-dark"><%= team.name %></p>
-                    <%= render "shared/qualification_badge", team: team %>
+                    <%= render "shared/progression_ticks", team: team %>
                     <p class="text-xs text-text-secondary-light dark:text-text-secondary-dark">
                       <%= team.matches.where(status: 'PostEvent').count %> matches played
                     </p>
@@ -68,12 +68,6 @@
                     <div class="text-xl font-bold text-text-primary-light dark:text-text-primary-dark"><%= team.progression_score %></div>
                     <div class="text-xs text-text-secondary-light dark:text-text-secondary-dark">pts</div>
                   </div>
-                  <% if team.progressed? %>
-                    <span class="px-2 py-1 rounded-full bg-accent-live/20 text-accent-live text-xs font-semibold flex items-center gap-1">
-                      <i class="fas fa-check text-xs"></i>
-                      <span>Advanced</span>
-                    </span>
-                  <% end %>
                   <i class="fas fa-chevron-right text-text-secondary-light dark:text-text-secondary-dark ml-2"></i>
                 </div>
 

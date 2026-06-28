@@ -1,0 +1,39 @@
+<%# Renders stacked progression ticks for a team.
+    - compact: true → icon-only (for the compact leaderboard list)
+    - compact: false (default) → labeled ticks ("Group", "L32", "QF", etc.)
+    Falls back to the qualification badge for teams not yet progressed. %>
+<% compact = local_assigns.fetch(:compact, false) %>
+<% stage_labels = { 'Last 32' => 'L32', 'Last 16' => 'L16', 'Quarter-finals' => 'QF', 'Semi-finals' => 'SF', 'Final' => 'Final' } %>
+
+<% if team.progressed? %>
+  <% won = team.knockout_stages_won %>
+  <% if compact %>
+    <span class="inline-flex items-center gap-0.5 align-middle">
+      <span class="inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[10px] leading-none font-semibold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300" title="Advanced from group stage">
+        <i class="fas fa-check" style="font-size:7px"></i>
+        Group
+      </span>
+      <% won.each do |stage| %>
+        <span class="inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[10px] leading-none font-semibold bg-accent-live/20 text-accent-live" title="Won <%= stage %>">
+          <i class="fas fa-check" style="font-size:7px"></i>
+          <%= stage_labels[stage] || stage %>
+        </span>
+      <% end %>
+    </span>
+  <% else %>
+    <div class="flex items-center gap-1 flex-wrap">
+      <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] leading-none font-semibold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300" title="Advanced from group stage">
+        <i class="fas fa-check" style="font-size:7px"></i>
+        Group
+      </span>
+      <% won.each do |stage| %>
+        <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] leading-none font-semibold bg-accent-live/20 text-accent-live" title="Won <%= stage %>">
+          <i class="fas fa-check" style="font-size:7px"></i>
+          <%= stage_labels[stage] || stage %>
+        </span>
+      <% end %>
+    </div>
+  <% end %>
+<% else %>
+  <%= render "shared/qualification_badge", team: team %>
+<% end %>

@@ -390,6 +390,32 @@
   text-transform: uppercase;
 }
 
+/* Reduced motion — disable all game animations for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .game-keeper,
+  .game-ball-mark,
+  .game-aim-zones,
+  .game-power-label {
+    transition: none;
+  }
+  .game-net-ripple.rippling,
+  .game-screen-flash.flash-goal,
+  .game-screen-flash.flash-missed,
+  .game-screen-flash.flash-saved,
+  .game-bar-wrapper.locked-flash .game-bar-track,
+  .game-bar-wrapper.bar-pop,
+  .game-result-overlay,
+  .game-leaderboard-row.new-pb,
+  .game-hint.hint-milestone {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .game-screen-flash {
+    display: none;
+  }
+}
+
 /* Power level label */
 .game-power-label {
   position: absolute;

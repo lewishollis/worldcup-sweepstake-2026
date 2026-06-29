@@ -1,11 +1,38 @@
-<%# Renders stacked progression ticks for a team.
-    - compact: true → icon-only (for the compact leaderboard list)
-    - compact: false (default) → labeled ticks ("Group", "L32", "QF", etc.)
+<%# app/views/shared/_progression_ticks.html.erb
+    Renders progression status for a team.
+    - compact: true  → small labeled pills ("Group", "L32", etc.) for match cards
+    - compact: false → full labeled ticks for group detail pages
+    - dots: true     → single coloured dot for leaderboard card rows (minimal)
     Falls back to the qualification badge for teams not yet progressed. %>
 <% compact = local_assigns.fetch(:compact, false) %>
+<% dots    = local_assigns.fetch(:dots, false) %>
 <% stage_labels = { 'Last 32' => 'L32', 'Last 16' => 'L16', 'Quarter-finals' => 'QF', 'Semi-finals' => 'SF', 'Final' => 'Final' } %>
 
-<% if team.progressed? %>
+<% if dots %>
+  <%# One dot + stage label per cleared stage, stacked vertically below the flag %>
+  <% if team.progressed? %>
+    <span class="inline-flex items-center gap-0.5 leading-none">
+      <span class="h-1.5 w-1.5 rounded-full bg-green-500 dark:bg-green-400 flex-shrink-0"></span>
+      <span class="text-[9px] font-bold text-green-600 dark:text-green-400">Grp</span>
+    </span>
+    <% team.knockout_stages_won.each do |stage| %>
+      <span class="inline-flex items-center gap-0.5 leading-none">
+        <span class="h-1.5 w-1.5 rounded-full bg-accent-live flex-shrink-0"></span>
+        <span class="text-[9px] font-bold text-accent-live"><%= stage_labels[stage] || stage %></span>
+      </span>
+    <% end %>
+  <% elsif (qual_status = team_qualification_status(team)) %>
+    <%
+      dot_class   = { through: 'bg-green-500',  likely: 'bg-amber-400',          contention: 'bg-blue-400',          third_hope: 'bg-purple-500',         out: 'bg-gray-400' }[qual_status] || 'bg-gray-300'
+      label_class = { through: 'text-green-600 dark:text-green-400', likely: 'text-amber-500 dark:text-amber-400', contention: 'text-blue-500 dark:text-blue-400', third_hope: 'text-purple-600 dark:text-purple-400', out: 'text-gray-400' }[qual_status] || 'text-gray-400'
+    %>
+    <span class="inline-flex items-center gap-0.5 leading-none">
+      <span class="h-1.5 w-1.5 rounded-full <%= dot_class %> flex-shrink-0"></span>
+      <span class="text-[9px] font-bold <%= label_class %>"><%= QualificationStatus.label(qual_status) %></span>
+    </span>
+  <% end %>
+
+<% elsif team.progressed? %>
   <% won = team.knockout_stages_won %>
   <% if compact %>
     <span class="inline-flex items-center gap-0.5 align-middle">

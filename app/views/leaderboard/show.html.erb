@@ -67,11 +67,17 @@
               <!-- Team Flags -->
               <div class="leaderboard-flags">
                 <% group.teams.each do |team| %>
-                  <span class="leaderboard-team">
+                  <span class="leaderboard-team-dot">
                     <% if team.flag_url.present? %>
-                      <%= image_tag team.flag_url, alt: team.name, class: "leaderboard-flag" %>
+                      <%= image_tag team.flag_url, alt: team.name, class: "leaderboard-flag-lg" %>
+                    <% else %>
+                      <span class="leaderboard-flag-lg bg-secondary/20 flex items-center justify-center">
+                        <span class="text-[9px] font-bold text-secondary"><%= team.name[0] %></span>
+                      </span>
                     <% end %>
-                    <%= render "shared/progression_ticks", team: team, compact: true %>
+                    <div class="flex flex-col items-center gap-0.5 mt-0.5">
+                      <%= render "shared/progression_ticks", team: team, dots: true %>
+                    </div>
                   </span>
                 <% end %>
               </div>

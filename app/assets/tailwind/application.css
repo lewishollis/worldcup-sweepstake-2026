@@ -27,6 +27,10 @@
   --color-border-light: #e5e7eb;
   --color-border-dark: #3b4354;
 
+  /* Surface Colors (between background and card in the elevation stack) */
+  --color-surface-light: #f8f9fb;
+  --color-surface-dark: #111622;
+
   /* Accent Colors */
   --color-accent-live: #22c55e;
 
@@ -49,6 +53,13 @@
   --radius-lg: 2rem;
   --radius-xl: 3rem;
   --radius-full: 9999px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .match-status-live .pulse-dot {
+    animation: none;
+  }
 }
 
 /* Import component styles */

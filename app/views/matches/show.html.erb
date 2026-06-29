@@ -4,7 +4,7 @@
       <%= link_to matches_path, class: "page-header-button" do %>
         <i class="fas fa-arrow-left text-xl"></i>
       <% end %>
-      <h1 class="page-title">Match Preview</h1>
+      <h1 class="page-title"><%= @match.status == 'PostEvent' ? 'Match Result' : (@match.status == 'MidEvent' ? 'Live Match' : 'Match Preview') %></h1>
       <div class="w-12"></div>
     </div>
   </header>

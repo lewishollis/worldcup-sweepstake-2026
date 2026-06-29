@@ -37,15 +37,25 @@
 }
 
 .leaderboard-flags {
-  @apply flex flex-wrap gap-x-2 gap-y-1 mt-1;
+  @apply flex items-start gap-3 mt-1.5;
 }
 
+/* Original inline layout (compact mode — kept for potential reuse) */
 .leaderboard-team {
   @apply inline-flex items-center gap-1 flex-shrink-0;
 }
 
 .leaderboard-flag {
   @apply h-4 w-4 flex-shrink-0 rounded-full object-cover;
+}
+
+/* Dot mode — flag above, status dot below */
+.leaderboard-team-dot {
+  @apply flex flex-col items-center gap-0.5 flex-shrink-0;
+}
+
+.leaderboard-flag-lg {
+  @apply h-6 w-6 flex-shrink-0 rounded-full object-cover;
 }
 
 /* Group Card Components */
@@ -73,23 +83,23 @@
   @apply px-2 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold;
 }
 
-/* Insights Box */
+/* Insights Box — same visual treatment as commentary-box (both are John Botson) */
 .insights-box {
-  @apply bg-card-light dark:bg-card-dark p-4 rounded-2xl mb-6 border border-border-light dark:border-border-dark;
+  @apply flex flex-col gap-3 bg-secondary/10 dark:bg-secondary/20 p-4 rounded-2xl mb-6 border border-secondary/20 dark:border-secondary/30;
 }
 
 .insights-header {
-  @apply flex items-center mb-2;
+  @apply flex items-center gap-3;
 }
 
 .insights-icon {
-  @apply text-lg text-text-secondary-light dark:text-text-secondary-dark mr-3;
+  @apply text-secondary dark:text-blue-300 text-2xl;
 }
 
 .insights-title {
-  @apply font-bold text-text-primary-light dark:text-text-primary-dark;
+  @apply text-base font-bold text-secondary dark:text-blue-300;
 }
 
 .insights-text {
-  @apply text-sm text-text-secondary-light dark:text-text-secondary-dark leading-relaxed;
+  @apply text-sm text-secondary/80 dark:text-blue-200/80 leading-relaxed;
 }

@@ -1,7 +1,7 @@
 /* Match Card Components */
 
 .match-card {
-  @apply flex flex-col gap-4 rounded-lg bg-card-light dark:bg-card-dark p-4 shadow-sm;
+  @apply flex flex-col gap-4 rounded-lg bg-card-light dark:bg-card-dark p-4 shadow-sm border border-border-light dark:border-border-dark;
 }
 
 .match-header {
@@ -50,7 +50,7 @@
 
 /* Ben Botcurdy Commentary Box */
 .commentary-box {
-  @apply flex flex-col gap-3 rounded-lg bg-secondary/10 dark:bg-secondary/20 p-4 border border-secondary/20 dark:border-secondary/30;
+  @apply flex flex-col gap-3 rounded-2xl bg-secondary/10 dark:bg-secondary/20 p-4 border border-secondary/20 dark:border-secondary/30;
 }
 
 .commentary-header {

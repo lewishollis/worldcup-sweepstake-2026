@@ -1,95 +1,87 @@
 <div class="relative min-h-screen flex flex-col">
-  <!-- Desktop Wrapper -->
-  <div class="max-w-7xl mx-auto w-full px-4 md:px-6 lg:px-8">
-    <div class="p-6 pb-28 md:pt-8 md:pb-8">
-      <!-- Header -->
-      <header class="flex items-center justify-center mb-8">
-        <h1 class="text-lg font-semibold text-text-primary-light dark:text-text-primary-dark">Groups</h1>
-      </header>
+  <div class="max-w-7xl mx-auto w-full">
+    <header class="page-header">
+      <div class="page-header-container">
+        <h1 class="page-title">Groups</h1>
+      </div>
+    </header>
 
-      <main class="flex-grow">
-        <!-- Page Title -->
-        <section class="mb-6">
-          <h2 class="text-4xl md:text-5xl lg:text-6xl font-bold text-text-primary-light dark:text-text-primary-dark">Team Groups</h2>
-        </section>
-
-        <!-- Groups Grid -->
-        <section class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-      <% @groups.each do |group| %>
-        <article class="group-card">
-          <!-- Group Header -->
-          <div class="group-header">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <% if group.friend&.profile_picture_url.present? %>
-                  <%= image_tag group.friend.profile_picture_url, alt: group.friend.name, class: "w-12 h-12 rounded-full object-cover cursor-pointer", data: { action: "click->image-modal#open", image_modal_src_param: group.friend.profile_picture_url, image_modal_alt_param: group.friend.name } %>
-                <% else %>
-                  <div class="w-12 h-12 rounded-full bg-secondary/30 flex items-center justify-center">
-                    <i class="fas fa-user text-xl text-secondary"></i>
+    <main class="flex-grow px-4 md:px-6 lg:px-8 pb-24 md:pb-8 pt-6">
+      <!-- Groups Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+        <% @groups.each do |group| %>
+          <article class="group-card">
+            <!-- Group Header -->
+            <div class="group-header">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <% if group.friend&.profile_picture_url.present? %>
+                    <%= image_tag group.friend.profile_picture_url, alt: group.friend.name, class: "w-12 h-12 rounded-full object-cover cursor-pointer", data: { action: "click->image-modal#open", image_modal_src_param: group.friend.profile_picture_url, image_modal_alt_param: group.friend.name } %>
+                  <% else %>
+                    <div class="w-12 h-12 rounded-full bg-secondary/30 flex items-center justify-center">
+                      <i class="fas fa-user text-xl text-secondary"></i>
+                    </div>
+                  <% end %>
+                  <div>
+                    <h3 class="group-title"><%= group.friend&.name || "No Friend Assigned" %></h3>
+                    <p class="group-subtitle"><%= group.name %></p>
                   </div>
-                <% end %>
-                <div>
-                  <h3 class="group-title"><%= group.friend&.name || "No Friend Assigned" %></h3>
-                  <p class="group-subtitle"><%= group.name %></p>
                 </div>
-              </div>
-              <div class="text-right">
-                <div class="group-points"><%= group.total_points %></div>
-                <div class="text-xs text-text-secondary-light dark:text-text-secondary-dark">points</div>
+                <div class="text-right">
+                  <div class="group-points"><%= group.total_points %></div>
+                  <div class="text-xs text-text-secondary-light dark:text-text-secondary-dark">points</div>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Teams List -->
-          <div class="p-4 space-y-3">
-            <% group.teams.each do |team| %>
-              <div class="flex items-center justify-between p-3 bg-background-light dark:bg-background-dark rounded-xl">
-                <div class="flex items-center gap-3 flex-1">
-                  <% if team.flag_url.present? %>
-                    <%= image_tag team.flag_url, alt: team.name, class: "h-8 w-8 rounded-full object-cover" %>
-                  <% else %>
-                    <div class="h-8 w-8 rounded-full bg-secondary/20 flex items-center justify-center">
-                      <span class="text-xs font-bold text-secondary"><%= team.name[0] %></span>
+            <!-- Teams List -->
+            <div class="p-4 space-y-3">
+              <% group.teams.each do |team| %>
+                <div class="flex items-center justify-between p-3 bg-background-light dark:bg-background-dark rounded-xl">
+                  <div class="flex items-center gap-3 flex-1">
+                    <% if team.flag_url.present? %>
+                      <%= image_tag team.flag_url, alt: team.name, class: "h-8 w-8 rounded-full object-cover" %>
+                    <% else %>
+                      <div class="h-8 w-8 rounded-full bg-secondary/20 flex items-center justify-center">
+                        <span class="text-xs font-bold text-secondary"><%= team.name[0] %></span>
+                      </div>
+                    <% end %>
+                    <div class="flex-1">
+                      <div class="flex items-center gap-2 flex-wrap">
+                        <p class="font-semibold text-text-primary-light dark:text-text-primary-dark"><%= team.name %></p>
+                        <%= render "shared/progression_ticks", team: team %>
+                      </div>
+                      <p class="text-xs text-text-secondary-light dark:text-text-secondary-dark">
+                        <%= team.matches.where(status: 'PostEvent').count %> matches played
+                      </p>
                     </div>
-                  <% end %>
-                  <div class="flex-1">
-                    <div class="flex items-center gap-2 flex-wrap">
-                      <p class="font-semibold text-text-primary-light dark:text-text-primary-dark"><%= team.name %></p>
-                      <%= render "shared/progression_ticks", team: team %>
+                    <div class="text-right mr-3">
+                      <div class="text-lg font-bold text-text-primary-light dark:text-text-primary-dark"><%= team.progression_score %></div>
+                      <div class="text-xs text-text-secondary-light dark:text-text-secondary-dark">pts</div>
                     </div>
-                    <p class="text-xs text-text-secondary-light dark:text-text-secondary-dark">
-                      <%= team.matches.where(status: 'PostEvent').count %> matches played
-                    </p>
-                  </div>
-                  <div class="text-right mr-3">
-                    <div class="text-lg font-bold text-text-primary-light dark:text-text-primary-dark"><%= team.progression_score %></div>
-                    <div class="text-xs text-text-secondary-light dark:text-text-secondary-dark">pts</div>
                   </div>
                 </div>
 
-              </div>
-
-              <!-- Match Results -->
-              <% if team.matches.where(status: 'PostEvent').any? %>
-                <div class="ml-11 text-xs text-text-secondary-light dark:text-text-secondary-dark space-y-1">
-                  <% team.matches.where(status: 'PostEvent').order(:start_time).each do |match| %>
-                    <div class="flex items-center gap-2">
-                      <i class="fas fa-circle text-[4px]"></i>
-                      <span class="<%= match.stage != 'Group Stage' ? 'font-semibold text-accent-live' : '' %>">
-                        <%= "[#{match.stage}]" unless match.stage == 'Group Stage' %>
-                        vs <%= match.home_team_id == team.id ? match.away_team.name : match.home_team.name %>: <%= match.result_for(team) %>
-                      </span>
-                    </div>
-                  <% end %>
-                </div>
+                <!-- Match Results -->
+                <% if team.matches.where(status: 'PostEvent').any? %>
+                  <div class="ml-11 text-xs text-text-secondary-light dark:text-text-secondary-dark space-y-1">
+                    <% team.matches.where(status: 'PostEvent').order(:start_time).each do |match| %>
+                      <div class="flex items-center gap-2">
+                        <i class="fas fa-circle text-[4px]"></i>
+                        <span class="<%= match.stage != 'Group Stage' ? 'font-semibold text-accent-live' : '' %>">
+                          <%= "[#{match.stage}]" unless match.stage == 'Group Stage' %>
+                          vs <%= match.home_team_id == team.id ? match.away_team.name : match.home_team.name %>: <%= match.result_for(team) %>
+                        </span>
+                      </div>
+                    <% end %>
+                  </div>
+                <% end %>
               <% end %>
-            <% end %>
-          </div>
+            </div>
           </article>
         <% end %>
-        </section>
-      </main>
-    </div>
+      </div>
+    </main>
   </div>
 </div>
 

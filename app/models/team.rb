@@ -69,6 +69,15 @@ class Team < ApplicationRecord
     KnockoutQualification.clinched?(self) || knockout_matches.any?
   end
 
+  # True once the team has a finished knockout match they lost — eliminates
+  # teams like RSA who reach Last 32 but go no further.
+  def knocked_out?
+    played_knockout_matches.any? do |match|
+      (match.home_team_id == id && match.winner == 'away') ||
+      (match.away_team_id == id && match.winner == 'home')
+    end
+  end
+
   # Returns the ordered list of main knockout stages this team has won.
   def knockout_stages_won
     MAIN_KNOCKOUT_STAGES.select do |stage|

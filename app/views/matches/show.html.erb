@@ -13,7 +13,7 @@
 
     <!-- Match Header -->
     <div class="bg-surface-light dark:bg-surface-dark rounded-2xl p-6 text-center">
-      <p class="text-xs text-text-secondary-light dark:text-text-secondary-dark uppercase tracking-widest mb-3"><%= @match.stage %></p>
+      <p class="text-xs font-medium text-text-secondary-light dark:text-text-secondary-dark mb-3"><%= @match.stage %></p>
       <div class="flex items-center justify-center gap-6">
         <div class="text-center flex-1">
           <% if @match.home_team.flag_url.present? %>
@@ -67,7 +67,7 @@
           <% scenario_labels = { home_win: "#{@match.home_team.name} win", draw: "Draw", away_win: "#{@match.away_team.name} win" } %>
           <% @scenarios.each do |outcome, data| %>
             <div class="bg-surface-light dark:bg-surface-dark rounded-2xl p-4">
-              <p class="text-xs font-semibold uppercase tracking-widest text-text-secondary-light dark:text-text-secondary-dark mb-3">
+              <p class="text-sm font-semibold text-text-primary-light dark:text-text-primary-dark mb-3">
                 If <%= scenario_labels[outcome] %>
               </p>
               <% if data[:friend_deltas].any? %>

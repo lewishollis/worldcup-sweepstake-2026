@@ -1,103 +1,94 @@
 <div class="relative min-h-screen flex flex-col">
-  <!-- Desktop Wrapper -->
-  <div class="max-w-7xl mx-auto w-full px-4 md:px-6 lg:px-8">
-    <div class="p-6 pb-28 md:pt-8 md:pb-8">
-      <!-- Header -->
-      <header class="flex items-center justify-center mb-8">
-        <h1 class="text-lg font-semibold text-text-primary-light dark:text-text-primary-dark">Leaderboard</h1>
-      </header>
+  <div class="max-w-7xl mx-auto w-full">
+    <header class="page-header">
+      <div class="page-header-container">
+        <h1 class="page-title">Sweepstake</h1>
+      </div>
+    </header>
 
-      <main class="flex-grow">
-        <!-- Page Title -->
-        <section class="mb-6">
-          <h2 class="text-4xl md:text-5xl lg:text-6xl font-bold text-text-primary-light dark:text-text-primary-dark">World Cup Sweepstake</h2>
+    <main class="flex-grow px-4 md:px-6 lg:px-8 pb-24 md:pb-8 pt-6">
+      <!-- John Botson Insights -->
+      <% if @ben_botcurdy_insight.present? %>
+        <section class="insights-box mb-6 md:max-w-2xl">
+          <div class="insights-header">
+            <i class="fas fa-microphone insights-icon"></i>
+            <h3 class="insights-title">John Botson's Analysis</h3>
+          </div>
+          <p class="insights-text">
+            <%= @ben_botcurdy_insight %>
+          </p>
         </section>
+      <% end %>
 
-        <!-- John Botson Insights -->
-        <% if @ben_botcurdy_insight.present? %>
-          <section class="insights-box md:max-w-2xl">
-            <div class="insights-header">
-              <i class="fas fa-microphone insights-icon"></i>
-              <h3 class="insights-title">John Botson's Analysis</h3>
-            </div>
-            <p class="insights-text">
-              <%= @ben_botcurdy_insight %>
-            </p>
-          </section>
-        <% end %>
+      <!-- Leaderboard List -->
+      <section class="md:max-w-2xl">
+        <div class="space-y-3">
+          <% @leaderboard.each_with_index do |group, index| %>
+            <% next unless group.friend %>
 
-        <!-- Leaderboard List -->
-        <section>
-          <div class="space-y-2">
-            <% @leaderboard.each_with_index do |group, index| %>
-              <% next unless group.friend %>
-
-              <%= link_to leaderboard_path(group), class: "block no-underline" do %>
-              <article class="leaderboard-entry">
-            <!-- Rank Icon/Number -->
-            <div class="leaderboard-rank">
-              <% if index == 0 %>
-                <i class="fas fa-star text-2xl text-yellow-400"></i>
-              <% elsif index == 1 %>
-                <i class="fas fa-medal text-2xl text-gray-400"></i>
-              <% elsif index == 2 %>
-                <i class="fas fa-award text-2xl text-orange-600"></i>
-              <% else %>
-                <span class="leaderboard-rank-number"><%= index + 1 %></span>
-              <% end %>
-            </div>
-
-            <!-- Profile Picture -->
-            <% if group.friend.profile_picture_url.present? %>
-              <%= image_tag group.friend.profile_picture_url, alt: group.friend.name, class: "leaderboard-avatar cursor-pointer", data: { action: "click->image-modal#open", image_modal_src_param: group.friend.profile_picture_url, image_modal_alt_param: group.friend.name } %>
-            <% else %>
-              <div class="leaderboard-avatar-placeholder">
-                <span class="leaderboard-avatar-initial"><%= group.friend.name[0] %></span>
-              </div>
-            <% end %>
-
-            <!-- Name and Points -->
-            <div class="leaderboard-info">
-              <p class="leaderboard-name"><%= group.friend.name %></p>
-              <p class="leaderboard-points">
-                <%= group.total_points.to_i %> pts
-                <span class="text-xs text-text-secondary-light dark:text-text-secondary-dark ml-1" title="Best penalty shootout streak — breaks points ties">🧤 <%= @best_streaks[group.friend_id] || 0 %></span>
-              </p>
-
-              <!-- Team Flags -->
-              <div class="leaderboard-flags">
-                <% group.teams.each do |team| %>
-                  <span class="leaderboard-team-dot">
-                    <% if team.flag_url.present? %>
-                      <%= image_tag team.flag_url, alt: team.name, class: "leaderboard-flag-lg" %>
-                    <% else %>
-                      <span class="leaderboard-flag-lg bg-secondary/20 flex items-center justify-center">
-                        <span class="text-[9px] font-bold text-secondary"><%= team.name[0] %></span>
-                      </span>
-                    <% end %>
-                    <div class="flex flex-col items-center gap-0.5 mt-0.5">
-                      <%= render "shared/progression_ticks", team: team, dots: true %>
-                    </div>
-                  </span>
+            <%= link_to leaderboard_path(group), class: "block no-underline" do %>
+            <article class="leaderboard-entry">
+              <!-- Rank Icon/Number -->
+              <div class="leaderboard-rank">
+                <% if index == 0 %>
+                  <i class="fas fa-star text-2xl text-yellow-400"></i>
+                <% elsif index == 1 %>
+                  <i class="fas fa-medal text-2xl text-gray-400"></i>
+                <% elsif index == 2 %>
+                  <i class="fas fa-award text-2xl text-orange-600"></i>
+                <% else %>
+                  <span class="leaderboard-rank-number"><%= index + 1 %></span>
                 <% end %>
               </div>
-            </div>
 
-            <!-- Expand Icon -->
-            <div class="ml-2">
-              <i class="fas fa-chevron-right text-text-secondary-light dark:text-text-secondary-dark"></i>
-            </div>
-          </article>
+              <!-- Profile Picture -->
+              <% if group.friend.profile_picture_url.present? %>
+                <%= image_tag group.friend.profile_picture_url, alt: group.friend.name, class: "leaderboard-avatar cursor-pointer", data: { action: "click->image-modal#open", image_modal_src_param: group.friend.profile_picture_url, image_modal_alt_param: group.friend.name } %>
+              <% else %>
+                <div class="leaderboard-avatar-placeholder">
+                  <span class="leaderboard-avatar-initial"><%= group.friend.name[0] %></span>
+                </div>
               <% end %>
-        <% end %>
-      </div>
-      <p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-3">
-        🧤 best penalty streak — breaks points ties.
-        <%= link_to "Beat yours in the game →", "/game", class: "underline" %>
-      </p>
-    </section>
-      </main>
-    </div>
+
+              <!-- Name and Points -->
+              <div class="leaderboard-info">
+                <p class="leaderboard-name"><%= group.friend.name %></p>
+                <p class="leaderboard-points">
+                  <%= group.total_points.to_i %> pts
+                  <span class="text-xs text-text-secondary-light dark:text-text-secondary-dark ml-1" title="Best penalty shootout streak — breaks points ties">🧤 <%= @best_streaks[group.friend_id] || 0 %></span>
+                </p>
+
+                <!-- Team Flags -->
+                <div class="leaderboard-flags">
+                  <% group.teams.each do |team| %>
+                    <span class="leaderboard-team-dot">
+                      <% if team.flag_url.present? %>
+                        <%= image_tag team.flag_url, alt: team.name, class: "leaderboard-flag-lg" %>
+                      <% else %>
+                        <span class="leaderboard-flag-lg bg-secondary/20 flex items-center justify-center">
+                          <span class="text-[9px] font-bold text-secondary"><%= team.name[0] %></span>
+                        </span>
+                      <% end %>
+                      <div class="flex flex-col items-center gap-0.5 mt-0.5">
+                        <%= render "shared/progression_ticks", team: team, dots: true %>
+                      </div>
+                    </span>
+                  <% end %>
+                </div>
+              </div>
+
+              <!-- Expand Icon -->
+              <i class="fas fa-chevron-right text-text-secondary-light dark:text-text-secondary-dark flex-shrink-0"></i>
+            </article>
+            <% end %>
+          <% end %>
+        </div>
+        <p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-3">
+          🧤 best penalty streak — breaks points ties.
+          <%= link_to "Beat yours in the game →", "/game", class: "underline" %>
+        </p>
+      </section>
+    </main>
   </div>
 </div>
 

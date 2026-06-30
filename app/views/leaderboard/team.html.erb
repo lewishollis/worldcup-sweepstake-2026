@@ -71,7 +71,7 @@
                       <div class="text-2xl font-bold text-text-primary-light dark:text-text-primary-dark">
                         <%= match.home_score %> – <%= match.away_score %>
                       </div>
-                      <span class="text-xs font-semibold px-2 py-0.5 rounded-full <%= result == 'Win' ? 'bg-green-500/20 text-green-400' : result == 'Lost' ? 'bg-red-500/20 text-red-400' : 'bg-gray-500/20 text-gray-400' %>">
+                      <span class="text-xs font-semibold px-2 py-0.5 rounded-full <%= result.start_with?('Win') ? 'bg-green-500/20 text-green-400' : result.start_with?('Lost') ? 'bg-red-500/20 text-red-400' : 'bg-gray-500/20 text-gray-400' %>">
                         <%= result %>
                       </span>
                     <% else %>

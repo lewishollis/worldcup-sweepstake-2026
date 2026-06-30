@@ -11,11 +11,18 @@ class Match < ApplicationRecord
   attribute :home_friend_profile_picture_url, :string
   attribute :away_friend_profile_picture_url, :string
   attribute :match_status, :string
-   def result_for(team)
+  def result_for(team)
     return 'TBC' unless status == 'PostEvent'
 
     if home_score == away_score
-      'Draw'
+      # Knockout matches can't end in a draw — use the stored winner (set after AET/penalties)
+      if winner == 'home'
+        team == home_team ? 'Win (pens)' : 'Lost (pens)'
+      elsif winner == 'away'
+        team == away_team ? 'Win (pens)' : 'Lost (pens)'
+      else
+        'Draw'
+      end
     elsif team == home_team
       home_score > away_score ? 'Win' : 'Lost'
     elsif team == away_team

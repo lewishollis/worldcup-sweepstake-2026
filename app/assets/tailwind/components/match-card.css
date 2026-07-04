@@ -17,11 +17,11 @@
 }
 
 .match-team {
-  @apply flex items-center gap-3 w-2/5 min-w-0;
+  @apply flex items-center gap-2 flex-1 min-w-0;
 }
 
 .match-team-avatar {
-  @apply h-12 w-12 rounded-full bg-secondary/20 flex items-center justify-center;
+  @apply h-10 w-10 rounded-full bg-secondary/20 flex items-center justify-center flex-shrink-0;
 }
 
 .match-team-avatar-initial {
@@ -29,7 +29,7 @@
 }
 
 .match-team-name {
-  @apply text-base font-bold text-text-primary-light dark:text-text-primary-dark leading-tight break-words;
+  @apply text-sm font-bold text-text-primary-light dark:text-text-primary-dark leading-tight truncate;
 }
 
 .match-team-owner {
@@ -42,6 +42,10 @@
 
 .match-vs {
   @apply text-xl font-bold text-text-secondary-light dark:text-text-secondary-dark;
+}
+
+.match-ticks-row {
+  @apply flex justify-between items-start gap-3 border-t border-border-light dark:border-border-dark pt-2;
 }
 
 .match-summary {

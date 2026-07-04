@@ -37,28 +37,28 @@
             <!-- Teams List -->
             <div class="p-4 space-y-3">
               <% group.teams.each do |team| %>
-                <div class="flex items-center justify-between p-3 bg-background-light dark:bg-background-dark rounded-xl">
-                  <div class="flex items-center gap-3 flex-1">
-                    <% if team.flag_url.present? %>
-                      <%= image_tag team.flag_url, alt: team.name, class: "h-8 w-8 rounded-full object-cover" %>
-                    <% else %>
-                      <div class="h-8 w-8 rounded-full bg-secondary/20 flex items-center justify-center">
-                        <span class="text-xs font-bold text-secondary"><%= team.name[0] %></span>
-                      </div>
-                    <% end %>
-                    <div class="flex-1">
-                      <div class="flex items-center gap-2 flex-wrap">
-                        <p class="font-semibold text-text-primary-light dark:text-text-primary-dark"><%= team.name %></p>
-                        <%= render "shared/progression_ticks", team: team %>
-                      </div>
-                      <p class="text-xs text-text-secondary-light dark:text-text-secondary-dark">
-                        <%= team.matches.where(status: 'PostEvent').count %> matches played
-                      </p>
+                <div class="flex items-center gap-3 p-3 bg-background-light dark:bg-background-dark rounded-xl">
+                  <% if team.flag_url.present? %>
+                    <%= image_tag team.flag_url, alt: team.name, class: "h-8 w-8 rounded-full object-cover flex-shrink-0" %>
+                  <% else %>
+                    <div class="h-8 w-8 rounded-full bg-secondary/20 flex items-center justify-center flex-shrink-0">
+                      <span class="text-xs font-bold text-secondary"><%= team.name[0] %></span>
                     </div>
-                    <div class="text-right mr-3">
-                      <div class="text-lg font-bold text-text-primary-light dark:text-text-primary-dark"><%= team.progression_score %></div>
-                      <div class="text-xs text-text-secondary-light dark:text-text-secondary-dark">pts</div>
+                  <% end %>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between gap-2">
+                      <p class="font-semibold text-text-primary-light dark:text-text-primary-dark truncate"><%= team.name %></p>
+                      <div class="text-right flex-shrink-0">
+                        <div class="text-lg font-bold text-text-primary-light dark:text-text-primary-dark"><%= team.progression_score %></div>
+                        <div class="text-xs text-text-secondary-light dark:text-text-secondary-dark">pts</div>
+                      </div>
                     </div>
+                    <div class="flex flex-wrap gap-0.5 mt-0.5">
+                      <%= render "shared/progression_ticks", team: team %>
+                    </div>
+                    <p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-0.5">
+                      <%= team.matches.where(status: 'PostEvent').count %> matches played
+                    </p>
                   </div>
                 </div>
 

@@ -148,11 +148,11 @@
               <% end %>
             </div>
 
-            <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
               <!-- Home Team -->
               <div class="match-team">
                 <% if match.home_friend_profile_picture_url.present? %>
-                  <%= image_tag match.home_friend_profile_picture_url, alt: match.home_friend_name, class: "h-12 w-12 object-cover rounded-full cursor-pointer", data: { action: "click->image-modal#open", image_modal_src_param: match.home_friend_profile_picture_url, image_modal_alt_param: match.home_friend_name } %>
+                  <%= image_tag match.home_friend_profile_picture_url, alt: match.home_friend_name, class: "h-10 w-10 object-cover rounded-full flex-shrink-0 cursor-pointer", data: { action: "click->image-modal#open", image_modal_src_param: match.home_friend_profile_picture_url, image_modal_alt_param: match.home_friend_name } %>
                 <% else %>
                   <div class="match-team-avatar">
                     <span class="match-team-avatar-initial"><%= match.home_team.name[0] %></span>
@@ -160,7 +160,6 @@
                 <% end %>
                 <div class="flex flex-col min-w-0">
                   <span class="match-team-name"><%= match.home_team.name %></span>
-                  <%= render "shared/progression_ticks", team: match.home_team, compact: true %>
                   <% if match.home_friend_name != 'No owner' %>
                     <span class="match-team-owner"><%= match.home_friend_name %></span>
                   <% end %>
@@ -168,28 +167,39 @@
               </div>
 
               <!-- Score or VS -->
-              <% if match.status == 'PreEvent' %>
-                <span class="match-vs">vs</span>
-              <% else %>
-                <span class="match-score"><%= match.home_score %> – <%= match.away_score %></span>
-              <% end %>
+              <div class="w-16 flex-shrink-0 flex items-center justify-center">
+                <% if match.status == 'PreEvent' %>
+                  <span class="match-vs">vs</span>
+                <% else %>
+                  <span class="match-score"><%= match.home_score %> – <%= match.away_score %></span>
+                <% end %>
+              </div>
 
               <!-- Away Team -->
               <div class="match-team justify-end">
                 <div class="flex flex-col items-end min-w-0">
                   <span class="match-team-name text-right"><%= match.away_team.name %></span>
-                  <%= render "shared/progression_ticks", team: match.away_team, compact: true %>
                   <% if match.away_friend_name != 'No owner' %>
-                    <span class="match-team-owner"><%= match.away_friend_name %></span>
+                    <span class="match-team-owner text-right"><%= match.away_friend_name %></span>
                   <% end %>
                 </div>
                 <% if match.away_friend_profile_picture_url.present? %>
-                  <%= image_tag match.away_friend_profile_picture_url, alt: match.away_friend_name, class: "h-12 w-12 object-cover rounded-full cursor-pointer", data: { action: "click->image-modal#open", image_modal_src_param: match.away_friend_profile_picture_url, image_modal_alt_param: match.away_friend_name } %>
+                  <%= image_tag match.away_friend_profile_picture_url, alt: match.away_friend_name, class: "h-10 w-10 object-cover rounded-full flex-shrink-0 cursor-pointer", data: { action: "click->image-modal#open", image_modal_src_param: match.away_friend_profile_picture_url, image_modal_alt_param: match.away_friend_name } %>
                 <% else %>
                   <div class="match-team-avatar">
                     <span class="match-team-avatar-initial"><%= match.away_team.name[0] %></span>
                   </div>
                 <% end %>
+              </div>
+            </div>
+
+            <!-- Progression ticks: own row so they scale as teams advance -->
+            <div class="match-ticks-row">
+              <div class="flex flex-wrap gap-0.5">
+                <%= render "shared/progression_ticks", team: match.home_team, compact: true %>
+              </div>
+              <div class="flex flex-wrap gap-0.5 justify-end">
+                <%= render "shared/progression_ticks", team: match.away_team, compact: true %>
               </div>
             </div>
 

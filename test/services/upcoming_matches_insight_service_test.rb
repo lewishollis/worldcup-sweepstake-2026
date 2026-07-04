@@ -276,6 +276,25 @@ class UpcomingMatchesInsightServiceTest < ActiveSupport::TestCase
     refute_equal version_before, version_after
   end
 
+  # Regression: the model called Argentina (world #1) v Cabo Verde (world #67)
+  # "evenly matched" — knockout fixture lines carried no rankings, so the model
+  # guessed strength. Group matches get ranks via group_context_text; knockout
+  # lines must carry them too.
+  test "knockout match line carries world rankings so the model never guesses strength" do
+    argentina = Team.create!(name: "Argentina", flag_url: "https://x.com/ar.svg", fifa_rank: 1)
+    cabo      = Team.create!(name: "Cabo Verde", flag_url: "https://x.com/cv.svg", fifa_rank: 67)
+    match = Match.create!(
+      home_team: argentina, away_team: cabo, stage: "Last 32", status: "PreEvent",
+      match_id: "umis-l32-1", home_score: 0, away_score: 0,
+      start_time: Time.zone.local(2026, 6, 11, 20, 0, 0)
+    )
+
+    prompt = UpcomingMatchesInsightService.new([match]).send(:build_user_message)
+
+    assert_includes prompt, "Argentina (world #1)"
+    assert_includes prompt, "Cabo Verde (world #67)"
+  end
+
   test "group match user message includes factual group context, not the old one-liner" do
     service = UpcomingMatchesInsightService.new([@tomorrow_match])
     prompt = service.send(:build_user_message)

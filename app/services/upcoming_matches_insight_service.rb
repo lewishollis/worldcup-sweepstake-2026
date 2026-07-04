@@ -9,7 +9,7 @@ class UpcomingMatchesInsightService
   # Folded into the cache version so changing the persona — or the generation
   # parameters (e.g. the token budget) — regenerates any previously cached
   # insight produced under the old settings.
-  PERSONA_VERSION = "gary-lineker-v15".freeze
+  PERSONA_VERSION = "gary-lineker-v16".freeze
   # Owners based in Vietnam — matches involving their teams also show Vietnam time.
   VIETNAM_FRIENDS = ["Richard", "Nhiên"].freeze
   VIETNAM_TIME_ZONE = "Asia/Ho_Chi_Minh".freeze
@@ -219,8 +219,10 @@ class UpcomingMatchesInsightService
     lines << "MATCHES ON #{day.strftime('%A %d %B %Y').upcase}#{day == today ? ' (TODAY)' : ''}:"
 
     @matches.each do |match|
-      home       = match.home_team.name
-      away       = match.away_team.name
+      # Knockout fixtures get no group_context_text, so the ranking must ride on
+      # the fixture line itself — without it the model guesses relative strength.
+      home       = match.home_team.name + rank_suffix(match.home_team)
+      away       = match.away_team.name + rank_suffix(match.away_team)
       # Derive ownership live — the denormalised friend-name columns on Match go
       # stale when group assignments change between API syncs
       home_owner = owner_name(match.home_team)
@@ -231,7 +233,7 @@ class UpcomingMatchesInsightService
       if Team::KNOCKOUT_STAGES.include?(match.stage)
         begin
           scenarios = ScenarioEngine.new(match).call
-          scenario_labels = { home_win: "#{home} win", away_win: "#{away} win", draw: "Draw" }
+          scenario_labels = { home_win: "#{match.home_team.name} win", away_win: "#{match.away_team.name} win", draw: "Draw" }
           scenarios.each do |outcome, data|
             next if data[:friend_deltas].empty?
             deltas = data[:friend_deltas].map { |d| "#{d[:friend]} +#{d[:delta].to_i} → #{d[:new_total].to_i}pts" }.join(", ")
@@ -253,6 +255,12 @@ class UpcomingMatchesInsightService
 
   def owner_name(team)
     team.groups.first&.friend&.name
+  end
+
+  # " (world #5)" when a FIFA ranking is available, else "". Matches the format
+  # GameStateSnapshot uses, which the system prompt tells the model to read.
+  def rank_suffix(team)
+    team.fifa_rank ? " (world ##{team.fifa_rank})" : ""
   end
 
   # Kick-off shown in UK time, plus Vietnam time when a Vietnam-based owner

@@ -46,4 +46,24 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
       as: :json
     assert_response :unprocessable_entity
   end
+
+  test "POST /game/scores is rejected once the game is locked" do
+    GameScore.stub(:locked?, true) do
+      assert_no_difference "GameScore.count" do
+        post "/game/scores",
+          params: { friend_id: @friend.id, streak: 5 },
+          as: :json
+      end
+      assert_response :forbidden
+      assert JSON.parse(response.body)["locked"]
+    end
+  end
+
+  test "POST /game/scores records the device_id" do
+    post "/game/scores",
+      params: { friend_id: @friend.id, streak: 5, device_id: "abc-123" },
+      as: :json
+    assert_response :success
+    assert_equal "abc-123", GameScore.last.device_id
+  end
 end

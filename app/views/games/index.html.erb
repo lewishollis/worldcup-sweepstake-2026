@@ -1,7 +1,16 @@
 <%# app/views/games/index.html.erb %>
+<%
+  # Deadline shown to players in Vietnam time (they're on the ground there), plus UK time.
+  vietnam_deadline = @game_deadline.in_time_zone("Asia/Ho_Chi_Minh")
+  uk_deadline      = @game_deadline.in_time_zone("London")
+  deadline_label   = "#{vietnam_deadline.strftime('%-l:%M%P %A')} (Vietnam) / " \
+                     "#{uk_deadline.strftime('%-l%P %A')} UK"  # e.g. "5:00pm Tuesday (Vietnam) / 11am Tuesday UK"
+%>
 <div class="max-w-lg mx-auto w-full" data-controller="penalty-game"
      data-penalty-game-friends-value="<%= @friends.to_json(only: [:id, :name, :profile_picture_url]) %>"
-     data-penalty-game-leaderboard-value="<%= @leaderboard.to_json %>">
+     data-penalty-game-leaderboard-value="<%= @leaderboard.to_json %>"
+     data-penalty-game-locked-value="<%= @game_locked %>"
+     data-penalty-game-deadline-value="<%= @game_deadline.iso8601 %>">
 
   <div class="game-screen-flash" data-penalty-game-target="screenFlash"></div>
 
@@ -14,6 +23,22 @@
   </header>
 
   <main class="flex-1 px-4 md:px-6 pb-24 md:pb-8 flex flex-col gap-4 pt-4">
+
+    <%# ── Deadline banner ──────────────────────────────── %>
+    <% if @game_locked %>
+      <div class="rounded-xl bg-red-500/10 border border-red-500/30 px-4 py-3 text-center">
+        <p class="text-sm font-bold text-red-500">🔒 Game closed</p>
+        <p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">
+          The penalty game locked at <%= deadline_label %>. Final scores below.
+        </p>
+      </div>
+    <% else %>
+      <div class="rounded-xl bg-amber-500/10 border border-amber-500/30 px-4 py-2 text-center">
+        <p class="text-xs text-amber-600 dark:text-amber-400">
+          ⏱ Game closes <strong><%= deadline_label %></strong>
+        </p>
+      </div>
+    <% end %>
 
     <%# ── Setup: Friend Picker ─────────────────────────── %>
     <div data-penalty-game-target="setupSection">

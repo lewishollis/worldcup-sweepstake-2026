@@ -1,10 +1,19 @@
 class GamesController < ApplicationController
+  before_action :require_admin, only: :audit
+
   def index
     @friends = Friend.all.order(:name)
     @leaderboard = leaderboard_data
+    @game_locked = GameScore.locked?
+    @game_deadline = GameScore::DEADLINE
   end
 
   def create
+    if GameScore.locked?
+      render json: { error: "The penalty game is closed", locked: true }, status: :forbidden
+      return
+    end
+
     friend = Friend.find_by(id: score_params[:friend_id])
 
     if friend.nil?
@@ -12,7 +21,11 @@ class GamesController < ApplicationController
       return
     end
 
-    score = GameScore.new(friend: friend, streak: score_params[:streak])
+    score = GameScore.new(
+      friend: friend,
+      streak: score_params[:streak],
+      device_id: score_params[:device_id]
+    )
 
     if score.save
       render json: leaderboard_data
@@ -25,10 +38,22 @@ class GamesController < ApplicationController
     render json: leaderboard_data
   end
 
+  # Admin-only audit: devices that have scored for more than one friend.
+  def audit
+    @suspicious_devices = GameScore.suspicious_devices
+  end
+
   private
 
+  def require_admin
+    admin_password = ENV.fetch("ADMIN_PASSWORD", "onlymesucker!")
+    authenticate_or_request_with_http_basic("Admin") do |_username, password|
+      ActiveSupport::SecurityUtils.secure_compare(password, admin_password)
+    end
+  end
+
   def score_params
-    params.permit(:friend_id, :streak)
+    params.permit(:friend_id, :streak, :device_id)
   end
 
   def leaderboard_data

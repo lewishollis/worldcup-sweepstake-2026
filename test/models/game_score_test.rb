@@ -55,4 +55,25 @@ class GameScoreTest < ActiveSupport::TestCase
     results = GameScore.best_per_friend
     assert_equal @friend.id, results.first[:friend_id]
   end
+
+  test "locked? is false before the deadline and true after" do
+    assert_not GameScore.locked?(GameScore::DEADLINE - 1.minute)
+    assert GameScore.locked?(GameScore::DEADLINE + 1.minute)
+  end
+
+  test "suspicious_devices flags a device that scored for more than one friend" do
+    friend2 = Friend.create!(name: "Ella")
+    friend3 = Friend.create!(name: "Sam")
+    # Sam's phone scores for himself and for Ella
+    GameScore.create!(friend: friend3, streak: 4, device_id: "sam-phone")
+    GameScore.create!(friend: friend2, streak: 6, device_id: "sam-phone")
+    # A clean device scoring only for one friend
+    GameScore.create!(friend: @friend, streak: 3, device_id: "lewis-phone")
+    # Legacy rows with no device_id are ignored
+    GameScore.create!(friend: @friend, streak: 8, device_id: nil)
+
+    flags = GameScore.suspicious_devices
+    assert_equal ["sam-phone"], flags.keys
+    assert_equal ["Ella", "Sam"], flags["sam-phone"]
+  end
 end

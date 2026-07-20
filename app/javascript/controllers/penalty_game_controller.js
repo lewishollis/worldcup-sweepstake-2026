@@ -111,6 +111,8 @@ export default class extends Controller {
   static values = {
     friends:     Array,
     leaderboard: Array,
+    locked:      Boolean,
+    deadline:    String,
   }
 
   connect() {
@@ -132,6 +134,16 @@ export default class extends Controller {
 
     this._renderFriendGrid()
     this._renderLeaderboard(this.leaderboardValue)
+
+    // ── Deadline lock ──────────────────────────────────────
+    // If already past the deadline, freeze immediately and never start a round.
+    if (this._isLocked()) {
+      this._lockGame()
+      return
+    }
+    // Otherwise arm a timer to freeze the moment the deadline passes mid-session.
+    this._armDeadlineTimer()
+
     this._showHowToPlayModal()
 
     const saved = sessionStorage.getItem("penalty_game_friend")
@@ -142,12 +154,53 @@ export default class extends Controller {
     }
   }
 
+  // ── Deadline handling ────────────────────────────────────
+
+  _isLocked() {
+    if (this.lockedValue) return true
+    if (!this.hasDeadlineValue || !this.deadlineValue) return false
+    return Date.now() >= new Date(this.deadlineValue).getTime()
+  }
+
+  _armDeadlineTimer() {
+    if (!this.hasDeadlineValue || !this.deadlineValue) return
+    const msLeft = new Date(this.deadlineValue).getTime() - Date.now()
+    // setTimeout maxes out around 24.8 days; only arm if the deadline is within range.
+    if (msLeft > 0 && msLeft < 2_147_483_647) {
+      this.deadlineTimer = setTimeout(() => this._lockGame(), msLeft)
+    }
+  }
+
+  // Freezes all play. Purely client-side UX — the server is the real gate.
+  _lockGame() {
+    cancelAnimationFrame(this.raf)
+    this._clearTapTimeout()
+    clearTimeout(this.deadlineTimer)
+    if (this.hasStartBtnTarget) this.startBtnTarget.disabled = true
+    if (this.hasSetupSectionTarget) this.setupSectionTarget.classList.add("game-locked")
+    if (this.hasPlaySectionTarget) this.playSectionTarget.classList.add("game-locked")
+    // Reload to surface the server-rendered "Game closed" banner and drop the play area.
+    if (!this.lockedValue) window.location.reload()
+  }
+
   disconnect() {
     cancelAnimationFrame(this.raf)
     clearTimeout(this.tapTimeout)
     clearTimeout(this.aimZoneTimeout)
     clearTimeout(this.lockFlashTimeout)
     clearTimeout(this.barPopTimeout)
+    clearTimeout(this.deadlineTimer)
+  }
+
+  // Stable per-browser id, used to spot one device scoring for several friends.
+  _deviceId() {
+    let id = localStorage.getItem("penalty_game_device_id")
+    if (!id) {
+      id = (crypto.randomUUID && crypto.randomUUID()) ||
+           `dev-${Date.now()}-${Math.random().toString(36).slice(2)}`
+      localStorage.setItem("penalty_game_device_id", id)
+    }
+    return id
   }
 
   // ── Timeout (30s idle = streak lost, no score written) ──
@@ -286,6 +339,7 @@ export default class extends Controller {
   }
 
   startGame() {
+    if (this._isLocked()) { this._lockGame(); return }
     sessionStorage.setItem("penalty_game_friend", JSON.stringify(this.selectedFriend))
     this._startGame()
   }
@@ -382,6 +436,7 @@ export default class extends Controller {
   }
 
   tapBall() {
+    if (this._isLocked()) { this._lockGame(); return }
     vibrate(30)
     if (!this.dirLocked) {
       this.lockDirection()
@@ -623,9 +678,16 @@ export default class extends Controller {
         "Content-Type": "application/json",
         "X-CSRF-Token": csrfToken.content
       },
-      body: JSON.stringify({ friend_id: this.selectedFriend.id, streak: streakToSave })
+      body: JSON.stringify({
+        friend_id: this.selectedFriend.id,
+        streak: streakToSave,
+        device_id: this._deviceId()
+      })
     })
-    .then(r => r.ok ? r.json() : Promise.reject())
+    .then(r => {
+      if (r.status === 403) { this._lockGame(); return Promise.reject() }
+      return r.ok ? r.json() : Promise.reject()
+    })
     .then(data => {
       const prevBest = this._myPersonalBest()
       this._renderLeaderboard(data)

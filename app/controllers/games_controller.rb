@@ -38,8 +38,10 @@ class GamesController < ApplicationController
     render json: leaderboard_data
   end
 
-  # Admin-only audit: every device that has played, with multi-friend ones flagged.
+  # Admin-only audit. Primary view: friends scored for by more than one device.
+  # Secondary: devices that scored for more than one friend.
   def audit
+    @friends_by_device = GameScore.friend_device_summary
     @devices = GameScore.device_summary
   end
 

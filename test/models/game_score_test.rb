@@ -96,4 +96,25 @@ class GameScoreTest < ActiveSupport::TestCase
     assert_not lewis[:suspicious?]
     assert_equal 1, lewis[:plays]
   end
+
+  test "friend_device_summary flags a friend scored for by more than one device" do
+    # Ella's score comes from two different phones — the cheat signal
+    ella = Friend.create!(name: "Ella")
+    GameScore.create!(friend: ella, streak: 5, device_id: "phone-a")
+    GameScore.create!(friend: ella, streak: 8, device_id: "phone-b")
+    # Lewis only ever plays on his own phone
+    GameScore.create!(friend: @friend, streak: 3, device_id: "phone-a")
+    GameScore.create!(friend: @friend, streak: 9, device_id: nil) # legacy, ignored
+
+    summary = GameScore.friend_device_summary
+    assert_equal ["Ella", "Lewis"], summary.map { |f| f[:friend_name] } # flagged first
+
+    ella_row = summary.find { |f| f[:friend_name] == "Ella" }
+    assert ella_row[:suspicious?]
+    assert_equal ["phone-a", "phone-b"], ella_row[:device_ids]
+    assert_equal 2, ella_row[:plays]
+
+    lewis_row = summary.find { |f| f[:friend_name] == "Lewis" }
+    assert_not lewis_row[:suspicious?]
+  end
 end

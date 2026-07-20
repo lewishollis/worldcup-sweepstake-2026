@@ -23,6 +23,27 @@ class GameScore < ApplicationRecord
       .to_h { |d| [d[:device_id], d[:friend_names]] }
   end
 
+  # Audit trail, friend-centric: how many distinct devices have scored for each friend.
+  # A friend whose scores come from more than one device is the tell-tale sign of several
+  # people playing on their behalf. Each entry: friend_name, device_count, distinct device_ids,
+  # plays, last_played, suspicious? (more than one device). Sorted most-devices first.
+  def self.friend_device_summary
+    where.not(device_id: nil)
+      .includes(:friend)
+      .group_by(&:friend_id)
+      .map do |_friend_id, scores|
+        device_ids = scores.map(&:device_id).uniq.sort
+        {
+          friend_name: scores.first.friend.name,
+          device_ids:  device_ids,
+          plays:       scores.size,
+          last_played: scores.map(&:created_at).max,
+          suspicious?: device_ids.size > 1
+        }
+      end
+      .sort_by { |f| [-f[:device_ids].size, -f[:last_played].to_i] }
+  end
+
   # Full audit: one entry per device that has recorded a device_id.
   # Each entry: device_id, distinct friend_names (sorted), plays (score count), last_played.
   # Sorted by most friends first, then most recently active. Devices scoring for

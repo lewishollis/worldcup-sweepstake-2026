@@ -38,9 +38,9 @@ class GamesController < ApplicationController
     render json: leaderboard_data
   end
 
-  # Admin-only audit: devices that have scored for more than one friend.
+  # Admin-only audit: every device that has played, with multi-friend ones flagged.
   def audit
-    @suspicious_devices = GameScore.suspicious_devices
+    @devices = GameScore.device_summary
   end
 
   private

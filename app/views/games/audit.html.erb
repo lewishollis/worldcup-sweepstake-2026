@@ -1,37 +1,57 @@
 <%# app/views/games/audit.html.erb — admin-only device audit for the penalty game %>
+<%
+  flagged = @devices.count { |d| d[:suspicious?] }
+%>
 <div class="max-w-lg mx-auto w-full">
   <header class="page-header">
     <div class="page-header-container">
-      <h1 class="page-title">Penalty Game — Device Audit</h1>
+      <h1 class="page-title">Penalty Game — Devices</h1>
     </div>
   </header>
 
   <main class="flex-1 px-4 md:px-6 pb-24 md:pb-8 flex flex-col gap-4 pt-4">
     <p class="text-sm text-text-secondary-light dark:text-text-secondary-dark">
-      Devices (browsers) that have submitted scores for more than one friend. This is the
-      tell-tale sign of one phone playing on several people's behalf. It identifies a browser,
-      not a person — clearing site data or switching browser makes a fresh id.
+      Every browser that has played, newest activity first. A device scoring for
+      <strong>more than one friend</strong> is highlighted — the tell-tale sign of one phone
+      playing on others' behalf. This identifies a browser, not a person, and only counts plays
+      since device tracking went live.
     </p>
 
-    <% if @suspicious_devices.empty? %>
-      <div class="rounded-xl bg-green-500/10 border border-green-500/30 px-4 py-3 text-center">
-        <p class="text-sm font-bold text-green-600 dark:text-green-400">✓ Nothing flagged</p>
-        <p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">
-          No device has scored for more than one friend.
+    <div class="flex gap-3 text-center">
+      <div class="flex-1 rounded-xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark px-3 py-2">
+        <p class="text-lg font-bold"><%= @devices.size %></p>
+        <p class="text-xs text-text-secondary-light dark:text-text-secondary-dark">devices</p>
+      </div>
+      <div class="flex-1 rounded-xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark px-3 py-2">
+        <p class="text-lg font-bold <%= 'text-amber-500' if flagged.positive? %>"><%= flagged %></p>
+        <p class="text-xs text-text-secondary-light dark:text-text-secondary-dark">flagged</p>
+      </div>
+    </div>
+
+    <% if @devices.empty? %>
+      <div class="rounded-xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark px-4 py-6 text-center">
+        <p class="text-sm text-text-secondary-light dark:text-text-secondary-dark">
+          No devices tracked yet — nobody's played since tracking went live.
         </p>
       </div>
     <% else %>
-      <div class="flex flex-col gap-3">
-        <% @suspicious_devices.each do |device_id, friend_names| %>
-          <div class="rounded-xl bg-amber-500/10 border border-amber-500/30 px-4 py-3">
-            <p class="text-xs font-mono text-text-secondary-light dark:text-text-secondary-dark break-all">
-              <%= device_id %>
+      <div class="flex flex-col gap-2">
+        <% @devices.each do |d| %>
+          <div class="rounded-xl px-4 py-3 border <%= d[:suspicious?] ? 'bg-amber-500/10 border-amber-500/40' : 'bg-surface-light dark:bg-surface-dark border-border-light dark:border-border-dark' %>">
+            <div class="flex items-center justify-between gap-2">
+              <p class="text-xs font-mono text-text-secondary-light dark:text-text-secondary-dark break-all">
+                <%= d[:device_id].first(12) %>…
+              </p>
+              <% if d[:suspicious?] %>
+                <span class="shrink-0 text-xs font-bold text-amber-600 dark:text-amber-400">⚠ <%= d[:friend_names].size %> friends</span>
+              <% end %>
+            </div>
+            <p class="text-sm font-medium text-text-primary-light dark:text-text-primary-dark mt-1">
+              <%= d[:friend_names].join(", ") %>
             </p>
-            <p class="text-sm font-bold text-amber-600 dark:text-amber-400 mt-1">
-              Scored for <%= friend_names.size %> friends:
-            </p>
-            <p class="text-sm text-text-primary-light dark:text-text-primary-dark">
-              <%= friend_names.join(", ") %>
+            <p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-0.5">
+              <%= d[:plays] %> <%= "play".pluralize(d[:plays]) %> ·
+              last <%= d[:last_played].in_time_zone("Asia/Ho_Chi_Minh").strftime("%-d %b %-l:%M%P") %> (VN)
             </p>
           </div>
         <% end %>

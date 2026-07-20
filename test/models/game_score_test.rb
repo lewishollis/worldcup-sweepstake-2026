@@ -76,4 +76,24 @@ class GameScoreTest < ActiveSupport::TestCase
     assert_equal ["sam-phone"], flags.keys
     assert_equal ["Ella", "Sam"], flags["sam-phone"]
   end
+
+  test "device_summary lists every device with plays and flags multi-friend ones" do
+    friend2 = Friend.create!(name: "Ella")
+    GameScore.create!(friend: friend2, streak: 6, device_id: "sam-phone")
+    GameScore.create!(friend: @friend, streak: 4, device_id: "sam-phone")
+    GameScore.create!(friend: @friend, streak: 3, device_id: "lewis-phone")
+    GameScore.create!(friend: @friend, streak: 9, device_id: nil) # legacy, ignored
+
+    summary = GameScore.device_summary
+    assert_equal ["sam-phone", "lewis-phone"], summary.map { |d| d[:device_id] } # flagged first
+
+    sam = summary.find { |d| d[:device_id] == "sam-phone" }
+    assert sam[:suspicious?]
+    assert_equal 2, sam[:plays]
+    assert_equal ["Ella", "Lewis"], sam[:friend_names]
+
+    lewis = summary.find { |d| d[:device_id] == "lewis-phone" }
+    assert_not lewis[:suspicious?]
+    assert_equal 1, lewis[:plays]
+  end
 end

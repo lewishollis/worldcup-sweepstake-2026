@@ -19,13 +19,29 @@ class GameScore < ApplicationRecord
   # Returns a hash of device_id => array of distinct friend names, sorted by most friends first.
   # A device scoring for several friends is the tell-tale sign of one phone playing on others' behalf.
   def self.suspicious_devices
+    device_summary.select { |d| d[:friend_names].size > 1 }
+      .to_h { |d| [d[:device_id], d[:friend_names]] }
+  end
+
+  # Full audit: one entry per device that has recorded a device_id.
+  # Each entry: device_id, distinct friend_names (sorted), plays (score count), last_played.
+  # Sorted by most friends first, then most recently active. Devices scoring for
+  # more than one friend are flagged suspicious?.
+  def self.device_summary
     where.not(device_id: nil)
       .includes(:friend)
       .group_by(&:device_id)
-      .transform_values { |scores| scores.map { |s| s.friend.name }.uniq.sort }
-      .select { |_device, names| names.size > 1 }
-      .sort_by { |_device, names| -names.size }
-      .to_h
+      .map do |device_id, scores|
+        friend_names = scores.map { |s| s.friend.name }.uniq.sort
+        {
+          device_id:    device_id,
+          friend_names: friend_names,
+          plays:        scores.size,
+          last_played:  scores.map(&:created_at).max,
+          suspicious?:  friend_names.size > 1
+        }
+      end
+      .sort_by { |d| [-d[:friend_names].size, -d[:last_played].to_i] }
   end
 
   # Returns best streak per friend, ordered descending, tie-broken by earliest achieved.

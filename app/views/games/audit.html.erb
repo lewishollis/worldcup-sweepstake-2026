@@ -44,9 +44,14 @@
               <p class="text-xs font-mono text-text-secondary-light dark:text-text-secondary-dark mt-1 break-all">
                 <%= f[:device_ids].map { |id| id.first(8) }.join(" · ") %>
               </p>
+              <% if f[:browsers].any? %>
+                <p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-0.5">
+                  <%= f[:browsers].join(", ") %>
+                </p>
+              <% end %>
               <p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-0.5">
                 <%= f[:plays] %> <%= "play".pluralize(f[:plays]) %> ·
-                last <%= f[:last_played].in_time_zone("Asia/Ho_Chi_Minh").strftime("%-d %b %-l:%M%P") %> (VN)
+                last <%= f[:last_played].in_time_zone("Europe/London").strftime("%-d %b %-l:%M%P") %> (UK) · <%= f[:last_played].in_time_zone("Asia/Ho_Chi_Minh").strftime("%-l:%M%P") %> (VN)
               </p>
             </div>
           <% end %>
@@ -80,9 +85,14 @@
               <p class="text-sm font-medium text-text-primary-light dark:text-text-primary-dark mt-1">
                 <%= d[:friend_names].join(", ") %>
               </p>
+              <% if d[:browsers].any? %>
+                <p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-0.5">
+                  <%= d[:browsers].join(", ") %>
+                </p>
+              <% end %>
               <p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-0.5">
                 <%= d[:plays] %> <%= "play".pluralize(d[:plays]) %> ·
-                last <%= d[:last_played].in_time_zone("Asia/Ho_Chi_Minh").strftime("%-d %b %-l:%M%P") %> (VN)
+                last <%= d[:last_played].in_time_zone("Europe/London").strftime("%-d %b %-l:%M%P") %> (UK) · <%= d[:last_played].in_time_zone("Asia/Ho_Chi_Minh").strftime("%-l:%M%P") %> (VN)
               </p>
             </div>
           <% end %>

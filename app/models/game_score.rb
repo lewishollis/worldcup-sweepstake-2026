@@ -26,16 +26,18 @@ class GameScore < ApplicationRecord
   # Audit trail, friend-centric: how many distinct devices have scored for each friend.
   # A friend whose scores come from more than one device is the tell-tale sign of several
   # people playing on their behalf. Each entry: friend_name, device_count, distinct device_ids,
-  # plays, last_played, suspicious? (more than one device). Sorted most-devices first.
+  # plays, last_played, browsers, suspicious? (more than one device). Sorted most-devices first.
   def self.friend_device_summary
     where.not(device_id: nil)
       .includes(:friend)
       .group_by(&:friend_id)
       .map do |_friend_id, scores|
         device_ids = scores.map(&:device_id).uniq.sort
+        browsers = scores.map(&:browser).uniq.compact.sort
         {
           friend_name: scores.first.friend.name,
           device_ids:  device_ids,
+          browsers:    browsers,
           plays:       scores.size,
           last_played: scores.map(&:created_at).max,
           suspicious?: device_ids.size > 1
@@ -45,7 +47,7 @@ class GameScore < ApplicationRecord
   end
 
   # Full audit: one entry per device that has recorded a device_id.
-  # Each entry: device_id, distinct friend_names (sorted), plays (score count), last_played.
+  # Each entry: device_id, distinct friend_names (sorted), browsers, plays (score count), last_played.
   # Sorted by most friends first, then most recently active. Devices scoring for
   # more than one friend are flagged suspicious?.
   def self.device_summary
@@ -54,9 +56,11 @@ class GameScore < ApplicationRecord
       .group_by(&:device_id)
       .map do |device_id, scores|
         friend_names = scores.map { |s| s.friend.name }.uniq.sort
+        browsers = scores.map(&:browser).uniq.compact.sort
         {
           device_id:    device_id,
           friend_names: friend_names,
+          browsers:     browsers,
           plays:        scores.size,
           last_played:  scores.map(&:created_at).max,
           suspicious?:  friend_names.size > 1

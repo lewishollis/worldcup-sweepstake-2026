@@ -24,7 +24,8 @@ class GamesController < ApplicationController
     score = GameScore.new(
       friend: friend,
       streak: score_params[:streak],
-      device_id: score_params[:device_id]
+      device_id: score_params[:device_id],
+      browser: parse_browser(request.user_agent)
     )
 
     if score.save
@@ -46,6 +47,27 @@ class GamesController < ApplicationController
   end
 
   private
+
+  def parse_browser(user_agent)
+    return "Unknown" if user_agent.blank?
+
+    case user_agent
+    when /Chrome\/(\d+)/
+      "Chrome"
+    when /Firefox\/(\d+)/
+      "Firefox"
+    when /Safari/ && !/Chrome/
+      "Safari"
+    when /Edge\/(\d+)/, /Edg\/(\d+)/
+      "Edge"
+    when /Opera/, /OPR/
+      "Opera"
+    when /MSIE (\d+)/, /Trident/
+      "Internet Explorer"
+    else
+      "Other"
+    end
+  end
 
   def require_admin
     admin_password = ENV.fetch("ADMIN_PASSWORD", "onlymesucker!")
